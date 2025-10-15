@@ -5,7 +5,6 @@ export function HomePage() {
   return (
     <>
       <Welcome />
-      <Welcome />
       <ColorSchemeToggle />
     </>
   );
