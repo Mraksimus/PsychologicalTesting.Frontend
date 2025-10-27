@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button, TextInput, PasswordInput, Paper, Title, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
