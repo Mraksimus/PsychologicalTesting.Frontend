@@ -1,8 +1,7 @@
-// src/pages/LoginPage.tsx
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AuthForm } from "@/components/AuthForm";
-import { login } from "@/api/auth";
+import { AuthForm } from "../components/AuthForm";
+import { login } from "../api/auth";
 import { notifications } from "@mantine/notifications";
 import { Center, Stack, Text } from "@mantine/core";
 
@@ -14,7 +13,7 @@ const LoginPage: React.FC = () => {
             const data = await login(values.email, values.password);
             localStorage.setItem("token", data.token);
             notifications.show({ title: "Успешный вход", message: "Добро пожаловать!" });
-            navigate("/"); // редирект на главную страницу
+            navigate("/home");
         } catch (err: any) {
             notifications.show({
                 color: "red",
@@ -25,13 +24,9 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <Center style={{ minHeight: "100vh" }}> {/* Центрируем по вертикали и горизонтали */}
+        <Center style={{ minHeight: "100vh" }}>
             <Stack align="center">
-
-                {/* Форма входа */}
                 <AuthForm title="Вход" submitLabel="Войти" onSubmit={handleSubmit} />
-
-                {/* Текст ссылки на регистрацию */}
                 <Text>
                     Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
                 </Text>
@@ -39,4 +34,5 @@ const LoginPage: React.FC = () => {
         </Center>
     );
 };
-export default LoginPage
+
+export default LoginPage;

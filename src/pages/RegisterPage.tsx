@@ -1,8 +1,7 @@
-// src/pages/RegisterPage.tsx
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AuthForm } from "@/components/AuthForm";
-import { register } from "@/api/auth";
+import { AuthForm } from "../components/AuthForm";
+import { register } from "../api/auth";
 import { notifications } from "@mantine/notifications";
 import { Center, Stack, Text } from "@mantine/core";
 
@@ -13,7 +12,7 @@ const RegisterPage: React.FC = () => {
         try {
             await register(values.email, values.password);
             notifications.show({ title: "Успешная регистрация", message: "Теперь войдите в систему" });
-            navigate("/login"); // редирект на страницу входа
+            navigate("/login");
         } catch (err: any) {
             notifications.show({
                 color: "red",
@@ -34,4 +33,5 @@ const RegisterPage: React.FC = () => {
         </Center>
     );
 };
-export default RegisterPage
+
+export default RegisterPage;
