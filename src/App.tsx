@@ -1,28 +1,29 @@
-// src/App.tsx
 import React from "react";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-// Контексты
-import { AuthProvider } from "./contexts/AuthContext";
-
 // Страницы
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
 // Компоненты
 import Header from "./components/Header";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Тема
 import { theme } from "./theme";
 
+// Стили фона
+import "./styles/Background.css";
+
 // Компонент для условного отображения Header
 function AppContent() {
     const location = useLocation();
-    const showHeader = location.pathname !== '/profile'; // Не показывать Header на странице профиля
+    // Хэдер показываем ТОЛЬКО на главной странице
+    const showHeader = location.pathname === '/home' || location.pathname === '/';
 
     return (
         <>
@@ -45,6 +46,24 @@ export default function App() {
             <Notifications position="top-right" />
             <AuthProvider>
                 <BrowserRouter>
+                    {/* Глобальный фон для всех страниц */}
+                    <div className="mindcheck-background">
+                        <div className="floating-icons">
+                            <div className="icon">🧠</div>
+                            <div className="icon">❤️</div>
+                            <div className="icon">😊</div>
+                            <div className="icon">📊</div>
+                            <div className="icon">🌟</div>
+                            <div className="icon">💭</div>
+                            <div className="icon">🌈</div>
+                            <div className="icon">🔮</div>
+                            <div className="icon">🎯</div>
+                            <div className="icon">💫</div>
+                            <div className="icon">🌙</div>
+                            <div className="icon">⭐</div>
+                        </div>
+                    </div>
+                    
                     <AppContent />
                 </BrowserRouter>
             </AuthProvider>
