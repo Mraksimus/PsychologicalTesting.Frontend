@@ -2,7 +2,7 @@
 import React from "react";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // Контексты
 import { AuthProvider } from "./contexts/AuthContext";
@@ -11,13 +11,33 @@ import { AuthProvider } from "./contexts/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
-import ProfilePage from "./pages/ProfilePage"; // Добавляем импорт профиля
+import ProfilePage from "./pages/ProfilePage";
 
 // Компоненты
-import Header from "./components/Header"; // Добавляем Header
+import Header from "./components/Header";
 
 // Тема
 import { theme } from "./theme";
+
+// Компонент для условного отображения Header
+function AppContent() {
+    const location = useLocation();
+    const showHeader = location.pathname !== '/profile'; // Не показывать Header на странице профиля
+
+    return (
+        <>
+            {showHeader && <Header />}
+            <Routes>
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
+        </>
+    );
+}
 
 export default function App() {
     return (
@@ -25,15 +45,7 @@ export default function App() {
             <Notifications position="top-right" />
             <AuthProvider>
                 <BrowserRouter>
-                    <Header /> {/* Добавляем Header чтобы он был на всех страницах */}
-                    <Routes>
-                        <Route path="/" element={<Navigate to="/home" replace />} />
-                        <Route path="/home" element={<HomePage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
-                        <Route path="/profile" element={<ProfilePage />} /> {/* Добавляем маршрут для профиля */}
-                        <Route path="*" element={<Navigate to="/home" replace />} />
-                    </Routes>
+                    <AppContent />
                 </BrowserRouter>
             </AuthProvider>
         </MantineProvider>
