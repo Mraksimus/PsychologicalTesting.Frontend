@@ -16,5 +16,3 @@ const router = createBrowserRouter([
 export function Router() {
     return <RouterProvider router={router} />;
 }
-// В роутинге
-<Route path="/profile" element={<LayoutWithoutHeader><ProfilePage /></LayoutWithoutHeader>} />
