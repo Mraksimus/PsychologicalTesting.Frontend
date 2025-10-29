@@ -7,7 +7,7 @@ export function Welcome() {
       <Title className={classes.title} ta="center" mt={100}>
         Добро пожаловать на сервис психологического тестирования
       </Title>
-      <Text c="dimmed" ta="center" size="lg" maw={580} mx="auto" mt="xl">
+      <Text ta="center" size="lg" maw={580} mx="auto" mt="xl" style={{ color: 'black' }}>
         Пройдите психологические тесты и получите персонализированные рекомендации от нашего AI-помощника
       </Text>
     </>

@@ -1,0 +1,81 @@
+/* src/styles/Background.css */
+.mindcheck-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  overflow: hidden;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.floating-icons {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.floating-icons .icon {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.7;
+  animation: float 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+/* Позиционирование иконок */
+.floating-icons .icon:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+.floating-icons .icon:nth-child(2) { top: 20%; left: 80%; animation-delay: 1s; }
+.floating-icons .icon:nth-child(3) { top: 60%; left: 10%; animation-delay: 2s; }
+.floating-icons .icon:nth-child(4) { top: 40%; left: 85%; animation-delay: 3s; }
+.floating-icons .icon:nth-child(5) { top: 80%; left: 70%; animation-delay: 4s; }
+.floating-icons .icon:nth-child(6) { top: 15%; left: 60%; animation-delay: 5s; }
+.floating-icons .icon:nth-child(7) { top: 70%; left: 40%; animation-delay: 6s; }
+.floating-icons .icon:nth-child(8) { top: 30%; left: 30%; animation-delay: 7s; }
+.floating-icons .icon:nth-child(9) { top: 85%; left: 20%; animation-delay: 8s; }
+.floating-icons .icon:nth-child(10) { top: 50%; left: 50%; animation-delay: 9s; }
+.floating-icons .icon:nth-child(11) { top: 25%; left: 15%; animation-delay: 10s; }
+.floating-icons .icon:nth-child(12) { top: 75%; left: 90%; animation-delay: 11s; }
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.7;
+  }
+  33% {
+    transform: translateY(-20px) rotate(120deg);
+    opacity: 0.9;
+  }
+  66% {
+    transform: translateY(10px) rotate(240deg);
+    opacity: 0.5;
+  }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .floating-icons .icon {
+    font-size: 1.5rem;
+  }
+  
+  .floating-icons .icon:nth-child(n+7) {
+    display: none; /* Скрываем часть иконок на мобильных */
+  }
+}

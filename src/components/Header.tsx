@@ -1,121 +1,140 @@
-// src/components/Header.tsx (с защитой от ошибок AuthContext)
-import React, { useState } from 'react';
-import AuthModal from './AuthModal';
-
-// Создаем fallback хук на случай ошибки AuthContext
-const useAuthFallback = () => {
-  return {
-    user: null,
-    isAuthenticated: false,
-    login: async () => {},
-    register: async () => {},
-    logout: () => {},
-    loading: false,
-    error: null
-  };
-};
+// src/components/Header.tsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  
-  // Пробуем использовать AuthContext, но если ошибка - используем fallback
-  let auth;
-  try {
-    const { useAuth } = require('../contexts/AuthContext');
-    auth = useAuth();
-  } catch (error) {
-    auth = useAuthFallback();
-    console.warn('AuthContext not available, using fallback');
-  }
+  const navigate = useNavigate();
 
-  const { user, logout, isAuthenticated } = auth;
-
-  const handleAuthClick = () => {
-    if (isAuthenticated) {
-      logout();
-    } else {
-      setIsAuthModalOpen(true);
-    }
-  };
-
-  const handleCloseAuthModal = () => {
-    setIsAuthModalOpen(false);
+  const handleProfileClick = () => {
+    navigate('/profile');
   };
 
   return (
-    <>
-      <header style={{ 
-        background: '#fff', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        padding: '1rem 0'
+    <header style={{ 
+      background: 'rgba(255, 255, 255, 0.95)', 
+      boxShadow: '0 2px 20px rgba(0,0,0,0.1)',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      padding: '1rem 0',
+      backdropFilter: 'blur(10px)'
+    }}>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto', 
+        padding: '0 20px' 
       }}>
         <div style={{ 
-          maxWidth: '1200px', 
-          margin: '0 auto', 
-          padding: '0 20px' 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center' 
         }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center' 
-          }}>
-            <div>
-              <span style={{ 
+          <div>
+            <span 
+              style={{ 
                 fontSize: '1.5rem', 
                 fontWeight: 'bold', 
-                color: '#007bff'
-              }}>
-                MindCheck
-              </span>
-            </div>
-            
-            <nav>
-              <ul style={{ 
-                display: 'flex', 
-                listStyle: 'none', 
-                gap: '2rem',
-                margin: 0,
-                padding: 0
-              }}>
-                <li><a href="/home" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>Главная</a></li>
-                <li><a href="#tests" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>Тесты</a></li>
-                <li><a href="#about" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>О проекте</a></li>
-              </ul>
-            </nav>
+                color: '#007bff',
+                cursor: 'pointer',
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+              onClick={() => navigate('/home')}
+            >
+              MindCheck
+            </span>
+          </div>
+          
+          <nav>
+            <ul style={{ 
+              display: 'flex', 
+              listStyle: 'none', 
+              gap: '2rem',
+              margin: 0,
+              padding: 0
+            }}>
+              <li>
+                <a 
+                  href="/home" 
+                  style={{ 
+                    textDecoration: 'none', 
+                    color: '#333', 
+                    fontWeight: '500',
+                    transition: 'color 0.3s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#007bff'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#333'}
+                >
+                  Главная
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#tests" 
+                  style={{ 
+                    textDecoration: 'none', 
+                    color: '#333', 
+                    fontWeight: '500',
+                    transition: 'color 0.3s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#007bff'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#333'}
+                >
+                  Тесты
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#about" 
+                  style={{ 
+                    textDecoration: 'none', 
+                    color: '#333', 
+                    fontWeight: '500',
+                    transition: 'color 0.3s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#007bff'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#333'}
+                >
+                  О проекте
+                </a>
+              </li>
+            </ul>
+          </nav>
 
-            <div>
-              {isAuthenticated && user && (
-                <span style={{ marginRight: '1rem', color: '#495057', fontSize: '0.9rem' }}>
-                  {user.email}
-                </span>
-              )}
-              <button 
-                onClick={handleAuthClick}
-                style={{
-                  background: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1.5rem',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
-                {isAuthenticated ? 'Выйти' : 'Войти'}
-              </button>
-            </div>
+          <div>
+            {/* Кнопка профиля (иконка человечка) */}
+            <button 
+              onClick={handleProfileClick}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                width: '45px',
+                height: '45px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.3rem',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+              }}
+              title="Профиль"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+              }}
+            >
+              👤
+            </button>
           </div>
         </div>
-      </header>
-
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={handleCloseAuthModal} 
-      />
-    </>
+      </div>
+    </header>
   );
 };
 

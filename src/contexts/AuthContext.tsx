@@ -1,5 +1,6 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { login as loginService, register as registerService, logout as logoutService, getCurrentUser, isAuthenticated, User } from '../api/auth';
+import { login as loginService, register as registerService, logout as logoutService, getCurrentUser, isAuthenticated as checkAuth, User } from '../api/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -25,9 +26,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        if (isAuthenticated()) {
+        console.log('Initializing auth...');
+        const authenticated = checkAuth();
+        console.log('isAuthenticated check:', authenticated);
+        
+        if (authenticated) {
           const currentUser = getCurrentUser();
+          console.log('Current user from localStorage:', currentUser);
           setUser(currentUser);
+        } else {
+          console.log('User not authenticated');
         }
       } catch (err) {
         console.error('Ошибка при инициализации аутентификации:', err);
@@ -43,9 +51,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('Logging in...', email);
       const response = await loginService(email, password);
+      console.log('Login response:', response);
       setUser(response.user);
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message);
       throw err;
     } finally {
@@ -57,9 +68,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('Registering...', email);
       const response = await registerService(email, password);
+      console.log('Register response:', response);
       setUser(response.user);
     } catch (err: any) {
+      console.error('Register error:', err);
       setError(err.message);
       throw err;
     } finally {
@@ -68,6 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('Logging out...');
     logoutService();
     setUser(null);
     setError(null);
@@ -75,13 +90,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user, // Важно: используем состояние user, а не функцию checkAuth
     login,
     register,
     logout,
     loading,
     error
   };
+
+  console.log('AuthProvider value:', value);
 
   return (
     <AuthContext.Provider value={value}>
