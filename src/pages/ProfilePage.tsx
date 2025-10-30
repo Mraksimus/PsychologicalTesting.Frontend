@@ -17,7 +17,8 @@ import {
     Divider,
     Grid,
     Box,
-    Avatar
+    Avatar,
+    Center
 } from '@mantine/core';
 import {
     IconUser,
@@ -29,7 +30,6 @@ import {
     IconCalendar,
     IconMail,
     IconId,
-    IconChartBar,
     IconListCheck,
     IconMoodSmile
 } from '@tabler/icons-react';
@@ -159,7 +159,7 @@ const ProfilePage: React.FC = () => {
 
     const handleLogout = () => {
         // Здесь должна быть логика выхода
-        navigate('/');
+        navigate('/login');
     };
 
     const formatDate = (dateString: string) => {
@@ -187,10 +187,12 @@ const ProfilePage: React.FC = () => {
                     </div>
                 </div>
                 <Container size="lg" py="xl">
-                    <Group position="center">
-                        <Loader size="lg" />
-                        <Text style={{ color: 'white' }}>Загрузка профиля...</Text>
-                    </Group>
+                    <Center>
+                        <Group>
+                            <Loader size="lg" />
+                            <Text c="white">Загрузка профиля...</Text>
+                        </Group>
+                    </Center>
                 </Container>
             </div>
         );
@@ -218,15 +220,15 @@ const ProfilePage: React.FC = () => {
 
             <Container size="lg" py="xl" style={{ position: 'relative' }}>
                 {/* Заголовок и кнопка выхода */}
-                <Group position="apart" mb="xl">
+                <Group justify="space-between" mb="xl">
                     <Group>
                         <IconUser size={32} style={{ color: 'white' }} />
-                        <Title order={1} style={{ color: 'white' }}>Профиль пользователя</Title>
+                        <Title order={1} c="white">Профиль пользователя</Title>
                     </Group>
                     <Button
                         variant="outline"
                         color="red"
-                        leftIcon={<IconLogout size={16} />}
+                        leftSection={<IconLogout size={16} />}
                         onClick={handleLogout}
                     >
                         Выйти
@@ -245,59 +247,79 @@ const ProfilePage: React.FC = () => {
                     </Alert>
                 )}
 
-                <Grid gutter="xl">
+                <Grid gutter="xl" align="stretch">
                     {/* Статистика */}
-                    <Grid.Col md={4}>
-                        <Card shadow="sm" p="lg" radius="md" withBorder style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
-                            <Group position="center" mb="md">
+                    <Grid.Col span={{ md: 4 }}>
+                        <Card
+                            shadow="sm"
+                            p="lg"
+                            radius="md"
+                            withBorder
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.95)',
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                        >
+                            <Group justify="center" mb="md">
                                 <Avatar color="blue" size="lg" radius="xl">
                                     <IconMoodSmile size={24} />
                                 </Avatar>
                             </Group>
 
-                            <Stack spacing="md">
+                            <Stack gap="md" style={{ flex: 1 }} justify="space-around">
                                 <Box style={{ textAlign: 'center' }}>
-                                    <Text size="xl" weight={700} color="blue">
+                                    <Text size="xl" fw={700} c="blue">
                                         {profile?.testsCompleted || 0}
                                     </Text>
-                                    <Text size="sm" color="dimmed">Пройдено тестов</Text>
+                                    <Text size="sm" c="dimmed">Пройдено тестов</Text>
                                 </Box>
 
                                 <Divider />
 
                                 <Box style={{ textAlign: 'center' }}>
-                                    <Text size="xl" weight={700} color="green">
+                                    <Text size="xl" fw={700} c="green">
                                         {actionHistory.filter(action => action.action === 'Тест пройден').length}
                                     </Text>
-                                    <Text size="sm" color="dimmed">Успешных тестов</Text>
+                                    <Text size="sm" c="dimmed">Успешных тестов</Text>
                                 </Box>
 
                                 <Divider />
 
                                 <Box style={{ textAlign: 'center' }}>
-                                    <Text size="xl" weight={700} color="orange">
+                                    <Text size="xl" fw={700} c="orange">
                                         {actionHistory.length}
                                     </Text>
-                                    <Text size="sm" color="dimmed">Всего действий</Text>
+                                    <Text size="sm" c="dimmed">Всего действий</Text>
                                 </Box>
                             </Stack>
                         </Card>
                     </Grid.Col>
 
                     {/* Информация о пользователе */}
-                    <Grid.Col md={8}>
-                        <Card shadow="sm" p="lg" radius="md" withBorder style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+                    <Grid.Col span={{ md: 8 }}>
+                        <Card
+                            shadow="sm"
+                            p="lg"
+                            radius="md"
+                            withBorder
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.95)',
+                                height: '100%'
+                            }}
+                        >
                             <Title order={2} mb="md">Личная информация</Title>
 
-                            <Stack spacing="md">
+                            <Stack gap="md">
                                 {/* ФИО */}
-                                <Group position="apart">
+                                <Group justify="space-between">
                                     <Group>
                                         <IconUser size={20} color="gray" />
-                                        <Text size="sm" color="dimmed">ФИО:</Text>
+                                        <Text size="sm" c="dimmed">ФИО:</Text>
                                     </Group>
                                     {editingName ? (
-                                        <Group spacing="xs">
+                                        <Group gap="xs">
                                             <TextInput
                                                 value={newName}
                                                 onChange={(e) => setNewName(e.target.value)}
@@ -324,8 +346,8 @@ const ProfilePage: React.FC = () => {
                                             </ActionIcon>
                                         </Group>
                                     ) : (
-                                        <Group spacing="xs">
-                                            <Text weight={500}>{profile?.fullName}</Text>
+                                        <Group gap="xs">
+                                            <Text fw={500}>{profile?.fullName}</Text>
                                             <ActionIcon
                                                 onClick={() => {
                                                     setEditingName(true);
@@ -341,38 +363,38 @@ const ProfilePage: React.FC = () => {
 
                                 <Divider />
 
-                                <Group position="apart">
+                                <Group justify="space-between">
                                     <Group>
                                         <IconMail size={20} color="gray" />
-                                        <Text size="sm" color="dimmed">Email:</Text>
+                                        <Text size="sm" c="dimmed">Email:</Text>
                                     </Group>
-                                    <Text weight={500}>{profile?.email}</Text>
+                                    <Text fw={500}>{profile?.email}</Text>
                                 </Group>
 
-                                <Group position="apart">
+                                <Group justify="space-between">
                                     <Group>
                                         <IconId size={20} color="gray" />
-                                        <Text size="sm" color="dimmed">ID пользователя:</Text>
+                                        <Text size="sm" c="dimmed">ID пользователя:</Text>
                                     </Group>
-                                    <Text weight={500}>{profile?.id || 'N/A'}</Text>
+                                    <Text fw={500}>{profile?.id || 'N/A'}</Text>
                                 </Group>
 
-                                <Group position="apart">
+                                <Group justify="space-between">
                                     <Group>
                                         <IconCalendar size={20} color="gray" />
-                                        <Text size="sm" color="dimmed">Дата регистрации:</Text>
+                                        <Text size="sm" c="dimmed">Дата регистрации:</Text>
                                     </Group>
-                                    <Text weight={500}>
+                                    <Text fw={500}>
                                         {profile ? formatDate(profile.created_at) : 'N/A'}
                                     </Text>
                                 </Group>
 
-                                <Group position="apart">
+                                <Group justify="space-between">
                                     <Group>
                                         <IconHistory size={20} color="gray" />
-                                        <Text size="sm" color="dimmed">Последний вход:</Text>
+                                        <Text size="sm" c="dimmed">Последний вход:</Text>
                                     </Group>
-                                    <Text weight={500}>
+                                    <Text fw={500}>
                                         {profile?.last_login ? formatDate(profile.last_login) : 'N/A'}
                                     </Text>
                                 </Group>
@@ -390,16 +412,16 @@ const ProfilePage: React.FC = () => {
 
                             {actionHistory.length === 0 ? (
                                 <Box py="xl" style={{ textAlign: 'center' }}>
-                                    <Text color="dimmed" mb="sm">История действий пуста</Text>
-                                    <Text size="sm" color="dimmed">
+                                    <Text c="dimmed" mb="sm">История действий пуста</Text>
+                                    <Text size="sm" c="dimmed">
                                         Здесь будут отображаться ваши действия с тестами
                                     </Text>
                                 </Box>
                             ) : (
-                                <Stack spacing="md">
+                                <Stack gap="md">
                                     {actionHistory.map((action) => (
                                         <Paper key={action.id} p="md" withBorder>
-                                            <Group position="apart" mb="xs">
+                                            <Group justify="space-between" mb="xs">
                                                 <Badge
                                                     color={
                                                         action.action === 'Тест пройден' ? 'green' :
@@ -409,7 +431,7 @@ const ProfilePage: React.FC = () => {
                                                 >
                                                     {action.action}
                                                 </Badge>
-                                                <Text size="sm" color="dimmed">
+                                                <Text size="sm" c="dimmed">
                                                     {formatDate(action.timestamp)}
                                                 </Text>
                                             </Group>
@@ -419,7 +441,7 @@ const ProfilePage: React.FC = () => {
                                             </Text>
 
                                             {action.testName && (
-                                                <Text size="xs" color="dimmed">
+                                                <Text size="xs" c="dimmed">
                                                     Тест: {action.testName}
                                                 </Text>
                                             )}
@@ -432,7 +454,7 @@ const ProfilePage: React.FC = () => {
                 </Grid>
 
                 {/* Кнопка назад */}
-                <Group position="center" mt="xl">
+                <Group justify="center" mt="xl">
                     <Button
                         variant="light"
                         onClick={() => navigate('/home')}
