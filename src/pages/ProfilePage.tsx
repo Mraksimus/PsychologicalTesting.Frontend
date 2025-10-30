@@ -33,6 +33,7 @@ import {
     IconListCheck,
     IconMoodSmile
 } from '@tabler/icons-react';
+import Header from '../components/Header';
 
 // Типы
 interface UserProfile {
@@ -200,6 +201,9 @@ const ProfilePage: React.FC = () => {
 
     return (
         <div style={{ position: 'relative', minHeight: '100vh' }}>
+            {/* Header */}
+            <Header />
+
             {/* Глобальный фон */}
             <div className="mindcheck-background">
                 <div className="floating-icons">
@@ -219,20 +223,12 @@ const ProfilePage: React.FC = () => {
             </div>
 
             <Container size="lg" py="xl" style={{ position: 'relative' }}>
-                {/* Заголовок и кнопка выхода */}
+                {/* Заголовок */}
                 <Group justify="space-between" mb="xl">
                     <Group>
                         <IconUser size={32} style={{ color: 'white' }} />
                         <Title order={1} c="white">Профиль пользователя</Title>
                     </Group>
-                    <Button
-                        variant="outline"
-                        color="red"
-                        leftSection={<IconLogout size={16} />}
-                        onClick={handleLogout}
-                    >
-                        Выйти
-                    </Button>
                 </Group>
 
                 {/* Сообщения */}
@@ -398,6 +394,22 @@ const ProfilePage: React.FC = () => {
                                         {profile?.last_login ? formatDate(profile.last_login) : 'N/A'}
                                     </Text>
                                 </Group>
+
+                                {/* Кнопка выхода в разделе личной информации */}
+                                <Divider />
+
+                                <Group justify="center" mt="md">
+                                    <Button
+                                        variant="outline"
+                                        color="red"
+                                        leftSection={<IconLogout size={16} />}
+                                        onClick={handleLogout}
+                                        fullWidth
+                                        style={{ maxWidth: 200 }}
+                                    >
+                                        Выйти из аккаунта
+                                    </Button>
+                                </Group>
                             </Stack>
                         </Card>
                     </Grid.Col>
@@ -452,16 +464,6 @@ const ProfilePage: React.FC = () => {
                         </Card>
                     </Grid.Col>
                 </Grid>
-
-                {/* Кнопка назад */}
-                <Group justify="center" mt="xl">
-                    <Button
-                        variant="light"
-                        onClick={() => navigate('/home')}
-                    >
-                        Назад на главную
-                    </Button>
-                </Group>
             </Container>
         </div>
     );
