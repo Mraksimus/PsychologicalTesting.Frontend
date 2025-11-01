@@ -7,14 +7,6 @@ export interface Token {
     expiresAt: string;
 }
 
-export interface LoginResponse {
-    token: Token;
-}
-
-export interface RegisterResponse {
-    token: Token;
-}
-
 export interface ApiError {
     status: number;
     fields?: Array<{
@@ -23,11 +15,35 @@ export interface ApiError {
     }>;
 }
 
-// Сохраняем токен в localStorage
-const saveToken = (token: Token): void => {
-    localStorage.setItem('token', token.value);
-    localStorage.setItem('token_expires', token.expiresAt);
-    localStorage.setItem('user_id', token.userId);
+// Сохраняем токен в localStorage с обработкой разных структур
+const saveToken = (tokenData: any): void => {
+    console.log('📦 Token data received:', tokenData);
+
+    let token: string;
+    let userId: string;
+    let expiresAt: string;
+
+    // Проверяем структуру ответа
+    if (tokenData.value && tokenData.userId) {
+        // Прямой объект Token { value, userId, createdAt, expiresAt }
+        token = tokenData.value;
+        userId = tokenData.userId;
+        expiresAt = tokenData.expiresAt;
+    } else if (tokenData.token && tokenData.token.value) {
+        // Объект { token: { value, userId, createdAt, expiresAt } }
+        token = tokenData.token.value;
+        userId = tokenData.token.userId;
+        expiresAt = tokenData.token.expiresAt;
+    } else {
+        console.error('❌ Unexpected token structure:', tokenData);
+        throw new Error('Unexpected response structure from server');
+    }
+
+    console.log('💾 Saving token:', { token, userId, expiresAt });
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('token_expires', expiresAt);
+    localStorage.setItem('user_id', userId);
 };
 
 // Получаем токен из localStorage
@@ -45,6 +61,8 @@ const isTokenValid = (): boolean => {
 
 // Регистрация
 export const register = async (email: string, password: string): Promise<void> => {
+    console.log('📝 Register attempt:', email);
+
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
@@ -53,6 +71,8 @@ export const register = async (email: string, password: string): Promise<void> =
         },
         body: JSON.stringify({ email, password }),
     });
+
+    console.log('📨 Register response status:', response.status);
 
     if (!response.ok) {
         if (response.status === 422) {
@@ -63,12 +83,15 @@ export const register = async (email: string, password: string): Promise<void> =
         throw new Error(`Registration failed: ${response.status}`);
     }
 
-    const data: RegisterResponse = await response.json();
-    saveToken(data.token);
+    const data = await response.json();
+    console.log('✅ Register success data:', data);
+    saveToken(data);
 };
 
 // Вход
 export const login = async (email: string, password: string): Promise<void> => {
+    console.log('🔐 Login attempt:', email);
+
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -78,6 +101,8 @@ export const login = async (email: string, password: string): Promise<void> => {
         body: JSON.stringify({ email, password }),
     });
 
+    console.log('📨 Login response status:', response.status);
+
     if (!response.ok) {
         if (response.status === 401) {
             throw new Error('Invalid email or password');
@@ -85,8 +110,9 @@ export const login = async (email: string, password: string): Promise<void> => {
         throw new Error(`Login failed: ${response.status}`);
     }
 
-    const data: LoginResponse = await response.json();
-    saveToken(data.token);
+    const data = await response.json();
+    console.log('✅ Login success data:', data);
+    saveToken(data);
 };
 
 // Выход
@@ -105,13 +131,8 @@ export const getCurrentUser = async (): Promise<any> => {
         throw new Error('Not authenticated');
     }
 
-    // Если ваш бекенд имеет endpoint для получения данных пользователя
-    // можно добавить запрос здесь
-    // Пока возвращаем базовые данные из localStorage
-
     return {
         id: localStorage.getItem('user_id'),
-        email: 'user@example.com' // Можно сохранять email при логине/регистрации
     };
 };
 
