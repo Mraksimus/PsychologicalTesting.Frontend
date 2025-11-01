@@ -16,7 +16,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 // Тема
 import { theme } from "./theme";
 
-// Стили фона
+// Стили
 import "./styles/Background.css";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
