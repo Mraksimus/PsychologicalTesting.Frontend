@@ -31,7 +31,7 @@ import {
     IconMail,
     IconId,
     IconListCheck,
-    IconMoodSmile, IconShield
+    IconMoodSmile
 } from '@tabler/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { notifications } from '@mantine/notifications';
@@ -350,17 +350,6 @@ const ProfilePage: React.FC = () => {
                                             >
                                                 <IconX size={16} />
                                             </ActionIcon>
-                                            // В разделе личной информации добавьте:
-                                            <Group justify="space-between">
-                                                <IconShield size={20} color="gray" />
-                                                    <Text size="sm" c="dimmed">Роль:</Text>
-                                                </Group>
-                                                <Badge
-                                                    color={user?.isAdmin ? "red" : "blue"}
-                                                    variant="light"
-                                                >
-                                                    {user?.isAdmin ? "Администратор" : "Пользователь"}
-                                                </Badge>
                                         </Group>
                                     ) : (
                                         <Group gap="xs">

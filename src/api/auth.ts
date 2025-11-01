@@ -7,6 +7,14 @@ export interface Token {
     expiresAt: string;
 }
 
+export interface LoginResponse {
+    token: Token;
+}
+
+export interface RegisterResponse {
+    token: Token;
+}
+
 export interface ApiError {
     status: number;
     fields?: Array<{
@@ -16,13 +24,10 @@ export interface ApiError {
 }
 
 // Сохраняем токен в localStorage
-const saveToken = (token: Token, isAdmin: boolean = false): void => {
+const saveToken = (token: Token): void => {
     localStorage.setItem('token', token.value);
     localStorage.setItem('token_expires', token.expiresAt);
     localStorage.setItem('user_id', token.userId);
-    if (isAdmin) {
-        localStorage.setItem('is_admin', 'true');
-    }
 };
 
 // Получаем токен из localStorage
@@ -36,11 +41,6 @@ const isTokenValid = (): boolean => {
     if (!expiresAt) return false;
 
     return new Date(expiresAt) > new Date();
-};
-
-// Проверяем является ли пользователь администратором
-export const isAdmin = (): boolean => {
-    return localStorage.getItem('is_admin') === 'true';
 };
 
 // Регистрация
@@ -63,26 +63,12 @@ export const register = async (email: string, password: string): Promise<void> =
         throw new Error(`Registration failed: ${response.status}`);
     }
 
-    const data: Token = await response.json();
-    saveToken(data);
+    const data: RegisterResponse = await response.json();
+    saveToken(data.token);
 };
 
 // Вход
 export const login = async (email: string, password: string): Promise<void> => {
-    // Специальная логика для администратора
-    if (email === 'admin' && password === 'admin') {
-        // Создаем mock токен для администратора
-        const adminToken: Token = {
-            userId: 'admin-user-id',
-            value: 'admin-token-' + Date.now(),
-            createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 часа
-        };
-        saveToken(adminToken, true);
-        return;
-    }
-
-    // Обычный вход для остальных пользователей
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -99,8 +85,8 @@ export const login = async (email: string, password: string): Promise<void> => {
         throw new Error(`Login failed: ${response.status}`);
     }
 
-    const data: Token = await response.json();
-    saveToken(data);
+    const data: LoginResponse = await response.json();
+    saveToken(data.token);
 };
 
 // Выход
@@ -108,7 +94,6 @@ export const logout = (): void => {
     localStorage.removeItem('token');
     localStorage.removeItem('token_expires');
     localStorage.removeItem('user_id');
-    localStorage.removeItem('is_admin');
 };
 
 // Получение текущего пользователя
@@ -120,19 +105,13 @@ export const getCurrentUser = async (): Promise<any> => {
         throw new Error('Not authenticated');
     }
 
-    // Для администратора возвращаем специальные данные
-    if (isAdmin()) {
-        return {
-            id: 'admin-user-id',
-            email: 'admin@psychological-testing.ru',
-            isAdmin: true
-        };
-    }
+    // Если ваш бекенд имеет endpoint для получения данных пользователя
+    // можно добавить запрос здесь
+    // Пока возвращаем базовые данные из localStorage
 
     return {
         id: localStorage.getItem('user_id'),
-        email: 'user@example.com',
-        isAdmin: false
+        email: 'user@example.com' // Можно сохранять email при логине/регистрации
     };
 };
 
