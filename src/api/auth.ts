@@ -132,7 +132,7 @@ export const getCurrentUser = async (): Promise<any> => {
     // Для обычных пользователей
     return {
         id: localStorage.getItem('user_id'),
-        email: 'user@example.com', // Здесь можно получить реальный email из API если есть endpoint
+        email: 'user@example.com',
         isAdmin: false
     };
 };
