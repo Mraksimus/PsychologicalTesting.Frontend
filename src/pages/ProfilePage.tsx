@@ -31,9 +31,10 @@ import {
     IconMail,
     IconId,
     IconListCheck,
-    IconMoodSmile
+    IconMoodSmile, IconShield
 } from '@tabler/icons-react';
-import Header from '../components/Header';
+import { useAuth } from '@/contexts/AuthContext';
+import { notifications } from '@mantine/notifications';
 
 // Типы
 interface UserProfile {
@@ -95,6 +96,7 @@ const mockActionHistory: ActionHistory[] = [
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
+    const { logout, user } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [actionHistory, setActionHistory] = useState<ActionHistory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -105,6 +107,13 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
         loadProfileData();
     }, []);
+
+    // Автоматическое перенаправление при выходе
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+        }
+    }, [user, navigate]);
 
     const loadProfileData = async () => {
         try {
@@ -159,8 +168,12 @@ const ProfilePage: React.FC = () => {
     };
 
     const handleLogout = () => {
-        // Здесь должна быть логика выхода
-        navigate('/login');
+        logout();
+        notifications.show({
+            title: "Выход выполнен",
+            message: "Вы успешно вышли из аккаунта",
+            color: "blue"
+        });
     };
 
     const formatDate = (dateString: string) => {
@@ -201,9 +214,6 @@ const ProfilePage: React.FC = () => {
 
     return (
         <div style={{ position: 'relative', minHeight: '100vh' }}>
-            {/* Header */}
-            <Header />
-
             {/* Глобальный фон */}
             <div className="mindcheck-background">
                 <div className="floating-icons">
@@ -340,6 +350,17 @@ const ProfilePage: React.FC = () => {
                                             >
                                                 <IconX size={16} />
                                             </ActionIcon>
+                                            // В разделе личной информации добавьте:
+                                            <Group justify="space-between">
+                                                <IconShield size={20} color="gray" />
+                                                    <Text size="sm" c="dimmed">Роль:</Text>
+                                                </Group>
+                                                <Badge
+                                                    color={user?.isAdmin ? "red" : "blue"}
+                                                    variant="light"
+                                                >
+                                                    {user?.isAdmin ? "Администратор" : "Пользователь"}
+                                                </Badge>
                                         </Group>
                                     ) : (
                                         <Group gap="xs">
