@@ -1,17 +1,27 @@
 // src/components/Header.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Header: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleProfileClick = () => {
         navigate('/profile');
     };
 
+    const handleNavigation = (path: string) => {
+        navigate(path);
+    };
+
     // Mock данные пользователя (в реальном приложении это будет из контекста или store)
     const currentUser = {
         fullName: 'Иванов Иван Иванович'
+    };
+
+    // Функция для определения активной страницы
+    const isActivePage = (path: string) => {
+        return location.pathname === path;
     };
 
     return (
@@ -34,81 +44,140 @@ const Header: React.FC = () => {
                     justifyContent: 'space-between',
                     alignItems: 'center'
                 }}>
-                    <div>
-            <span
-                style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
-                    color: '#007bff',
-                    cursor: 'pointer',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-                onClick={() => navigate('/home')}
-            >
-              MindCheck
-            </span>
+                    {/* Логотип */}
+                    <div style={{ flex: 1 }}>
+                        <span
+                            style={{
+                                fontSize: '1.5rem',
+                                fontWeight: 'bold',
+                                color: '#007bff',
+                                cursor: 'pointer',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                            onClick={() => handleNavigation('/home')}
+                        >
+                            MindCheck
+                        </span>
                     </div>
 
-                    <nav>
+                    {/* Навигация по центру */}
+                    <nav style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                         <ul style={{
                             display: 'flex',
                             listStyle: 'none',
-                            gap: '2rem',
+                            gap: '1rem',
                             margin: 0,
                             padding: 0
                         }}>
                             <li>
-                                <a
-                                    href="/home"
+                                <button
+                                    onClick={() => handleNavigation('/home')}
                                     style={{
+                                        background: 'none',
+                                        border: 'none',
                                         textDecoration: 'none',
-                                        color: '#333',
+                                        color: isActivePage('/home') ? '#007bff' : '#333',
                                         fontWeight: '500',
-                                        transition: 'color 0.3s'
+                                        transition: 'all 0.3s',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        backgroundColor: isActivePage('/home') ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
+                                        whiteSpace: 'nowrap'
                                     }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#007bff'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#333'}
+                                    onMouseEnter={(e) => {
+                                        if (!isActivePage('/home')) {
+                                            e.currentTarget.style.color = '#007bff';
+                                            e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isActivePage('/home')) {
+                                            e.currentTarget.style.color = '#333';
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                        }
+                                    }}
                                 >
                                     Главная
-                                </a>
+                                </button>
                             </li>
                             <li>
-                                <a
-                                    href="#tests"
+                                <button
+                                    onClick={() => handleNavigation('/tests')}
                                     style={{
+                                        background: 'none',
+                                        border: 'none',
                                         textDecoration: 'none',
-                                        color: '#333',
+                                        color: isActivePage('/tests') ? '#007bff' : '#333',
                                         fontWeight: '500',
-                                        transition: 'color 0.3s'
+                                        transition: 'all 0.3s',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        backgroundColor: isActivePage('/tests') ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
+                                        whiteSpace: 'nowrap'
                                     }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#007bff'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#333'}
+                                    onMouseEnter={(e) => {
+                                        if (!isActivePage('/tests')) {
+                                            e.currentTarget.style.color = '#007bff';
+                                            e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isActivePage('/tests')) {
+                                            e.currentTarget.style.color = '#333';
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                        }
+                                    }}
                                 >
                                     Тесты
-                                </a>
+                                </button>
                             </li>
                             <li>
-                                <a
-                                    href="#about"
+                                <button
+                                    onClick={() => handleNavigation('/about')}
                                     style={{
+                                        background: 'none',
+                                        border: 'none',
                                         textDecoration: 'none',
-                                        color: '#333',
+                                        color: isActivePage('/about') ? '#007bff' : '#333',
                                         fontWeight: '500',
-                                        transition: 'color 0.3s'
+                                        transition: 'all 0.3s',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        backgroundColor: isActivePage('/about') ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
+                                        whiteSpace: 'nowrap'
                                     }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#007bff'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#333'}
+                                    onMouseEnter={(e) => {
+                                        if (!isActivePage('/about')) {
+                                            e.currentTarget.style.color = '#007bff';
+                                            e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isActivePage('/about')) {
+                                            e.currentTarget.style.color = '#333';
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                        }
+                                    }}
                                 >
                                     О проекте
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </nav>
 
+                    {/* Профиль пользователя - справа */}
                     <div style={{
+                        flex: 1,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '1rem'
+                        gap: '1rem',
+                        justifyContent: 'flex-end'
                     }}>
                         {/* Имя пользователя */}
                         <div
@@ -120,7 +189,8 @@ const Header: React.FC = () => {
                                 padding: '0.5rem 1rem',
                                 borderRadius: '20px',
                                 background: 'rgba(102, 126, 234, 0.1)',
-                                transition: 'all 0.3s ease'
+                                transition: 'all 0.3s ease',
+                                whiteSpace: 'nowrap'
                             }}
                             onClick={handleProfileClick}
                             onMouseEnter={(e) => {
@@ -152,7 +222,8 @@ const Header: React.FC = () => {
                                 justifyContent: 'center',
                                 fontSize: '1.3rem',
                                 transition: 'all 0.3s ease',
-                                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+                                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                                flexShrink: 0
                             }}
                             title="Профиль"
                             onMouseEnter={(e) => {
