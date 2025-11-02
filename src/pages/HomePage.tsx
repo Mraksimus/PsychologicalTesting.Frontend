@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Welcome } from '../components/Welcome/Welcome';
-import TestCard from '../components/TestCard';
+import { Welcome } from '@/components/Welcome/Welcome';
+import TestCard from '@/components/TestCard';
 import Popup from '../components/Popup';
 import AIAssistant from '../components/AIAssistant';
-import { Test, PopupState } from '../types';
+import { Test, PopupState } from '@/types';
 
-// Моковые данные тестов
+// Моковые данные
 const mockTests: Test[] = [
     {
         id: 1,
