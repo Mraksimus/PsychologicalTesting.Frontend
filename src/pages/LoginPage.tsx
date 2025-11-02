@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AuthForm } from "../components/AuthForm";
-import { login } from "../api/auth";
+import { AuthForm } from "@/components/AuthForm";
+import { login } from "@/api/auth";
 import { notifications } from "@mantine/notifications";
 import { Center, Stack, Text } from "@mantine/core";
 
