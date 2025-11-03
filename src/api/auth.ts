@@ -60,7 +60,7 @@ const isTokenValid = (): boolean => {
 };
 
 // Регистрация
-export const register = async (email: string, password: string): Promise<void> => {
+export const register = async (name: string, surname: string, patronymic: string | undefined, email: string, password: string): Promise<void> => {
     console.log('📝 Register attempt:', email);
 
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -69,7 +69,7 @@ export const register = async (email: string, password: string): Promise<void> =
             'accept': 'application/json',
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, surname, patronymic, email, password }),
     });
 
     console.log('📨 Register response status:', response.status);
@@ -77,7 +77,7 @@ export const register = async (email: string, password: string): Promise<void> =
     if (!response.ok) {
         if (response.status === 422) {
             const error: ApiError = await response.json();
-            const message = error.fields?.[0]?.message || 'Email is already taken';
+            const message = error.fields?.[0]?.message;
             throw new Error(message);
         }
         throw new Error(`Registration failed: ${response.status}`);

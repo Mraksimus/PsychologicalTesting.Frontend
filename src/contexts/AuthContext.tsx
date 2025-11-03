@@ -1,17 +1,16 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
-import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser, isAuthenticated, isAdmin } from "@/api/auth";
+import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser, isAuthenticated } from "@/api/auth";
 
 interface User {
     id: string;
     email: string;
-    isAdmin: boolean;
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string) => Promise<void>;
+    register: (name: string, surname: string, patronymic: string | undefined, email: string, password: string) => Promise<void>;
     logout: () => void;
 }
 
@@ -53,10 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const register = async (email: string, password: string) => {
+    const register = async (name: string, surname: string, patronymic: string | undefined, email: string, password: string) => {
         setIsLoading(true);
         try {
-            await apiRegister(email, password);
+            await apiRegister(name, surname, patronymic, email, password);
             await checkAuth();
         } catch (error: any) {
             throw error;
