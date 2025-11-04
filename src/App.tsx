@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import TestsPage from "@/pages/TestPage";
 
 // Компоненты
 import Header from "./components/Header";
@@ -35,6 +36,7 @@ function AppContent() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="*" element={<Navigate to="/home" replace />} />
+                <Route path="/tests" element={<TestsPage />} />
             </Routes>
         </>
     );
