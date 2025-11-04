@@ -17,38 +17,45 @@ import { AuthProvider } from "./contexts/AuthContext";
 // Тема
 import { theme } from "./theme";
 
-// Стили фона
+// Стили
 import "./styles/Background.css";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Компонент для условного отображения Header
-function AppContent() {
+const Layout: React.FC = () => {
     const location = useLocation();
-    // Хэдер показываем ТОЛЬКО на главной странице
-    const showHeader = location.pathname === '/home' || location.pathname === '/';
+    const showHeader = location.pathname === '/home' || location.pathname === '/profile';
 
     return (
         <>
             {showHeader && <Header />}
             <Routes>
                 <Route path="/" element={<Navigate to="/home" replace />} />
-                <Route path="/home" element={<HomePage />} />
+                <Route path="/home" element={
+                    <ProtectedRoute>
+                        <HomePage />
+                    </ProtectedRoute>
+                } />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile" element={
+                    <ProtectedRoute>
+                        <ProfilePage />
+                    </ProtectedRoute>
+                } />
                 <Route path="*" element={<Navigate to="/home" replace />} />
                 <Route path="/tests" element={<TestsPage />} />
             </Routes>
         </>
     );
-}
+};
 
-export default function App() {
+const App: React.FC = () => {
     return (
         <MantineProvider theme={theme}>
             <Notifications position="top-right" />
             <AuthProvider>
                 <BrowserRouter>
-                    {/* Глобальный фон для всех страниц */}
                     <div className="mindcheck-background">
                         <div className="floating-icons">
                             <div className="icon">🧠</div>
@@ -65,10 +72,12 @@ export default function App() {
                             <div className="icon">⭐</div>
                         </div>
                     </div>
-                    
-                    <AppContent />
+
+                    <Layout />
                 </BrowserRouter>
             </AuthProvider>
         </MantineProvider>
     );
-}
+};
+
+export default App;
