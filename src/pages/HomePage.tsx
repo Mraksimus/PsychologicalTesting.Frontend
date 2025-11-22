@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Welcome } from '../components/Welcome/Welcome';
+import { Welcome } from '@/components/Welcome/Welcome';
 import TestCard from '../components/TestCard';
 import Popup from '../components/Popup';
 import AIAssistant from '../components/AIAssistant';
-import { Test, PopupState } from '../types';
+import { Test, PopupState } from '@/types';
+
+const API_URL = "http://localhost:5000/api";
 
 // Моковые данные тестов
 const mockTests: Test[] = [
@@ -96,12 +98,12 @@ const HomePage: React.FC = () => {
     useEffect(() => {
         // СКРОЛЛИМ НАВЕРХ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
         window.scrollTo(0, 0);
-        
+
         const timer = setTimeout(() => {
             setTests(mockTests);
             setLoading(false);
         }, 1000);
-        
+
         return () => clearTimeout(timer);
     }, []);
 
