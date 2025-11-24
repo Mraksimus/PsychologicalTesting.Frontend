@@ -268,11 +268,13 @@ const HomePage: React.FC = () => {
                     </section>
 
                     {/* Секция "О проекте" */}
-                    <section style={{
-                        marginTop: '100px',
-                        padding: '60px 0',
-                        borderTop: '2px solid rgba(255,255,255,0.15)'
-                    }}>
+                    <section
+                        id="about"  // ✅ ДОБАВЬТЕ ID
+                        style={{
+                            marginTop: '100px',
+                            padding: '60px 0',
+                            borderTop: '2px solid rgba(255,255,255,0.15)'
+                        }}>
                         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
                             <h2 style={{
                                 fontSize: '2.5rem',
