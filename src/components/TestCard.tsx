@@ -1,5 +1,5 @@
 import React from 'react';
-import { Test } from '../types';
+import { Test } from '@/types';
 
 interface TestCardProps {
     test: Test;
