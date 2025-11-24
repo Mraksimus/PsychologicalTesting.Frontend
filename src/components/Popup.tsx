@@ -1,73 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { Question } from '../types';
+import { testsApi, TestResult } from '../api/testsApi';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PopupProps {
   testId: number;
   onClose: () => void;
 }
 
-const mockQuestions: Record<number, Question[]> = {
-  1: [
-    {
-      id: 1,
-      text: "Как часто вы чувствуете напряжение в последнее время?",
-      options: [
-        "Почти никогда",
-        "Иногда",
-        "Часто",
-        "Постоянно"
-      ],
-      correctAnswer: 0
-    },
-    {
-      id: 2,
-      text: "Насколько хорошо вы спите?",
-      options: [
-        "Очень хорошо",
-        "Нормально",
-        "Плохо",
-        "Очень плохо"
-      ],
-      correctAnswer: 0
-    },
-    {
-      id: 3,
-      text: "Как вы справляетесь со сложными ситуациями?",
-      options: [
-        "Легко нахожу решение",
-        "Обычно справляюсь",
-        "Часто испытываю трудности",
-        "Очень тяжело даются"
-      ],
-      correctAnswer: 0
-    }
-  ],
-  2: [
-    {
-      id: 1,
-      text: "Как легко вы понимаете чувства других людей?",
-      options: [
-        "Очень легко",
-        "Довольно легко",
-        "Иногда сложно",
-        "Часто не понимаю"
-      ],
-      correctAnswer: 0
-    }
-  ]
-};
-
 const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
+  const { user } = useAuth();
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [testCompleted, setTestCompleted] = useState<boolean>(false);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<TestResult | null>(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    const testQuestions = mockQuestions[testId] || [];
-    setQuestions(testQuestions);
-    setAnswers(new Array(testQuestions.length).fill(-1));
+    loadQuestions();
   }, [testId]);
+
+  const loadQuestions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const testQuestions = await testsApi.getTestQuestions(testId);
+      setQuestions(testQuestions);
+      setAnswers(new Array(testQuestions.length).fill(-1));
+    } catch (err: any) {
+      console.error('Error loading questions:', err);
+      setError(err.message || 'Ошибка загрузки вопросов');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAnswerSelect = (answerIndex: number) => {
     const newAnswers = [...answers];
@@ -79,7 +48,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      setTestCompleted(true);
+      handleCompleteTest();
     }
   };
 
@@ -89,13 +58,40 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
     }
   };
 
+  const handleCompleteTest = async () => {
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const results: Omit<TestResult, 'id'> = {
+        testId,
+        userId: user?.id || 'anonymous',
+        answers,
+        score: 0, // Будет рассчитано на бэкенде
+        completedAt: new Date(),
+        recommendations: []
+      };
+
+      const submittedResults = await testsApi.submitTestResults(results);
+      setTestResults(submittedResults);
+      setTestCompleted(true);
+    } catch (err: any) {
+      console.error('Error submitting test results:', err);
+      setError(err.message || 'Ошибка сохранения результатов');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleRestartTest = () => {
     setCurrentQuestion(0);
     setAnswers(new Array(questions.length).fill(-1));
     setTestCompleted(false);
+    setTestResults(null);
+    setError(null);
   };
 
-  if (questions.length === 0) {
+  if (loading) {
     return (
       <div style={{
         position: 'fixed',
@@ -129,6 +125,64 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
               margin: '0 auto 1rem'
             }}></div>
             <p>Загрузка вопросов...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !testCompleted) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.7)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 2000,
+        padding: '1rem'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '10px',
+          width: '100%',
+          maxWidth: '500px',
+          padding: '2rem',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>Ошибка</h3>
+          <p style={{ marginBottom: '2rem', color: '#666' }}>{error}</p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <button
+              style={{
+                background: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+              onClick={loadQuestions}
+            >
+              Попробовать снова
+            </button>
+            <button
+              style={{
+                background: '#6c757d',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+              onClick={onClose}
+            >
+              Закрыть
+            </button>
           </div>
         </div>
       </div>
@@ -180,6 +234,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
           </button>
         </div>
 
+        {/* Прогресс бар */}
         <div style={{ height: '4px', background: '#eee', width: '100%' }}>
           <div 
             style={{
@@ -201,11 +256,11 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
               </div>
               
               <h3 style={{ fontSize: '1.3rem', marginBottom: '2rem', color: '#2c3e50', lineHeight: '1.4' }}>
-                {questions[currentQuestion].text}
+                {questions[currentQuestion]?.text}
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-                {questions[currentQuestion].options.map((option, index) => (
+                {questions[currentQuestion]?.options.map((option, index) => (
                   <div 
                     key={index}
                     style={{
@@ -264,14 +319,14 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                     border: 'none',
                     borderRadius: '5px',
                     fontWeight: '500',
-                    cursor: 'pointer',
-                    background: answers[currentQuestion] === -1 ? '#ccc' : '#007bff',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    background: answers[currentQuestion] === -1 || submitting ? '#ccc' : '#007bff',
                     color: 'white'
                   }}
                   onClick={handleNextQuestion}
-                  disabled={answers[currentQuestion] === -1}
+                  disabled={answers[currentQuestion] === -1 || submitting}
                 >
-                  {currentQuestion === questions.length - 1 ? 'Завершить' : 'Далее'}
+                  {submitting ? 'Сохранение...' : currentQuestion === questions.length - 1 ? 'Завершить' : 'Далее'}
                 </button>
               </div>
             </div>
@@ -280,17 +335,41 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
               <h3 style={{ color: '#28a745', marginBottom: '1rem', fontSize: '1.5rem' }}>
                 Тест завершен!
               </h3>
-              <p>Вы ответили на все вопросы.</p>
               
-              <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', margin: '2rem 0' }}>
-                <p style={{ fontSize: '1.1rem', fontWeight: '500' }}>
-                  Правильных ответов: {answers.filter((answer, index) => 
-                    answer === questions[index].correctAnswer
-                  ).length} из {questions.length}
-                </p>
-              </div>
+              {testResults && (
+                <>
+                  <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', margin: '2rem 0' }}>
+                    <p style={{ fontSize: '1.1rem', fontWeight: '500', marginBottom: '1rem' }}>
+                      Правильных ответов: {testResults.score} из {questions.length}
+                    </p>
+                    
+                    {testResults.recommendations.length > 0 && (
+                      <div style={{ textAlign: 'left', marginTop: '1rem' }}>
+                        <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Рекомендации:</p>
+                        <ul style={{ paddingLeft: '1.5rem', margin: 0 }}>
+                          {testResults.recommendations.map((rec, index) => (
+                            <li key={index} style={{ marginBottom: '0.5rem' }}>{rec}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <div style={{ 
+                    background: '#e7f3ff', 
+                    padding: '1rem', 
+                    borderRadius: '8px', 
+                    margin: '1rem 0',
+                    border: '1px solid #b3d9ff'
+                  }}>
+                    <p style={{ margin: 0, color: '#0066cc', fontSize: '0.9rem' }}>
+                      💡 Обсудите результаты с нашим AI-помощником для получения персонализированных рекомендаций!
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button 
                   style={{
                     background: '#ffc107',
@@ -304,6 +383,24 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                   onClick={handleRestartTest}
                 >
                   Пройти еще раз
+                </button>
+                <button 
+                  style={{
+                    background: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => {
+                    // Переход к AI-ассистенту для обсуждения результатов
+                    onClose();
+                    // Здесь можно добавить навигацию к чату
+                  }}
+                >
+                  Обсудить с AI
                 </button>
                 <button 
                   style={{

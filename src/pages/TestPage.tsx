@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IconSearch, IconClock, IconQuestionMark } from '@tabler/icons-react';
-import { Test } from '@/types';
+import { Test } from '../types';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -15,170 +15,49 @@ import {
     TextInput,
     Select,
     LoadingOverlay,
-    Box
+    Box,
+    Alert
 } from '@mantine/core';
 import Header from '../components/Header';
-
-// Расширенные данные для страницы тестов
-const allTests: Test[] = [
-    {
-        id: 1,
-        title: "Тест на уровень стресса",
-        description: "Определите ваш текущий уровень стресса и получите рекомендации по его снижению",
-        questionsCount: 15,
-        time: 10,
-        category: "Психология",
-        popularity: 95,
-        isNew: true
-    },
-    {
-        id: 2,
-        title: "Тест на эмоциональный интеллект",
-        description: "Проверьте ваш EQ и узнайте сильные стороны вашего эмоционального интеллекта",
-        questionsCount: 20,
-        time: 15,
-        category: "Психология",
-        popularity: 87,
-        isNew: false
-    },
-    {
-        id: 3,
-        title: "Тест на адаптацию к изменениям",
-        description: "Узнайте, насколько хорошо вы справляетесь с переменами в жизни",
-        questionsCount: 12,
-        time: 8,
-        category: "Развитие",
-        popularity: 76,
-        isNew: true
-    },
-    {
-        id: 4,
-        title: "Тест на тревожность",
-        description: "Оцените уровень тревожности и получите рекомендации по управлению",
-        questionsCount: 18,
-        time: 12,
-        category: "Психология",
-        popularity: 82,
-        isNew: false
-    },
-    {
-        id: 5,
-        title: "Тест на выгорание",
-        description: "Определите признаки профессионального и эмоционального выгорания",
-        questionsCount: 16,
-        time: 10,
-        category: "Профессия",
-        popularity: 79,
-        isNew: false
-    },
-    {
-        id: 6,
-        title: "Тест коммуникативных навыков",
-        description: "Проверьте ваши навыки общения и эффективной коммуникации",
-        questionsCount: 14,
-        time: 8,
-        category: "Развитие",
-        popularity: 71,
-        isNew: true
-    },
-    {
-        id: 7,
-        title: "Тест на самооценку",
-        description: "Узнайте уровень вашей самооценки и получите рекомендации",
-        questionsCount: 15,
-        time: 9,
-        category: "Психология",
-        popularity: 88,
-        isNew: false
-    },
-    {
-        id: 8,
-        title: "Тест на профориентацию",
-        description: "Поможет определить подходящие профессиональные направления",
-        questionsCount: 25,
-        time: 20,
-        category: "Профессия",
-        popularity: 91,
-        isNew: false
-    },
-    {
-        id: 9,
-        title: "Тест на креативность",
-        description: "Оцените ваш творческий потенциал и нестандартное мышление",
-        questionsCount: 12,
-        time: 7,
-        category: "Развитие",
-        popularity: 68,
-        isNew: true
-    },
-    {
-        id: 10,
-        title: "Тест на устойчивость к стрессу",
-        description: "Определите вашу стрессоустойчивость в сложных ситуациях",
-        questionsCount: 17,
-        time: 11,
-        category: "Психология",
-        popularity: 84,
-        isNew: false
-    },
-    {
-        id: 11,
-        title: "Тест на лидерские качества",
-        description: "Узнайте ваши сильные стороны как лидера",
-        questionsCount: 19,
-        time: 13,
-        category: "Развитие",
-        popularity: 77,
-        isNew: false
-    },
-    {
-        id: 12,
-        title: "Тест на эмоциональное выгорание",
-        description: "Определите уровень эмоционального истощения",
-        questionsCount: 14,
-        time: 9,
-        category: "Психология",
-        popularity: 80,
-        isNew: true
-    }
-];
-
-const categories = [
-    { value: 'all', label: 'Все категории' },
-    { value: 'Психология', label: 'Психология' },
-    { value: 'Развитие', label: 'Развитие' },
-    { value: 'Профессия', label: 'Профессия' },
-];
-
-const sortOptions = [
-    { value: 'popular', label: 'По популярности' },
-    { value: 'new', label: 'Сначала новые' },
-    { value: 'time', label: 'По времени' },
-    { value: 'questions', label: 'По количеству вопросов' },
-];
+import { testsApi } from '../api/testsApi';
 
 const TestsPage: React.FC = () => {
     const navigate = useNavigate();
     const [tests, setTests] = useState<Test[]>([]);
     const [filteredTests, setFilteredTests] = useState<Test[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('popular');
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setTests(allTests);
-            setFilteredTests(allTests);
-            setLoading(false);
-        }, 1000);
-
-        return () => clearTimeout(timer);
+        loadTests();
     }, []);
 
     useEffect(() => {
+        filterAndSortTests();
+    }, [tests, searchQuery, selectedCategory, sortBy]);
+
+    const loadTests = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const testsData = await testsApi.getAllTests();
+            setTests(testsData);
+            setFilteredTests(testsData);
+        } catch (err: any) {
+            console.error('Error loading tests:', err);
+            setError(err.message || 'Ошибка загрузки тестов');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filterAndSortTests = () => {
         let result = [...tests];
 
+        // Фильтрация по поисковому запросу
         if (searchQuery) {
             result = result.filter(test =>
                 test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -186,10 +65,12 @@ const TestsPage: React.FC = () => {
             );
         }
 
+        // Фильтрация по категории
         if (selectedCategory !== 'all') {
             result = result.filter(test => test.category === selectedCategory);
         }
 
+        // Сортировка
         switch (sortBy) {
             case 'popular':
                 result.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
@@ -207,13 +88,22 @@ const TestsPage: React.FC = () => {
             case 'questions':
                 result.sort((a, b) => a.questionsCount - b.questionsCount);
                 break;
+            default:
+                result.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
         }
 
         setFilteredTests(result);
-    }, [tests, searchQuery, selectedCategory, sortBy]);
+    };
 
-    const handleStartTest = (testId: number) => {
-        navigate(`/test/${testId}`);
+    const handleStartTest = async (testId: number) => {
+        try {
+            // Проверяем доступность теста
+            await testsApi.getTestById(testId);
+            navigate(`/test/${testId}`);
+        } catch (err: any) {
+            console.error('Error starting test:', err);
+            setError('Ошибка при запуске теста: ' + err.message);
+        }
     };
 
     const getCategoryColor = (category: string) => {
@@ -243,6 +133,20 @@ const TestsPage: React.FC = () => {
         setSortBy('popular');
     };
 
+    const categories = [
+        { value: 'all', label: 'Все категории' },
+        { value: 'Психология', label: 'Психология' },
+        { value: 'Развитие', label: 'Развитие' },
+        { value: 'Профессия', label: 'Профессия' },
+    ];
+
+    const sortOptions = [
+        { value: 'popular', label: 'По популярности' },
+        { value: 'new', label: 'Сначала новые' },
+        { value: 'time', label: 'По времени' },
+        { value: 'questions', label: 'По количеству вопросов' },
+    ];
+
     if (loading) {
         return (
             <>
@@ -267,6 +171,13 @@ const TestsPage: React.FC = () => {
                         Выберите тест, который вам интересен, и получите детальный анализ от нашего ИИ
                     </Text>
                 </Stack>
+
+                {/* Сообщение об ошибке */}
+                {error && (
+                    <Alert color="red" mb="xl" withCloseButton onClose={() => setError(null)}>
+                        {error}
+                    </Alert>
+                )}
 
                 {/* Фильтры и поиск */}
                 <Card shadow="md" p="lg" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
@@ -312,6 +223,13 @@ const TestsPage: React.FC = () => {
                     <Text size="lg" style={{ color: 'white' }}>
                         Найдено тестов: {filteredTests.length}
                     </Text>
+                    <Button
+                        variant="light"
+                        onClick={loadTests}
+                        loading={loading}
+                    >
+                        Обновить
+                    </Button>
                 </Group>
 
                 {/* Сетка тестов */}
@@ -379,13 +297,14 @@ const TestsPage: React.FC = () => {
                                         </Group>
                                     </Group>
 
-                                    {/* Кнопка начала */}
+                                                                        {/* Кнопка начала */}
                                     <Button
                                         fullWidth
                                         variant="gradient"
                                         gradient={{ from: 'blue', to: 'cyan' }}
                                         onClick={() => handleStartTest(test.id)}
                                         style={{ flexShrink: 0 }}
+                                        loading={loading}
                                     >
                                         Начать тест
                                     </Button>

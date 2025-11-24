@@ -1,55 +1,53 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { chatApi, AnalysisRequest } from '../api/chatApi';
+import { useAuth } from '../contexts/AuthContext';
 
 const AIAssistant: React.FC = () => {
-  const [messages, setMessages] = useState<Array<{ id: number; text: string; isUser: boolean; timestamp: Date }>>([
-    {
-      id: 1,
-      text: "Привет! Я ваш AI-помощник MindCheck. Я могу проанализировать результаты ваших тестов и помочь понять ваше психологическое состояние. Расскажите о своих результатах или задайте вопрос!",
-      isUser: false,
-      timestamp: new Date()
-    }
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Array<{ id: number; text: string; isUser: boolean; timestamp: Date }>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    loadChatHistory();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const analyzeMessage = async (userMessage: string): Promise<string> => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('стресс') || lowerMessage.includes('тревож')) {
-      return "На основе вашего описания я вижу признаки повышенного стресса. Рекомендую практиковать дыхательные упражнения, регулярную физическую активность и соблюдать режим сна. Если симптомы сохраняются более 2 недель,建议 обратиться к специалисту.";
+  const loadChatHistory = async () => {
+    try {
+      if (user) {
+        const history = await chatApi.getChatHistory(user.id);
+        setMessages(history);
+      } else {
+        // Default welcome message for non-authenticated users
+        setMessages([{
+          id: 1,
+          text: "Привет! Я ваш AI-помощник MindCheck. Я могу проанализировать результаты ваших тестов и помочь понять ваше психологическое состояние. Расскажите о своих результатах или задайте вопрос!",
+          isUser: false,
+          timestamp: new Date()
+        }]);
+      }
+    } catch (err) {
+      console.error('Error loading chat history:', err);
+      setMessages([{
+        id: 1,
+        text: "Привет! Я ваш AI-помощник MindCheck. Я могу проанализировать результаты ваших тестов и помочь понять ваше психологическое состояние. Расскажите о своих результатах или задайте вопрос!",
+        isUser: false,
+        timestamp: new Date()
+      }]);
     }
-    
-    if (lowerMessage.includes('депресси') || lowerMessage.includes('плохое настроение')) {
-      return "Замечаю возможные признаки депрессивного состояния. Важно сохранять социальные контакты, заниматься приятными активностями и соблюдать режим дня. Рекомендую проконсультироваться с психологом для более точной оценки.";
-    }
-    
-    if (lowerMessage.includes('тревог') || lowerMessage.includes('паник')) {
-      return "Похоже на симптомы тревожности. Попробуйте техники заземления, медитацию и ограничьте потребление кофеина. Регулярная практика релаксации может значительно улучшить состояние.";
-    }
-    
-    if (lowerMessage.includes('результат') || lowerMessage.includes('тест')) {
-      return "Для анализа результатов тестов, пожалуйста, опишите: 1) Название пройденного теста, 2) Ваши основные ответы, 3) Что вас беспокоит в результатах. Я помогу интерпретировать данные и дам рекомендации.";
-    }
-    
-    if (lowerMessage.includes('помощь') || lowerMessage.includes('что делать')) {
-      return "Я здесь чтобы помочь! Вы можете: 1) Поделиться результатами тестов для анализа, 2) Описать свои симптомы, 3) Задать вопросы о психологическом состоянии, 4) Получить рекомендации по самопомощи.";
-    }
-    
-    return "Спасибо за ваше сообщение! Чтобы я мог лучше помочь, пожалуйста, опишите: конкретные симптомы, результаты тестов или задайте конкретный вопрос о вашем психологическом состоянии. Я проанализирую информацию и дам персонализированные рекомендации.";
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     const userMessage = {
-      id: messages.length + 1,
+      id: Date.now(),
       text: inputMessage,
       isUser: true,
       timestamp: new Date()
@@ -58,18 +56,51 @@ const AIAssistant: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsAnalyzing(true);
+    setError(null);
 
-    const aiResponse = await analyzeMessage(inputMessage);
-    
-    const aiMessage = {
-      id: messages.length + 2,
-      text: aiResponse,
-      isUser: false,
-      timestamp: new Date()
-    };
+    try {
+      // Сохраняем сообщение пользователя
+      if (user) {
+        await chatApi.saveChatMessage(user.id, userMessage);
+      }
 
-    setMessages(prev => [...prev, aiMessage]);
-    setIsAnalyzing(false);
+      // Получаем ответ от API
+      const request: AnalysisRequest = {
+        message: inputMessage,
+        userId: user?.id
+      };
+
+      const response = await chatApi.analyzeMessage(request);
+      
+      const aiMessage = {
+        id: Date.now() + 1,
+        text: response.response,
+        isUser: false,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Сохраняем ответ AI
+      if (user) {
+        await chatApi.saveChatMessage(user.id, aiMessage);
+      }
+
+    } catch (err: any) {
+      console.error('Error analyzing message:', err);
+      setError(err.message || 'Произошла ошибка при анализе сообщения');
+      
+      const errorMessage = {
+        id: Date.now() + 1,
+        text: "Извините, произошла ошибка при обработке вашего сообщения. Пожалуйста, попробуйте еще раз.",
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -115,6 +146,20 @@ const AIAssistant: React.FC = () => {
       </div>
 
       <div style={{ padding: '1.5rem', borderBottom: '1px solid #e9ecef' }}>
+        {/* Сообщение об ошибке */}
+        {error && (
+          <div style={{
+            background: '#f8d7da',
+            color: '#721c24',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            border: '1px solid #f5c6cb'
+          }}>
+            {error}
+          </div>
+        )}
+
         <div style={{
           height: '400px',
           overflowY: 'auto',
@@ -258,9 +303,18 @@ const AIAssistant: React.FC = () => {
                   padding: '0.5rem 1rem',
                   fontSize: '0.85rem',
                   color: '#495057',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
                 }}
                 onClick={() => handleQuickQuestion(question)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e9ecef';
+                  e.currentTarget.style.borderColor = '#adb5bd';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f8f9fa';
+                  e.currentTarget.style.borderColor = '#dee2e6';
+                }}
               >
                 {question}
               </button>
@@ -283,7 +337,8 @@ const AIAssistant: React.FC = () => {
               fontFamily: 'inherit',
               fontSize: '1rem',
               lineHeight: '1.5',
-              minHeight: '60px'
+              minHeight: '60px',
+              transition: 'border-color 0.3s'
             }}
             rows={3}
           />
@@ -299,10 +354,11 @@ const AIAssistant: React.FC = () => {
               fontSize: '1rem',
               fontWeight: '500',
               cursor: !inputMessage.trim() || isAnalyzing ? 'not-allowed' : 'pointer',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              transition: 'background 0.3s'
             }}
           >
-            Отправить
+            {isAnalyzing ? 'Анализ...' : 'Отправить'}
           </button>
         </div>
       </div>

@@ -5,34 +5,7 @@ import Popup from '../components/Popup';
 import AIAssistant from '../components/AIAssistant';
 import { Test, PopupState } from '../types';
 import { useNavigate } from 'react-router-dom';
-
-// Моковые данные тестов
-const mockTests: Test[] = [
-    {
-        id: 1,
-        title: "Тест на уровень стресса",
-        description: "Определите ваш текущий уровень стресса и получите рекомендации по его снижению",
-        questionsCount: 15,
-        time: 10,
-        category: "Психология"
-    },
-    {
-        id: 2,
-        title: "Тест на эмоциональный интеллект",
-        description: "Проверьте ваш EQ и узнайте сильные стороны вашего эмоционального интеллекта",
-        questionsCount: 20,
-        time: 15,
-        category: "Психология"
-    },
-    {
-        id: 3,
-        title: "Тест на адаптацию к изменениям",
-        description: "Узнайте, насколько хорошо вы справляетесь с переменами в жизни",
-        questionsCount: 12,
-        time: 8,
-        category: "Развитие"
-    }
-];
+import { testsApi } from '../api/testsApi';
 
 // Данные психологов команды
 const teamPsychologists = [
@@ -90,6 +63,7 @@ const HomePage: React.FC = () => {
     const navigate = useNavigate();
     const [tests, setTests] = useState<Test[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     const [popup, setPopup] = useState<PopupState>({
         isOpen: false,
         testId: null
@@ -98,17 +72,59 @@ const HomePage: React.FC = () => {
     useEffect(() => {
         // СКРОЛЛИМ НАВЕРХ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
         window.scrollTo(0, 0);
-
-        const timer = setTimeout(() => {
-            setTests(mockTests);
-            setLoading(false);
-        }, 1000);
-
-        return () => clearTimeout(timer);
+        loadTests();
     }, []);
 
-    const handleOpenTest = (testId: number) => {
-        setPopup({ isOpen: true, testId });
+    const loadTests = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const testsData = await testsApi.getAllTests();
+            setTests(testsData);
+        } catch (err: any) {
+            console.error('Error loading tests:', err);
+            setError('Ошибка загрузки тестов. Пожалуйста, попробуйте позже.');
+            // Fallback to limited mock data if API fails
+            setTests([
+                {
+                    id: 1,
+                    title: "Тест на уровень стресса",
+                    description: "Определите ваш текущий уровень стресса и получите рекомендации по его снижению",
+                    questionsCount: 15,
+                    time: 10,
+                    category: "Психология"
+                },
+                {
+                    id: 2,
+                    title: "Тест на эмоциональный интеллект",
+                    description: "Проверьте ваш EQ и узнайте сильные стороны вашего эмоционального интеллекта",
+                    questionsCount: 20,
+                    time: 15,
+                    category: "Психология"
+                },
+                {
+                    id: 3,
+                    title: "Тест на адаптацию к изменениям",
+                    description: "Узнайте, насколько хорошо вы справляетесь с переменами в жизни",
+                    questionsCount: 12,
+                    time: 8,
+                    category: "Развитие"
+                }
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOpenTest = async (testId: number) => {
+        try {
+            // Проверяем доступность теста через API
+            await testsApi.getTestById(testId);
+            setPopup({ isOpen: true, testId });
+        } catch (err: any) {
+            console.error('Error opening test:', err);
+            setError('Ошибка при запуске теста: ' + err.message);
+        }
     };
 
     const handleClosePopup = () => {
@@ -117,6 +133,11 @@ const HomePage: React.FC = () => {
 
     const handleViewAllTests = () => {
         navigate('/tests');
+    };
+
+    const handleRetryLoadTests = () => {
+        setError(null);
+        loadTests();
     };
 
     return (
@@ -149,6 +170,41 @@ const HomePage: React.FC = () => {
                                 Пройдите тесты и получите анализ от ИИ
                             </p>
                         </div>
+
+                        {/* Сообщение об ошибке */}
+                        {error && (
+                            <div style={{
+                                background: 'rgba(255,255,255,0.95)',
+                                padding: '1.5rem',
+                                borderRadius: '10px',
+                                marginBottom: '2rem',
+                                border: '2px solid #ff6b6b',
+                                textAlign: 'center'
+                            }}>
+                                <p style={{ 
+                                    color: '#d63031', 
+                                    marginBottom: '1rem',
+                                    fontSize: '1.1rem'
+                                }}>
+                                    {error}
+                                </p>
+                                <button
+                                    onClick={handleRetryLoadTests}
+                                    style={{
+                                        background: '#4a6cf7',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '0.75rem 1.5rem',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem',
+                                        fontWeight: '500'
+                                    }}
+                                >
+                                    Попробовать снова
+                                </button>
+                            </div>
+                        )}
 
                         {loading ? (
                             <div style={{
@@ -350,7 +406,7 @@ const HomePage: React.FC = () => {
                                 overflowX: 'auto',
                                 padding: '2rem 0',
                                 cursor: 'grab'
-                            }}>
+                            }} className="team-scroll-container">
                                 <div style={{
                                     display: 'flex',
                                     gap: '2rem',
@@ -391,6 +447,25 @@ const HomePage: React.FC = () => {
                                                     margin: '0 auto 1.5rem',
                                                     border: '4px solid #4a6cf7',
                                                     boxShadow: '0 4px 15px rgba(74, 108, 247, 0.3)'
+                                                }}
+                                                onError={(e) => {
+                                                    // Fallback if image fails to load
+                                                    e.currentTarget.style.display = 'none';
+                                                    e.currentTarget.parentElement!.innerHTML += `
+                                                        <div style="
+                                                            width: 120px; 
+                                                            height: 120px; 
+                                                            border-radius: 50%; 
+                                                            background: #4a6cf7; 
+                                                            color: white; 
+                                                            display: flex; 
+                                                            align-items: center; 
+                                                            justify-content: center; 
+                                                            font-size: 2rem; 
+                                                            margin: 0 auto 1.5rem;
+                                                            border: 4px solid #4a6cf7;
+                                                        ">👤</div>
+                                                    `;
                                                 }}
                                             />
                                             <h4 style={{
@@ -476,6 +551,18 @@ const HomePage: React.FC = () => {
                     
                     .team-scroll-container::-webkit-scrollbar-thumb:hover {
                         background: rgba(255,255,255,0.5);
+                    }
+
+                    /* Стили для мобильных устройств */
+                    @media (max-width: 768px) {
+                        .team-scroll-container {
+                            padding: 1rem 0;
+                        }
+                        
+                        .team-scroll-container > div {
+                            gap: 1rem;
+                            padding: 0 1rem;
+                        }
                     }
                 `}
             </style>
