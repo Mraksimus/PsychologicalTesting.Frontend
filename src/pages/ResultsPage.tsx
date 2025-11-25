@@ -271,29 +271,29 @@ const ResultsPage: React.FC = () => {
     };
 
     return (
-        <>
+        <div style={{ background: 'white', minHeight: '100vh' }}>
             <Header />
-            <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
+            <Container size="xl" style={{ padding: '40px 0' }}>
 
                 {/* Заголовок */}
-                <div style={{ textAlign: 'center', color: 'white', marginBottom: '50px' }}>
-                    <Title order={1} size={2.5}>📊 Ваши результаты</Title>
-                    <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)', marginTop: '10px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+                    <Text size="lg" style={{ color: '#666', marginTop: '10px' }}>
                         Тест: {testTitle}
                     </Text>
                 </div>
 
                 {/* Результат с процентилем */}
                 <Card
-                    shadow="lg"
+                    shadow="md"
                     p="xl"
                     mb="xl"
                     style={{
-                        background: 'rgba(255,255,255,0.97)',
-                        borderRadius: '16px'
+                        background: '#f8f9ff',
+                        borderRadius: '16px',
+                        border: '1px solid #e8e8f0'
                     }}
                 >
-                    <Group justify="space-between" align="flex-start" mb="xl">
+                    <Group justify="space-between" align="flex-start">
                         <div>
                             <Title order={2} size="h2">{getRiskLabel()}</Title>
                             <Badge size="lg" color={getRiskColor()} mt="md">
@@ -318,12 +318,18 @@ const ResultsPage: React.FC = () => {
                     </Group>
                 </Card>
 
-                {/* AI Анализ - левый бордер */}
-                <div style={{
-                    paddingLeft: '20px',
-                    borderLeft: '4px solid #667eea',
-                    marginBottom: '40px'
-                }}>
+                {/* AI Анализ */}
+                <Card
+                    shadow="md"
+                    p="xl"
+                    mb="xl"
+                    style={{
+                        background: '#f8f9ff',
+                        borderRadius: '16px',
+                        border: '1px solid #e8e8f0',
+                        borderLeft: '4px solid #667eea'
+                    }}
+                >
                     <Group mb="lg">
                         <span style={{ fontSize: '1.4rem' }}>🔵</span>
                         <Title order={3} style={{ margin: 0 }}>AI Анализ</Title>
@@ -331,46 +337,18 @@ const ResultsPage: React.FC = () => {
                     <Text style={{ color: '#333', lineHeight: 1.8, fontSize: '15px' }}>
                         {analysis.mainFindings}
                     </Text>
-                </div>
-
-                {/* Рекомендации - с галочками */}
-                <div style={{ marginBottom: '40px' }}>
-                    <Group mb="lg">
-                        <span style={{ fontSize: '1.4rem' }}>💡</span>
-                        <Title order={3} style={{ margin: 0 }}>Рекомендации</Title>
-                    </Group>
-                    <Stack gap="md" style={{ paddingLeft: '10px' }}>
-                        {analysis.recommendations.map((rec, index) => (
-                            <Group key={index} gap="sm" align="flex-start">
-                                <span style={{ color: '#28a745', fontSize: '1.2rem', marginTop: '2px' }}>✓</span>
-                                <Text style={{ color: '#333', lineHeight: 1.6 }}>
-                                    {rec}
-                                </Text>
-                            </Group>
-                        ))}
-                    </Stack>
-                </div>
-
-                {/* Рекомендуемые действия - со стрелками */}
-                <div style={{ marginBottom: '40px' }}>
-                    <Group mb="lg">
-                        <span style={{ fontSize: '1.4rem' }}>🚀</span>
-                        <Title order={3} style={{ margin: 0 }}>Рекомендуемые действия</Title>
-                    </Group>
-                    <Stack gap="md" style={{ paddingLeft: '10px' }}>
-                        {analysis.suggestedActions.map((action, index) => (
-                            <Group key={index} gap="sm" align="flex-start">
-                                <span style={{ color: '#667eea', fontSize: '1.2rem', marginTop: '2px' }}>→</span>
-                                <Text style={{ color: '#333', lineHeight: 1.6 }}>
-                                    {action.substring(2).trim()}
-                                </Text>
-                            </Group>
-                        ))}
-                    </Stack>
-                </div>
+                </Card>
 
                 {/* Кнопки */}
-                <Card shadow="md" p="xl" style={{ background: 'rgba(255,255,255,0.97)', borderRadius: '12px' }}>
+                <Card
+                    shadow="md"
+                    p="xl"
+                    style={{
+                        background: '#f8f9ff',
+                        borderRadius: '16px',
+                        border: '1px solid #e8e8f0'
+                    }}
+                >
                     <Stack gap="md">
                         <Group justify="center" grow>
                             <Button
@@ -395,7 +373,7 @@ const ResultsPage: React.FC = () => {
                     </Stack>
                 </Card>
             </Container>
-        </>
+        </div>
     );
 };
 
