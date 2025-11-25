@@ -10,8 +10,11 @@ import {
     Text,
     Progress,
     Badge,
+    Modal,
 } from '@mantine/core';
 import Header from '../components/Header';
+import {TestSession} from "@/types/session";
+import {sessionUtils} from "../../test-utils/sessionUtils";
 
 interface Question {
     id: number;
@@ -24,6 +27,7 @@ interface TestDataType {
     category: string;
     questions: Question[];
 }
+
 
 // ВСЕ 12 ТЕСТОВ
 const testsData: { [key: number]: TestDataType } = {
@@ -268,61 +272,65 @@ const TestingPage: React.FC = () => {
     const testIdNum = parseInt(testId || '1');
     const testData = testsData[testIdNum];
 
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
-        const savedProgress = localStorage.getItem(`testProgress_${testIdNum}`);
-        if (savedProgress) {
-            try {
-                const progressData = JSON.parse(savedProgress);
-                const isDataFresh = Date.now() - progressData.timestamp < 24 * 60 * 60 * 1000;
-                if (isDataFresh && progressData.testId === testIdNum) {
-                    return progressData.currentQuestionIndex;
-                }
-            } catch (error) {
-                console.error('Ошибка при восстановлении прогресса:', error);
-            }
-        }
-        return 0;
-    });
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
+    const [activeSession, setActiveSession] = useState<TestSession | null>(null);
+    const [showContinueModal, setShowContinueModal] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>(() => {
-        const savedProgress = localStorage.getItem(`testProgress_${testIdNum}`);
-        if (savedProgress) {
-            try {
-                const progressData = JSON.parse(savedProgress);
-                const isDataFresh = Date.now() - progressData.timestamp < 24 * 60 * 60 * 1000;
-                if (isDataFresh && progressData.testId === testIdNum) {
-                    return progressData.userAnswers;
-                }
-            } catch (error) {
-                console.error('Ошибка при восстановлении прогресса:', error);
+    useEffect(() => {
+        if (!testData) return;
+
+        // Проверяем есть ли активная сессия для этого теста
+        const session = sessionUtils.getSessionForTest(testIdNum);
+
+        if (session && session.status === 'active') {
+            setActiveSession(session);
+            setCurrentQuestionIndex(session.currentQuestionIndex);
+            setUserAnswers(session.userAnswers || {});
+
+            // Если сессия только что создана, не показываем модалку
+            if (session.currentQuestionIndex > 0 || Object.keys(session.userAnswers || {}).length > 0) {
+                setShowContinueModal(true);
             }
+        } else {
+            // Создаем новую сессию если нет активной
+            const newSession = sessionUtils.createSession(testIdNum, testData.title);
+            setActiveSession(newSession);
         }
-        return {};
-    });
+
+        setIsInitialized(true);
+    }, [testIdNum, testData]);
+
+    if (!testData || !isInitialized) {
+        return (
+            <>
+                <Header />
+                <Container>
+                    <Text>Тест не найден или загружается...</Text>
+                </Container>
+            </>
+        );
+    }
 
     const currentQuestion = testData.questions[currentQuestionIndex];
     const totalQuestions = testData.questions.length;
     const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
 
-    useEffect(() => {
-        const progressData = {
-            testId: testIdNum,
-            currentQuestionIndex,
-            userAnswers,
-            timestamp: Date.now()
-        };
-        localStorage.setItem(`testProgress_${testIdNum}`, JSON.stringify(progressData));
-    }, [currentQuestionIndex, userAnswers, testIdNum]);
-
-    if (!testData) {
-        return <div>Тест не найден</div>;
-    }
-
     const handleSelectAnswer = (answerIndex: number) => {
-        setUserAnswers({
+        const newAnswers = {
             ...userAnswers,
             [currentQuestion.id]: answerIndex
-        });
+        };
+        setUserAnswers(newAnswers);
+
+        // Сохраняем прогресс в сессию
+        if (activeSession) {
+            sessionUtils.updateSessionProgress(activeSession.id, {
+                currentQuestionIndex,
+                userAnswers: newAnswers
+            });
+        }
     };
 
     const handleNextQuestion = () => {
@@ -332,7 +340,16 @@ const TestingPage: React.FC = () => {
         }
 
         if (currentQuestionIndex < totalQuestions - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            const newIndex = currentQuestionIndex + 1;
+            setCurrentQuestionIndex(newIndex);
+
+            // Обновляем прогресс в сессии
+            if (activeSession) {
+                sessionUtils.updateSessionProgress(activeSession.id, {
+                    currentQuestionIndex: newIndex,
+                    userAnswers
+                });
+            }
         } else {
             calculateAndNavigateToResults();
         }
@@ -340,21 +357,33 @@ const TestingPage: React.FC = () => {
 
     const handlePreviousQuestion = () => {
         if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(currentQuestionIndex - 1);
+            const newIndex = currentQuestionIndex - 1;
+            setCurrentQuestionIndex(newIndex);
+
+            if (activeSession) {
+                sessionUtils.updateSessionProgress(activeSession.id, {
+                    currentQuestionIndex: newIndex,
+                    userAnswers
+                });
+            }
         }
+    };
+
+    const handleContinueSession = () => {
+        setShowContinueModal(false);
     };
 
     const handleRestartTest = () => {
         if (window.confirm('Вы уверены, что хотите начать тест заново? Весь ваш прогресс будет потерян.')) {
+            const newSession = sessionUtils.restartTest(testIdNum, testData.title);
+            setActiveSession(newSession);
             setCurrentQuestionIndex(0);
             setUserAnswers({});
-            localStorage.removeItem(`testProgress_${testIdNum}`);
+            setShowContinueModal(false);
         }
     };
 
     const calculateAndNavigateToResults = () => {
-        localStorage.removeItem(`testProgress_${testIdNum}`);
-
         let totalScore = 0;
         const maxPossibleScore = totalQuestions * 3;
 
@@ -371,29 +400,65 @@ const TestingPage: React.FC = () => {
             testTitle: testData.title,
             category: testData.category,
             percentile: percentile,
-            userAnswers
+            userAnswers,
+            sessionId: activeSession?.id
         };
+
+        // Завершаем сессию
+        if (activeSession) {
+            sessionUtils.completeSession(activeSession.id, {
+                percentile,
+                category: testData.category
+            });
+        }
 
         navigate(`/result`, { state: resultsData });
     };
 
-    const hasSavedProgress = Object.keys(userAnswers).length > 0 || currentQuestionIndex > 0;
+    const hasProgress = currentQuestionIndex > 0 || Object.keys(userAnswers).length > 0;
 
     return (
         <>
             <Header />
             <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
+
+                {/* Модальное окно продолжения теста */}
+                <Modal
+                    opened={showContinueModal}
+                    onClose={() => setShowContinueModal(false)}
+                    title="Продолжить тест?"
+                    centered
+                >
+                    <Stack>
+                        <Text>
+                            Вы уже начинали этот тест. Хотите продолжить с того места, где остановились,
+                            или начать заново?
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                            Пройдено вопросов: {currentQuestionIndex} из {totalQuestions}
+                        </Text>
+                        <Group justify="center">
+                            <Button
+                                onClick={handleContinueSession}
+                                variant="filled"
+                            >
+                                Продолжить
+                            </Button>
+                            <Button
+                                onClick={handleRestartTest}
+                                variant="outline"
+                            >
+                                Начать заново
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Modal>
+
                 <div style={{ textAlign: 'center', color: 'white', marginBottom: '40px' }}>
                     <Title order={1}>{testData.title}</Title>
                     <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
                         {testData.category}
                     </Text>
-
-                    {hasSavedProgress && (
-                        <Badge color="green" variant="light" size="lg" style={{ marginTop: '10px' }}>
-                            🔄 Прогресс восстановлен
-                        </Badge>
-                    )}
                 </div>
 
                 <Card shadow="md" p="xl" style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px' }}>
@@ -484,16 +549,6 @@ const TestingPage: React.FC = () => {
                             >
                                 ← Назад
                             </Button>
-
-                            {hasSavedProgress && (
-                                <Button
-                                    variant="outline"
-                                    color="red"
-                                    onClick={handleRestartTest}
-                                >
-                                    🔄 Начать заново
-                                </Button>
-                            )}
                         </Group>
 
                         <Button

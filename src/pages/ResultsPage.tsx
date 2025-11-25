@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -12,6 +12,7 @@ import {
     RingProgress,
 } from '@mantine/core';
 import Header from '../components/Header';
+import {sessionUtils} from "../../test-utils/sessionUtils";
 
 interface AnalysisResult {
     resultLevel: 'low' | 'medium' | 'high';
@@ -20,6 +21,7 @@ interface AnalysisResult {
     recommendations: string[];
     suggestedActions: string[];
 }
+
 
 const analysisTemplates: { [key: string]: AnalysisResult } = {
     'Тест на уровень стресса': {
@@ -245,6 +247,19 @@ const ResultsPage: React.FC = () => {
     const navigate = useNavigate();
     const resultsData = location.state;
 
+    // Получаем историю сессий для этого теста
+    const [testSessions, setTestSessions] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (resultsData?.testId) {
+            const allSessions = sessionUtils.getAllSessions();
+            const testSessions = allSessions
+                .filter(session => session.testId === resultsData.testId)
+                .sort((a, b) => b.startedAt - a.startedAt);
+            setTestSessions(testSessions);
+        }
+    }, [resultsData?.testId]);
+
     if (!resultsData) {
         return (
             <Container>
@@ -256,7 +271,6 @@ const ResultsPage: React.FC = () => {
 
     const { testId, testTitle, category, percentile } = resultsData;
     const analysis = analysisTemplates[testTitle] || analysisTemplates['Тест на уровень стресса'];
-
     const getRiskColor = () => {
         if (analysis.resultLevel === 'high') return 'teal';
         if (analysis.resultLevel === 'medium') return 'yellow';
@@ -280,9 +294,10 @@ const ResultsPage: React.FC = () => {
                         📊 Ваши результаты
                     </Title>
                     <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                         {testTitle}
+                        {testTitle}
                     </Text>
                 </div>
+
 
                 {/* Результат с процентилем */}
                 <Card
