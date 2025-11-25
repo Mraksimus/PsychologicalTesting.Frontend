@@ -47,16 +47,56 @@ const testsData: { [key: number]: TestDataType } = {
         title: 'Тест на эмоциональный интеллект',
         category: 'Психология',
         questions: [
-            { id: 1, text: 'Как вы реагируете на конструктивную критику?', options: ['Внимательно слушаю и учусь', 'Сначала обижаюсь, потом анализирую', 'Становлюсь защитным', 'Игнорирую полностью'] },
-            { id: 2, text: 'Насколько хорошо вы распознаете эмоции других людей?', options: ['Отлично - замечаю малейшие изменения', 'Хорошо - обычно понимаю', 'Удовлетворительно', 'Плохо - часто не замечаю'] },
-            { id: 3, text: 'Как вы управляете своими эмоциями в конфликтной ситуации?', options: ['Спокойно и конструктивно', 'Стараюсь оставаться спокойным', 'Теряю над собой контроль', 'Ухожу от ситуации'] },
-            { id: 4, text: 'Как хорошо вы понимаете свои собственные эмоции?', options: ['Очень хорошо - четко их разбираю', 'Хорошо обычно', 'Иногда теряюсь', 'Часто не понимаю, что чувствую'] },
-            { id: 5, text: 'Умеете ли вы адаптировать свое поведение к другим людям?', options: ['Легко адаптируюсь', 'Обычно адаптируюсь', 'Иногда сложно', 'Предпочитаю быть собой'] },
-            { id: 6, text: 'Насколько вы эмпатичны к чувствам других?', options: ['Очень - часто сопереживаю', 'Достаточно', 'Средне', 'Слабо - фокусируюсь на себе'] },
-            { id: 7, text: 'Как часто вы размышляете о свои чувствах и поведении?', options: ['Постоянно', 'Регулярно', 'Иногда', 'Редко или никогда'] },
-            { id: 8, text: 'Способны ли вы эффективно общаться при высоком эмоциональном напряжении?', options: ['Да, сохраняю ясность', 'Обычно удается', 'Иногда теряюсь', 'Нет, становлюсь нерациональным'] },
-            { id: 9, text: 'Как вы помогаете близким людям справляться с эмоциями?', options: ['Активно слушаю и поддерживаю', 'Стараюсь помочь', 'Затрудняюсь с этим', 'Предпочитаю не вмешиваться'] },
-            { id: 10, text: 'Насколько вы мотивированы своими эмоциями?', options: ['Позитивно мотивирован эмоциями', 'Обычно хорошо', 'Иногда теряю мотивацию', 'Часто неконтролируемо'] }
+            {
+                id: 1,
+                text: 'Как вы реагируете на конструктивную критику?',
+                options: ['Внимательно слушаю и учусь', 'Сначала обижаюсь, потом анализирую', 'Становлюсь защитным', 'Игнорирую полностью']
+            },
+            {
+                id: 2,
+                text: 'Насколько хорошо вы распознаете эмоции других людей?',
+                options: ['Отлично - замечаю малейшие изменения', 'Хорошо - обычно понимаю', 'Удовлетворительно', 'Плохо - часто не замечаю']
+            },
+            {
+                id: 3,
+                text: 'Как вы управляете своими эмоциями в конфликтной ситуации?',
+                options: ['Спокойно и конструктивно', 'Стараюсь оставаться спокойным', 'Теряю над собой контроль', 'Ухожу от ситуации']
+            },
+            {
+                id: 4,
+                text: 'Как хорошо вы понимаете свои собственные эмоции?',
+                options: ['Очень хорошо - четко их разбираю', 'Хорошо обычно', 'Иногда теряюсь', 'Часто не понимаю, что чувствую']
+            },
+            {
+                id: 5,
+                text: 'Умеете ли вы адаптировать свое поведение к другим людям?',
+                options: ['Легко адаптируюсь', 'Обычно адаптируюсь', 'Иногда сложно', 'Предпочитаю быть собой']
+            },
+            {
+                id: 6,
+                text: 'Насколько вы эмпатичны к чувствам других?',
+                options: ['Очень - часто сопереживаю', 'Достаточно', 'Средне', 'Слабо - фокусируюсь на себе']
+            },
+            {
+                id: 7,
+                text: 'Как часто вы размышляете о своих чувствах и поведении?',
+                options: ['Постоянно', 'Регулярно', 'Иногда', 'Редко или никогда']
+            },
+            {
+                id: 8,
+                text: 'Способны ли вы эффективно общаться при высоком эмоциональном напряжении?',
+                options: ['Да, сохраняю ясность', 'Обычно удается', 'Иногда теряюсь', 'Нет, становлюсь нерациональным']
+            },
+            {
+                id: 9,
+                text: 'Как вы помогаете близким людям справляться с эмоциями?',
+                options: ['Активно слушаю и поддерживаю', 'Стараюсь помочь', 'Затрудняюсь с этим', 'Предпочитаю не вмешиваться']
+            },
+            {
+                id: 10,
+                text: 'Насколько вы мотивированы своими эмоциями?',
+                options: ['Позитивно мотивирован эмоциями', 'Обычно хорошо', 'Иногда теряю мотивацию', 'Часто неконтролируемо']
+            }
         ]
     },
     3: {
@@ -224,38 +264,55 @@ const testsData: { [key: number]: TestDataType } = {
 const TestingPage: React.FC = () => {
     const { testId } = useParams<{ testId: string }>();
     const navigate = useNavigate();
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
 
     const testIdNum = parseInt(testId || '1');
     const testData = testsData[testIdNum];
+
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
+        const savedProgress = localStorage.getItem(`testProgress_${testIdNum}`);
+        if (savedProgress) {
+            try {
+                const progressData = JSON.parse(savedProgress);
+                const isDataFresh = Date.now() - progressData.timestamp < 24 * 60 * 60 * 1000;
+                if (isDataFresh && progressData.testId === testIdNum) {
+                    return progressData.currentQuestionIndex;
+                }
+            } catch (error) {
+                console.error('Ошибка при восстановлении прогресса:', error);
+            }
+        }
+        return 0;
+    });
+
+    const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>(() => {
+        const savedProgress = localStorage.getItem(`testProgress_${testIdNum}`);
+        if (savedProgress) {
+            try {
+                const progressData = JSON.parse(savedProgress);
+                const isDataFresh = Date.now() - progressData.timestamp < 24 * 60 * 60 * 1000;
+                if (isDataFresh && progressData.testId === testIdNum) {
+                    return progressData.userAnswers;
+                }
+            } catch (error) {
+                console.error('Ошибка при восстановлении прогресса:', error);
+            }
+        }
+        return {};
+    });
+
     const currentQuestion = testData.questions[currentQuestionIndex];
     const totalQuestions = testData.questions.length;
     const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
 
-    // Сохранение прогресса
     useEffect(() => {
-        const progress = {
+        const progressData = {
             testId: testIdNum,
             currentQuestionIndex,
             userAnswers,
             timestamp: Date.now()
         };
-        localStorage.setItem(`testProgress_${testIdNum}`, JSON.stringify(progress));
+        localStorage.setItem(`testProgress_${testIdNum}`, JSON.stringify(progressData));
     }, [currentQuestionIndex, userAnswers, testIdNum]);
-
-    // Восстановление прогресса
-    useEffect(() => {
-        const savedProgress = localStorage.getItem(`testProgress_${testIdNum}`);
-        if (savedProgress) {
-            const progress = JSON.parse(savedProgress);
-            // Предлагаем продолжить если прошло меньше 1 часа
-            if (Date.now() - progress.timestamp < 3600000) {
-                setCurrentQuestionIndex(progress.currentQuestionIndex);
-                setUserAnswers(progress.userAnswers);
-            }
-        }
-    }, [testIdNum]);
 
     if (!testData) {
         return <div>Тест не найден</div>;
@@ -287,31 +344,40 @@ const TestingPage: React.FC = () => {
         }
     };
 
+    const handleRestartTest = () => {
+        if (window.confirm('Вы уверены, что хотите начать тест заново? Весь ваш прогресс будет потерян.')) {
+            setCurrentQuestionIndex(0);
+            setUserAnswers({});
+            localStorage.removeItem(`testProgress_${testIdNum}`);
+        }
+    };
+
     const calculateAndNavigateToResults = () => {
-        // Правильно считаем результаты (0 = лучший ответ, 3 = худший)
+        localStorage.removeItem(`testProgress_${testIdNum}`);
+
         let totalScore = 0;
-        const maxPossibleScore = totalQuestions * 3; // 3 балла за каждый вопрос
+        const maxPossibleScore = totalQuestions * 3;
 
         testData.questions.forEach(question => {
             const userAnswer = userAnswers[question.id];
-            // Инвертируем: 0 → 3 балла, 1 → 2 балла, 2 → 1 балл, 3 → 0 баллов
-            const questionScore = 3 - userAnswer;
+            const questionScore = 3 - (userAnswer || 0);
             totalScore += questionScore;
         });
 
-        // Считаем процентиль (0-100%)
         const percentile = Math.round((totalScore / maxPossibleScore) * 100);
 
         const resultsData = {
             testId: testIdNum,
             testTitle: testData.title,
             category: testData.category,
-            percentile: percentile,  // ← используем процентиль вместо score
+            percentile: percentile,
             userAnswers
         };
 
-        navigate(`/result`, { state: resultsData });  // ← измененный маршрут
+        navigate(`/result`, { state: resultsData });
     };
+
+    const hasSavedProgress = Object.keys(userAnswers).length > 0 || currentQuestionIndex > 0;
 
     return (
         <>
@@ -322,6 +388,12 @@ const TestingPage: React.FC = () => {
                     <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
                         {testData.category}
                     </Text>
+
+                    {hasSavedProgress && (
+                        <Badge color="green" variant="light" size="lg" style={{ marginTop: '10px' }}>
+                            🔄 Прогресс восстановлен
+                        </Badge>
+                    )}
                 </div>
 
                 <Card shadow="md" p="xl" style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px' }}>
@@ -361,7 +433,8 @@ const TestingPage: React.FC = () => {
                                             ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                                             : 'white',
                                         cursor: 'pointer',
-                                        transition: 'all 0.3s ease'
+                                        transition: 'all 0.3s ease',
+                                        transform: userAnswers[currentQuestion.id] === index ? 'scale(1.02)' : 'scale(1)'
                                     }}
                                     onClick={() => handleSelectAnswer(index)}
                                     withBorder
@@ -403,13 +476,26 @@ const TestingPage: React.FC = () => {
                     </Stack>
 
                     <Group justify="space-between" mt="xl">
-                        <Button
-                            variant="light"
-                            disabled={currentQuestionIndex === 0}
-                            onClick={handlePreviousQuestion}
-                        >
-                            ← Назад
-                        </Button>
+                        <Group>
+                            <Button
+                                variant="light"
+                                disabled={currentQuestionIndex === 0}
+                                onClick={handlePreviousQuestion}
+                            >
+                                ← Назад
+                            </Button>
+
+                            {hasSavedProgress && (
+                                <Button
+                                    variant="outline"
+                                    color="red"
+                                    onClick={handleRestartTest}
+                                >
+                                    🔄 Начать заново
+                                </Button>
+                            )}
+                        </Group>
+
                         <Button
                             gradient={{ from: 'blue', to: 'cyan' }}
                             onClick={handleNextQuestion}

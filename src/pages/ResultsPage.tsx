@@ -11,7 +11,6 @@ import {
     Badge,
     RingProgress,
 } from '@mantine/core';
-import { IconDownload, IconTrendingUp } from '@tabler/icons-react';
 import Header from '../components/Header';
 
 interface AnalysisResult {
@@ -255,7 +254,7 @@ const ResultsPage: React.FC = () => {
         );
     }
 
-    const { testId, testTitle, category } = resultsData;
+    const { testId, testTitle, category, percentile } = resultsData;
     const analysis = analysisTemplates[testTitle] || analysisTemplates['Тест на уровень стресса'];
 
     const getRiskColor = () => {
@@ -271,14 +270,17 @@ const ResultsPage: React.FC = () => {
     };
 
     return (
-        <div style={{ background: 'white', minHeight: '100vh' }}>
+        <>
             <Header />
             <Container size="xl" style={{ padding: '40px 0' }}>
 
                 {/* Заголовок */}
-                <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                    <Text size="lg" style={{ color: '#666', marginTop: '10px' }}>
-                        Тест: {testTitle}
+                <div style={{ textAlign: 'center', color: 'white', marginBottom: '50px' }}>
+                    <Title order={1} style={{ color: 'white', fontSize: '2.5rem', marginBottom: '10px' }}>
+                        📊 Ваши результаты
+                    </Title>
+                    <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                         {testTitle}
                     </Text>
                 </div>
 
@@ -288,28 +290,28 @@ const ResultsPage: React.FC = () => {
                     p="xl"
                     mb="xl"
                     style={{
-                        background: '#f8f9ff',
+                        background: 'rgba(255,255,255,0.95)',
                         borderRadius: '16px',
                         border: '1px solid #e8e8f0'
                     }}
                 >
                     <Group justify="space-between" align="flex-start">
                         <div>
-                            <Title order={2} size="h2">{getRiskLabel()}</Title>
+                            <Title order={2} size="h2" style={{ color: '#333' }}>{getRiskLabel()}</Title>
                             <Badge size="lg" color={getRiskColor()} mt="md">
                                 {category}
                             </Badge>
                             <Text size="md" style={{ color: '#666', marginTop: '15px' }}>
-                                Процентиль: <strong>{analysis.percentile}%</strong>
+                                Процентиль: <strong style={{ color: '#333' }}>{percentile}%</strong>
                             </Text>
                         </div>
 
                         <RingProgress
-                            sections={[{ value: analysis.percentile, color: getRiskColor() }]}
+                            sections={[{ value: percentile, color: getRiskColor() }]}
                             label={
                                 <div style={{ textAlign: 'center' }}>
-                                    <Text size="xl" fw={700}>{analysis.percentile}%</Text>
-                                    <Text size="xs" c="dimmed">Процентиль</Text>
+                                    <Text size="xl" fw={700} style={{ color: '#333' }}>{percentile}%</Text>
+                                    <Text size="xs" style={{ color: '#666' }}>Процентиль</Text>
                                 </div>
                             }
                             thickness={8}
@@ -324,7 +326,7 @@ const ResultsPage: React.FC = () => {
                     p="xl"
                     mb="xl"
                     style={{
-                        background: '#f8f9ff',
+                        background: 'rgba(255,255,255,0.95)',
                         borderRadius: '16px',
                         border: '1px solid #e8e8f0',
                         borderLeft: '4px solid #667eea'
@@ -332,7 +334,7 @@ const ResultsPage: React.FC = () => {
                 >
                     <Group mb="lg">
                         <span style={{ fontSize: '1.4rem' }}>🔵</span>
-                        <Title order={3} style={{ margin: 0 }}>AI Анализ</Title>
+                        <Title order={3} style={{ margin: 0, color: '#333' }}>AI Анализ</Title>
                     </Group>
                     <Text style={{ color: '#333', lineHeight: 1.8, fontSize: '15px' }}>
                         {analysis.mainFindings}
@@ -344,7 +346,7 @@ const ResultsPage: React.FC = () => {
                     shadow="md"
                     p="xl"
                     style={{
-                        background: '#f8f9ff',
+                        background: 'rgba(255,255,255,0.95)',
                         borderRadius: '16px',
                         border: '1px solid #e8e8f0'
                     }}
@@ -373,7 +375,7 @@ const ResultsPage: React.FC = () => {
                     </Stack>
                 </Card>
             </Container>
-        </div>
+        </>
     );
 };
 
