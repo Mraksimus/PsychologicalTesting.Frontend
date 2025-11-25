@@ -9,6 +9,8 @@ import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import TestsPage from "@/pages/TestPage";
+import TestingPage from "@/pages/TestingPage";
+import ResultsPage from "@/pages/ResultsPage";
 
 // Компоненты
 import Header from "./components/Header";
@@ -43,8 +45,27 @@ const Layout: React.FC = () => {
                         <ProfilePage />
                     </ProtectedRoute>
                 } />
+                <Route path="/tests" element={
+                    <ProtectedRoute>
+                        <TestsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/test/:testId" element={
+                    <ProtectedRoute>
+                        <TestingPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/test/:testId/results" element={
+                    <ProtectedRoute>
+                        <ResultsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/result" element={
+                    <ProtectedRoute>
+                        <ResultsPage />
+                    </ProtectedRoute>
+                } />
                 <Route path="*" element={<Navigate to="/home" replace />} />
-                <Route path="/tests" element={<TestsPage />} />
             </Routes>
         </>
     );
