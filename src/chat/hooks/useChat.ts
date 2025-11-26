@@ -1,20 +1,66 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ChatApiService } from '../services/chatApi';
 import { ChatMessage } from '@/types';
-import { isAuthenticated } from '@/api/auth';
+import { isAuthenticated, logout } from '@/api/auth';
 
 export interface UseChatReturn {
     messages: ChatMessage[];
     sendMessage: (text: string) => Promise<void>;
     isLoading: boolean;
+    isLoadingHistory: boolean;
     error: string | null;
     clearMessages: () => void;
+    loadHistory: () => Promise<void>;
 }
 
 export const useChat = (): UseChatReturn => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Загрузка истории сообщений
+    const loadHistory = useCallback(async () => {
+        if (!isAuthenticated()) {
+            return;
+        }
+
+        setIsLoadingHistory(true);
+        setError(null);
+
+        try {
+            const history = await ChatApiService.getHistory();
+
+            // Преобразуем историю в наш формат
+            const historyMessages: ChatMessage[] = history.map((item, index) => ({
+                id: index + 1,
+                text: item.content,
+                isUser: item.role === 'USER',
+                timestamp: new Date() // Используем текущее время, так как API не предоставляет временные метки
+            }));
+
+            setMessages(historyMessages);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки истории';
+
+            // Если ошибка 401 - разлогиниваем пользователя
+            if (errorMessage.includes('401')) {
+                logout();
+                setError('Сессия истекла. Пожалуйста, войдите снова.');
+            } else {
+                setError(errorMessage);
+            }
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    }, []);
+
+    // Загружаем историю при монтировании
+    useEffect(() => {
+        if (isAuthenticated()) {
+            loadHistory();
+        }
+    }, [loadHistory]);
 
     const sendMessage = useCallback(async (text: string) => {
         if (!isAuthenticated()) {
@@ -47,16 +93,23 @@ export const useChat = (): UseChatReturn => {
             setMessages(prev => [...prev, botMessage]);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка при отправке сообщения';
-            setError(errorMessage);
 
-            const errorResponse: ChatMessage = {
-                id: Date.now() + 1,
-                text: `Извините, произошла ошибка: ${errorMessage}. Пожалуйста, попробуйте еще раз.`,
-                isUser: false,
-                timestamp: new Date(),
-            };
+            // Если ошибка 401 - разлогиниваем пользователя
+            if (errorMessage.includes('401')) {
+                logout();
+                setError('Сессия истекла. Пожалуйста, войдите снова.');
+            } else {
+                setError(errorMessage);
 
-            setMessages(prev => [...prev, errorResponse]);
+                const errorResponse: ChatMessage = {
+                    id: Date.now() + 1,
+                    text: `Извините, произошла ошибка: ${errorMessage}. Пожалуйста, попробуйте еще раз.`,
+                    isUser: false,
+                    timestamp: new Date(),
+                };
+
+                setMessages(prev => [...prev, errorResponse]);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -71,7 +124,9 @@ export const useChat = (): UseChatReturn => {
         messages,
         sendMessage,
         isLoading,
+        isLoadingHistory,
         error,
         clearMessages,
+        loadHistory,
     };
 };
