@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -14,7 +13,7 @@ const Header: React.FC = () => {
         navigate(path);
     };
 
-    // Mock данные пользователя (в реальном приложении это будет из контекста или store)
+    // Mock данные пользователя
     const currentUser = {
         fullName: 'Иванов Иван Иванович'
     };
@@ -137,32 +136,45 @@ const Header: React.FC = () => {
                             </li>
                             <li>
                                 <button
-                                    onClick={() => handleNavigation('/about')}
+                                    onClick={() => {
+                                        // ✅ Если на главной - скроллим к якорю
+                                        if (location.pathname === '/home') {
+                                            const element = document.getElementById('about');
+                                            if (element) {
+                                                element.scrollIntoView({ behavior: 'smooth' });
+                                            }
+                                        } else {
+                                            // Если на другой странице - идем на главную и скроллим
+                                            navigate('/home');
+                                            setTimeout(() => {
+                                                const element = document.getElementById('about');
+                                                if (element) {
+                                                    element.scrollIntoView({ behavior: 'smooth' });
+                                                }
+                                            }, 100);
+                                        }
+                                    }}
                                     style={{
                                         background: 'none',
                                         border: 'none',
                                         textDecoration: 'none',
-                                        color: isActivePage('/about') ? '#007bff' : '#333',
+                                        color: '#333',
                                         fontWeight: '500',
                                         transition: 'all 0.3s',
                                         cursor: 'pointer',
                                         fontSize: '1rem',
                                         padding: '0.5rem 1rem',
                                         borderRadius: '6px',
-                                        backgroundColor: isActivePage('/about') ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
+                                        backgroundColor: 'transparent',
                                         whiteSpace: 'nowrap'
                                     }}
                                     onMouseEnter={(e) => {
-                                        if (!isActivePage('/about')) {
-                                            e.currentTarget.style.color = '#007bff';
-                                            e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
-                                        }
+                                        e.currentTarget.style.color = '#007bff';
+                                        e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
                                     }}
                                     onMouseLeave={(e) => {
-                                        if (!isActivePage('/about')) {
-                                            e.currentTarget.style.color = '#333';
-                                            e.currentTarget.style.backgroundColor = 'transparent';
-                                        }
+                                        e.currentTarget.style.color = '#333';
+                                        e.currentTarget.style.backgroundColor = 'transparent';
                                     }}
                                 >
                                     О проекте
@@ -206,7 +218,7 @@ const Header: React.FC = () => {
                             {currentUser.fullName}
                         </div>
 
-                        {/* Кнопка профиля (иконка человечка) */}
+                        {/* Кнопка профиля */}
                         <button
                             onClick={handleProfileClick}
                             style={{
