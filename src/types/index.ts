@@ -21,7 +21,7 @@ export interface PopupState {
     testId: number | null;
 }
 
-export interface Message {
+export interface ChatMessage {
     id: number;
     text: string;
     isUser: boolean;
