@@ -8,7 +8,6 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import TestsPage from "@/pages/TestPage";
 import TestingPage from "@/pages/TestingPage";
 import ResultsPage from "@/pages/ResultsPage";
 
@@ -22,6 +21,7 @@ import { theme } from "./theme";
 // Стили
 import "./styles/Background.css";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import TestPage from "@/pages/TestPage";
 
 // Компонент для условного отображения Header
 const Layout: React.FC = () => {
@@ -47,7 +47,7 @@ const Layout: React.FC = () => {
                 } />
                 <Route path="/tests" element={
                     <ProtectedRoute>
-                        <TestsPage />
+                        <TestPage />
                     </ProtectedRoute>
                 } />
                 <Route path="/test/:testId" element={
