@@ -1,155 +1,120 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
+import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser, isAuthenticated } from "@/api/auth";
 
-// Пропсы для модального окна аутентификации
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface User {
+    id: string;
+    email: string;
 }
 
-// Компонент модального окна для входа и регистрации
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const [isLogin, setIsLogin] = useState<boolean>(true);
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [formError, setFormError] = useState<string>('');
+interface AuthContextType {
+    user: User | null;
+    isLoading: boolean;
+    loading: boolean;
+    error: string | null;
+    login: (email: string, password: string) => Promise<void>;
+    register: (name: string, surname: string, patronymic?: string, email?: string, password?: string) => Promise<void>;
+    logout: () => void;
+}
 
-  const { login, register, loading, error } = useAuth();
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-  // Обработчик отправки формы
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Валидация
-    if (!email || !password) {
-      setFormError('Все поля обязательны для заполнения');
-      return;
-    }
+    const checkAuth = useCallback(async () => {
+        try {
+            if (isAuthenticated()) {
+                const currentUser = await getCurrentUser();
+                setUser(currentUser);
+            } else {
+                setUser(null);
+            }
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            setUser(null);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-    if (!isLogin && password !== confirmPassword) {
-      setFormError('Пароли не совпадают');
-      return;
-    }
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
 
-    try {
-      if (isLogin) {
-        await login(email, password);
-        onClose(); // Закрываем модальное окно после успешного входа
-        resetForm();
-      } else {
-        await register(email, password);
-        onClose(); // Закрываем модальное окно после успешной регистрации
-        resetForm();
-      }
-    } catch (err) {
-      // Ошибка уже обработана в контексте
-      console.error('Ошибка аутентификации:', err);
-    }
-  };
+    const login = async (email: string, password: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            await apiLogin(email, password);
+            await checkAuth();
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при входе';
+            setError(errorMessage);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  // Сброс формы
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setFormError('');
-  };
+    // ✅ ОБНОВЛЕНО: register принимает оба варианта
+    const register = async (
+        nameOrEmail: string,
+        surnameOrPassword: string,
+        patronymic?: string,
+        email?: string,
+        password?: string
+    ) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Если передано только 2 параметра (email, password)
+            if (!email && !password) {
+                await apiRegister('User', '', undefined, nameOrEmail, surnameOrPassword);
+            } else {
+                // Если передано 5 параметров (name, surname, patronymic, email, password)
+                await apiRegister(nameOrEmail, surnameOrPassword, patronymic, email!, password!);
+            }
+            await checkAuth();
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при регистрации';
+            setError(errorMessage);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  // Переключение между входом и регистрацией
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setFormError('');
-  };
+    const logout = () => {
+        apiLogout();
+        setUser(null);
+        setError(null);
+    };
 
-  // Закрытие модального окна
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    const value = {
+        user,
+        isLoading,
+        loading: isLoading,
+        error,
+        login,
+        register,
+        logout,
+    };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>{isLogin ? 'Вход в аккаунт' : 'Регистрация'}</h2>
-          <button className="close-button" onClick={handleClose}>×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          {/* Поле email */}
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Введите ваш email"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Поле пароля */}
-          <div className="form-group">
-            <label htmlFor="password">Пароль</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Введите пароль"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Подтверждение пароля (только для регистрации) */}
-          {!isLogin && (
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Подтвердите пароль</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Повторите пароль"
-                disabled={loading}
-              />
-            </div>
-          )}
-
-          {/* Ошибки */}
-          {(formError || error) && (
-            <div className="error-message">
-              {formError || error}
-            </div>
-          )}
-
-          {/* Кнопка отправки */}
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={loading}
-          >
-            {loading ? 'Загрузка...' : (isLogin ? 'Войти' : 'Зарегистрироваться')}
-          </button>
-        </form>
-
-        {/* Переключение между входом и регистрацией */}
-        <div className="auth-toggle">
-          <p>
-            {isLogin ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}
-            <button type="button" onClick={toggleMode} className="toggle-button">
-              {isLogin ? ' Зарегистрироваться' : ' Войти'}
-            </button>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
-export default AuthModal;
+export const useAuth = (): AuthContextType => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+};
+
+export default AuthContext;

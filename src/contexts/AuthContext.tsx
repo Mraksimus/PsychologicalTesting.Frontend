@@ -9,6 +9,8 @@ interface User {
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
+    loading: boolean;
+    error: string | null;
     login: (email: string, password: string) => Promise<void>;
     register: (name: string, surname: string, patronymic: string | undefined, email: string, password: string) => Promise<void>;
     logout: () => void;
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const checkAuth = useCallback(async () => {
         try {
@@ -42,10 +45,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
         setIsLoading(true);
+        setError(null);  // ✅ ОЧИСТКА ОШИБОК
         try {
             await apiLogin(email, password);
             await checkAuth();
         } catch (error: any) {
+            const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при входе';
+            setError(errorMessage);
             throw error;
         } finally {
             setIsLoading(false);
@@ -54,10 +60,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const register = async (name: string, surname: string, patronymic: string | undefined, email: string, password: string) => {
         setIsLoading(true);
+        setError(null);
         try {
             await apiRegister(name, surname, patronymic, email, password);
             await checkAuth();
         } catch (error: any) {
+            const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка при регистрации';
+            setError(errorMessage);
             throw error;
         } finally {
             setIsLoading(false);
@@ -67,11 +76,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = () => {
         apiLogout();
         setUser(null);
+        setError(null);
     };
 
     const value = {
         user,
         isLoading,
+        loading: isLoading,
+        error,
         login,
         register,
         logout,
