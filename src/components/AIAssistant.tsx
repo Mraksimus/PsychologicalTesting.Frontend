@@ -1,21 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { isAuthenticated } from '@/api/auth';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {useChat} from "@/chat/hooks/useChat";
 
 const AIAssistant: React.FC = () => {
     const { messages, sendMessage, isLoading, isLoadingHistory, error } = useChat();
     const [inputMessage, setInputMessage] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+    // Автоматическая прокрутка к последнему сообщению при изменении сообщений
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [messages, isLoading]);
 
     const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
-
-        await sendMessage(inputMessage);
         setInputMessage('');
+        await sendMessage(inputMessage);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -32,8 +36,81 @@ const AIAssistant: React.FC = () => {
         "Как улучшить психическое здоровье?"
     ];
 
-    const handleQuickQuestion = (question: string) => {
-        setInputMessage(question);
+    const handleQuickQuestion = async(question: string) => {
+        await sendMessage(question);
+    };
+
+    // Компоненты для кастомизации Markdown
+    const MarkdownComponents = {
+        p: ({ children }: any) => <p style={{ margin: '0 0 8px 0', lineHeight: '1.5' }}>{children}</p>,
+        h1: ({ children }: any) => <h1 style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: '16px 0 8px 0', color: '#2c3e50' }}>{children}</h1>,
+        h2: ({ children }: any) => <h2 style={{ fontSize: '1.3rem', fontWeight: 'bold', margin: '14px 0 7px 0', color: '#2c3e50' }}>{children}</h2>,
+        h3: ({ children }: any) => <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '12px 0 6px 0', color: '#2c3e50' }}>{children}</h3>,
+        ul: ({ children }: any) => <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>{children}</ul>,
+        ol: ({ children }: any) => <ol style={{ paddingLeft: '20px', margin: '8px 0' }}>{children}</ol>,
+        li: ({ children }: any) => <li style={{ margin: '4px 0', lineHeight: '1.4' }}>{children}</li>,
+        strong: ({ children }: any) => <strong style={{ fontWeight: 'bold', color: '#2c3e50' }}>{children}</strong>,
+        em: ({ children }: any) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
+        blockquote: ({ children }: any) => (
+            <blockquote style={{
+                borderLeft: '4px solid #007bff',
+                paddingLeft: '12px',
+                margin: '12px 0',
+                color: '#666',
+                fontStyle: 'italic'
+            }}>
+                {children}
+            </blockquote>
+        ),
+        code: ({ children, inline }: any) => {
+            if (inline) {
+                return <code style={{
+                    background: '#f8f9fa',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace',
+                    fontSize: '0.9em',
+                    color: '#e83e8c'
+                }}>{children}</code>;
+            }
+            return (
+                <pre style={{
+                    background: '#f8f9fa',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    overflow: 'auto',
+                    margin: '12px 0',
+                    fontSize: '0.9em',
+                    lineHeight: '1.4'
+                }}>
+                    <code>{children}</code>
+                </pre>
+            );
+        },
+        hr: () => <hr style={{ border: 'none', borderTop: '1px solid #e9ecef', margin: '16px 0' }} />,
+        table: ({ children }: any) => (
+            <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                margin: '12px 0',
+                fontSize: '0.9em'
+            }}>{children}</table>
+        ),
+        th: ({ children }: any) => (
+            <th style={{
+                border: '1px solid #dee2e6',
+                padding: '8px',
+                background: '#f8f9fa',
+                fontWeight: 'bold',
+                textAlign: 'left'
+            }}>{children}</th>
+        ),
+        td: ({ children }: any) => (
+            <td style={{
+                border: '1px solid #dee2e6',
+                padding: '8px'
+            }}>{children}</td>
+        )
     };
 
     // Если есть ошибка авторизации, показываем сообщение о необходимости перелогина
@@ -94,7 +171,7 @@ const AIAssistant: React.FC = () => {
                 <div>
                     <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem' }}>AI-помощник MindCheck</h3>
                     <p style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>
-                        Подключен к психологическому API • Режим реального времени • История сообщений
+                        Подключен к психологическому API • Режим реального времени
                     </p>
                 </div>
             </div>
@@ -113,14 +190,17 @@ const AIAssistant: React.FC = () => {
                     </div>
                 )}
 
-                <div style={{
-                    height: '400px',
-                    overflowY: 'auto',
-                    marginBottom: '1.5rem',
-                    padding: '1rem',
-                    background: '#f8f9fa',
-                    borderRadius: '10px'
-                }}>
+                <div
+                    ref={messagesContainerRef}
+                    style={{
+                        height: '400px',
+                        overflowY: 'auto',
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: '#f8f9fa',
+                        borderRadius: '10px'
+                    }}
+                >
                     {isLoadingHistory ? (
                         <div style={{
                             display: 'flex',
@@ -189,8 +269,19 @@ const AIAssistant: React.FC = () => {
                                         borderBottomLeftRadius: message.isUser ? '15px' : '5px',
                                         boxShadow: message.isUser ? 'none' : '0 2px 8px rgba(0,0,0,0.1)'
                                     }}>
-                                        <div style={{ marginBottom: '0.5rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
-                                            {message.text}
+                                        <div style={{ marginBottom: '0.5rem', lineHeight: '1.5' }}>
+                                            {message.isUser ? (
+                                                <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                    {message.text}
+                                                </div>
+                                            ) : (
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={MarkdownComponents}
+                                                >
+                                                    {message.text}
+                                                </ReactMarkdown>
+                                            )}
                                         </div>
                                         <div style={{
                                             fontSize: '0.75rem',
@@ -281,8 +372,6 @@ const AIAssistant: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-
-                            <div ref={messagesEndRef} />
                         </>
                     )}
                 </div>
@@ -404,8 +493,8 @@ const AIAssistant: React.FC = () => {
                         borderRadius: '10px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                     }}>
-                        <span style={{ fontSize: '1.5rem' }}>📝</span>
-                        <span>История сообщений</span>
+                        <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                        <span>Оценка факторов риска</span>
                     </div>
                     <div style={{
                         display: 'flex',
