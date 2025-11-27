@@ -1,12 +1,16 @@
 export interface Test {
-    id: number;
-    title: string;
+    id: string;
+    name: string;
     description: string;
-    questionsCount: number;
-    time: number;
-    category: string;
-    popularity?: number;
-    isNew?: boolean;
+    durationMins: string;
+    position: string;
+}
+
+export interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    offset: number;
+    limit: number;
 }
 
 export interface Question {
