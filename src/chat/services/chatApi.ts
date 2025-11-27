@@ -2,14 +2,8 @@ import { getToken } from '@/api/auth';
 
 const API_BASE_URL = 'https://psychological-testing.mraksimus.ru';
 
-export interface ChatMessage {
-    message: string;
-}
-
 export interface ChatResponse {
-    llmChatResponse: {
-        message: string;
-    };
+    message: string;
 }
 
 export interface HistoryMessage {
@@ -48,7 +42,7 @@ export class ChatApiService {
         }
 
         const data: ChatResponse = await response.json();
-        return data.llmChatResponse.message;
+        return data.message;
     }
 
     static async getHistory(): Promise<HistoryMessage[]> {

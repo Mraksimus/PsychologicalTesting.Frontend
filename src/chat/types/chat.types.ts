@@ -6,9 +6,7 @@ export interface Message {
 }
 
 export interface LLMChatResponse {
-    llmChatResponse: {
         message: string;
-    };
 }
 
 export interface UseChatReturn {
