@@ -1,8 +1,8 @@
 import React from 'react';
-import { Test } from '@/types';
+import { FeaturedTest } from '@/types';
 
 interface TestCardProps {
-    test: Test;
+    test: FeaturedTest;
     onStartTest: (testId: number) => void;
 }
 
@@ -94,6 +94,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 </div>
 
                 <button
+                    type="button"
                     style={{
                         width: '100%',
                         background: '#28a745',

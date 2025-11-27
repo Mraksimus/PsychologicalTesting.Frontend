@@ -45,18 +45,23 @@ const Header: React.FC = () => {
                 }}>
                     {/* Логотип */}
                     <div style={{ flex: 1 }}>
-                        <span
+                        <button
+                            type="button"
                             style={{
                                 fontSize: '1.5rem',
                                 fontWeight: 'bold',
                                 color: '#007bff',
                                 cursor: 'pointer',
-                                textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                background: 'none',
+                                border: 'none',
+                                padding: 0
                             }}
                             onClick={() => handleNavigation('/home')}
+                            aria-label="Перейти на главную MindCheck"
                         >
                             MindCheck
-                        </span>
+                        </button>
                     </div>
 
                     {/* Навигация по центру */}
@@ -70,6 +75,7 @@ const Header: React.FC = () => {
                         }}>
                             <li>
                                 <button
+                                    type="button"
                                     onClick={() => handleNavigation('/home')}
                                     style={{
                                         background: 'none',
@@ -103,6 +109,7 @@ const Header: React.FC = () => {
                             </li>
                             <li>
                                 <button
+                                    type="button"
                                     onClick={() => handleNavigation('/tests')}
                                     style={{
                                         background: 'none',
@@ -136,6 +143,7 @@ const Header: React.FC = () => {
                             </li>
                             <li>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         // ✅ Если на главной - скроллим к якорю
                                         if (location.pathname === '/home') {
@@ -192,7 +200,8 @@ const Header: React.FC = () => {
                         justifyContent: 'flex-end'
                     }}>
                         {/* Имя пользователя */}
-                        <div
+                        <button
+                            type="button"
                             style={{
                                 color: '#333',
                                 fontWeight: '500',
@@ -202,7 +211,8 @@ const Header: React.FC = () => {
                                 borderRadius: '20px',
                                 background: 'rgba(102, 126, 234, 0.1)',
                                 transition: 'all 0.3s ease',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                border: 'none'
                             }}
                             onClick={handleProfileClick}
                             onMouseEnter={(e) => {
@@ -214,12 +224,14 @@ const Header: React.FC = () => {
                                 e.currentTarget.style.color = '#333';
                             }}
                             title="Перейти в профиль"
+                            aria-label="Перейти в профиль"
                         >
                             {currentUser.fullName}
-                        </div>
+                        </button>
 
                         {/* Кнопка профиля */}
                         <button
+                            type="button"
                             onClick={handleProfileClick}
                             style={{
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

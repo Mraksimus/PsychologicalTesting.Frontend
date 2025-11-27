@@ -1,9 +1,21 @@
 export interface Test {
-    id: string;
+    id: number;
     name: string;
     description: string;
-    durationMins: string;
-    position: string;
+    durationMins: number;
+    category?: string;
+    questionsCount?: number;
+    popularity?: number;
+    isNew?: boolean;
+}
+
+export interface FeaturedTest {
+    id: number;
+    title: string;
+    description: string;
+    questionsCount: number;
+    time: number;
+    category: string;
 }
 
 export interface PaginatedResponse<T> {

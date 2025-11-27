@@ -3,7 +3,6 @@ import { login as apiLogin, register as apiRegister, logout as apiLogout, getCur
 
 interface User {
     id: string;
-    email: string;
 }
 
 interface AuthContextType {
@@ -26,13 +25,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuth = useCallback(async () => {
         try {
             if (isAuthenticated()) {
-                const currentUser = await getCurrentUser();
-                setUser(currentUser);
+                const currentUser = getCurrentUser();
+                // Проверяем что id не null
+                if (currentUser.id) {
+                    setUser({ id: currentUser.id });
+                } else {
+                    setUser(null);
+                }
             } else {
                 setUser(null);
             }
         } catch (error) {
-            console.error("Auth check failed:", error);
+            setError(error instanceof Error ? error.message : 'Не удалось проверить авторизацию');
             setUser(null);
         } finally {
             setIsLoading(false);

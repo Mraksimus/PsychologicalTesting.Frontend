@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Welcome } from '../components/Welcome/Welcome';
+import { Welcome } from '@/components/Welcome/Welcome';
 import TestCard from '../components/TestCard';
 import Popup from '../components/Popup';
 import AIAssistant from '../components/AIAssistant';
-import { Test, PopupState } from '../types';
+import { FeaturedTest, PopupState } from '@/types';
 import { useNavigate } from 'react-router-dom';
 
 // Моковые данные тестов
-const mockTests: Test[] = [
+const mockTests: FeaturedTest[] = [
     {
         id: 1,
         title: "Тест на уровень стресса",
@@ -88,7 +88,7 @@ const teamPsychologists = [
 
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
-    const [tests, setTests] = useState<Test[]>([]);
+    const [tests, setTests] = useState<FeaturedTest[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [popup, setPopup] = useState<PopupState>({
         isOpen: false,
@@ -167,7 +167,7 @@ const HomePage: React.FC = () => {
                                     borderRadius: '50%',
                                     animation: 'spin 1s linear infinite',
                                     marginBottom: '1.5rem'
-                                }}></div>
+                                }} />
                                 <p style={{
                                     color: 'white',
                                     fontSize: '1.1rem',
@@ -209,10 +209,11 @@ const HomePage: React.FC = () => {
                                         height: '1px',
                                         background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
                                         zIndex: 1
-                                    }}></div>
+                                    }} />
 
                                     {/* Кнопка */}
                                     <button
+                                        type="button"
                                         onClick={handleViewAllTests}
                                         style={{
                                             position: 'relative',

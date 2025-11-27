@@ -13,8 +13,9 @@ import {
     Modal,
 } from '@mantine/core';
 import Header from '../components/Header';
-import {TestSession} from "@/types/session";
-import {sessionUtils} from "../../test-utils/sessionUtils";
+import { TestSession } from "@/types/session";
+import { sessionUtils } from "../../test-utils/sessionUtils";
+import { notifications } from "@mantine/notifications";
 
 interface Question {
     id: number;
@@ -269,17 +270,20 @@ const TestingPage: React.FC = () => {
     const { testId } = useParams<{ testId: string }>();
     const navigate = useNavigate();
 
-    const testIdNum = parseInt(testId || '1');
+    const testIdNum = Number.parseInt(testId || '1', 10);
     const testData = testsData[testIdNum];
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
     const [activeSession, setActiveSession] = useState<TestSession | null>(null);
     const [showContinueModal, setShowContinueModal] = useState(false);
+    const [isRestartModalOpen, setIsRestartModalOpen] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
-        if (!testData) return;
+        if (!testData) {
+            return;
+        }
 
         // Проверяем есть ли активная сессия для этого теста
         const session = sessionUtils.getSessionForTest(testIdNum);
@@ -335,7 +339,11 @@ const TestingPage: React.FC = () => {
 
     const handleNextQuestion = () => {
         if (userAnswers[currentQuestion.id] === undefined) {
-            alert('Пожалуйста, выберите ответ');
+            notifications.show({
+                color: 'red',
+                title: 'Ответ не выбран',
+                message: 'Пожалуйста, выберите вариант ответа перед продолжением',
+            });
             return;
         }
 
@@ -374,13 +382,20 @@ const TestingPage: React.FC = () => {
     };
 
     const handleRestartTest = () => {
-        if (window.confirm('Вы уверены, что хотите начать тест заново? Весь ваш прогресс будет потерян.')) {
-            const newSession = sessionUtils.restartTest(testIdNum, testData.title);
-            setActiveSession(newSession);
-            setCurrentQuestionIndex(0);
-            setUserAnswers({});
-            setShowContinueModal(false);
-        }
+        setIsRestartModalOpen(true);
+    };
+
+    const confirmRestartTest = () => {
+        const newSession = sessionUtils.restartTest(testIdNum, testData.title);
+        setActiveSession(newSession);
+        setCurrentQuestionIndex(0);
+        setUserAnswers({});
+        setShowContinueModal(false);
+        setIsRestartModalOpen(false);
+    };
+
+    const cancelRestartTest = () => {
+        setIsRestartModalOpen(false);
     };
 
     const calculateAndNavigateToResults = () => {
@@ -399,9 +414,9 @@ const TestingPage: React.FC = () => {
             testId: testIdNum,
             testTitle: testData.title,
             category: testData.category,
-            percentile: percentile,
+            percentile,
             userAnswers,
-            sessionId: activeSession?.id
+            sessionId: activeSession?.id,
         };
 
         // Завершаем сессию
@@ -414,8 +429,6 @@ const TestingPage: React.FC = () => {
 
         navigate(`/result`, { state: resultsData });
     };
-
-    const hasProgress = currentQuestionIndex > 0 || Object.keys(userAnswers).length > 0;
 
     return (
         <>
@@ -449,6 +462,25 @@ const TestingPage: React.FC = () => {
                                 variant="outline"
                             >
                                 Начать заново
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Modal>
+
+                <Modal
+                    opened={isRestartModalOpen}
+                    onClose={cancelRestartTest}
+                    title="Начать тест заново?"
+                    centered
+                >
+                    <Stack>
+                        <Text>Текущий прогресс будет потерян. Продолжить?</Text>
+                        <Group justify="center">
+                            <Button onClick={confirmRestartTest} color="red">
+                                Начать заново
+                            </Button>
+                            <Button variant="outline" onClick={cancelRestartTest}>
+                                Отмена
                             </Button>
                         </Group>
                     </Stack>
@@ -510,7 +542,7 @@ const TestingPage: React.FC = () => {
                                                 width: '24px',
                                                 height: '24px',
                                                 borderRadius: '50%',
-                                                border: '2px solid ' + (userAnswers[currentQuestion.id] === index ? 'white' : '#ccc'),
+                                                border: `2px solid ${userAnswers[currentQuestion.id] === index ? 'white' : '#ccc'}`,
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',

@@ -127,7 +127,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                             borderRadius: '50%',
                             animation: 'spin 1s linear infinite',
                             margin: '0 auto 1rem'
-                        }}></div>
+                        }} />
                         <p>Загрузка вопросов...</p>
                     </div>
                 </div>
@@ -166,6 +166,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                 }}>
                     <h2 style={{ margin: 0 }}>Тест #{testId}</h2>
                     <button
+                        type="button"
                         onClick={onClose}
                         style={{
                             background: 'none',
@@ -188,7 +189,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                             transition: 'width 0.3s',
                             width: `${((currentQuestion + 1) / questions.length) * 100}%`
                         }}
-                    ></div>
+                    />
                 </div>
 
                 <div style={{ padding: '2rem' }}>
@@ -206,7 +207,8 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                                 {questions[currentQuestion].options.map((option, index) => (
-                                    <div
+                                    <button
+                                        type="button"
                                         key={index}
                                         style={{
                                             display: 'flex',
@@ -217,7 +219,8 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                                             cursor: 'pointer',
                                             transition: 'all 0.3s',
                                             textAlign: 'left',
-                                            background: answers[currentQuestion] === index ? '#e7f3ff' : 'transparent'
+                                            background: answers[currentQuestion] === index ? '#e7f3ff' : 'transparent',
+                                            width: '100%'
                                         }}
                                         onClick={() => handleAnswerSelect(index)}
                                     >
@@ -237,12 +240,13 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                       {String.fromCharCode(65 + index)}
                     </span>
                                         <span style={{ flex: 1 }}>{option}</span>
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
                                 <button
+                                    type="button"
                                     style={{
                                         padding: '0.8rem 1.5rem',
                                         border: 'none',
@@ -259,6 +263,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                                 </button>
 
                                 <button
+                                    type="button"
                                     style={{
                                         padding: '0.8rem 1.5rem',
                                         border: 'none',
@@ -283,6 +288,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
 
                             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
                                 <button
+                                    type="button"
                                     style={{
                                         background: '#ffc107',
                                         color: '#212529',
@@ -297,6 +303,7 @@ const Popup: React.FC<PopupProps> = ({ testId, onClose }) => {
                                     Пройти еще раз
                                 </button>
                                 <button
+                                    type="button"
                                     style={{
                                         background: '#6c757d',
                                         color: 'white',

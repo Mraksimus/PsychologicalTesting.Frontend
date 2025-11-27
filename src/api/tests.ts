@@ -1,66 +1,63 @@
-import { getToken } from './auth';
-import {PaginatedResponse, Test} from "@/types";
+import axios from 'axios';
+import { PaginatedResponse, Test } from '@/types';
+import { httpClient } from '@/shared/http/httpClient';
+import { API_ROUTES } from '@/shared/config/apiConfig';
 
-const API_BASE_URL = 'https://psychological-testing.mraksimus.ru';
+interface RemoteTest {
+    id: number;
+    name?: string;
+    title?: string;
+    description?: string;
+    durationMins?: number;
+    category?: string;
+    questionsCount?: number;
+    popularity?: number;
+    isNew?: boolean;
+}
 
-export const fetchTests = async (offset: number = 0, limit: number = 10): Promise<PaginatedResponse<Test>> => {
-    const token = getToken();
+const mapRemoteTest = (test: RemoteTest): Test => ({
+    id: Number(test.id),
+    name: test.name ?? test.title ?? 'Без названия',
+    description: test.description ?? 'Описание недоступно',
+    durationMins: test.durationMins ?? 10,
+    category: test.category ?? 'Психология',
+    questionsCount: test.questionsCount ?? 10,
+    popularity: test.popularity,
+    isNew: test.isNew,
+});
 
-    if (!token) {
-        throw new Error('Not authenticated');
-    }
-
-    const params = new URLSearchParams({
-        offset: offset.toString(),
-        limit: limit.toString(),
-    });
-
+export const fetchTests = async (offset = 0, limit = 10): Promise<PaginatedResponse<Test>> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/testing/tests?${params}`, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
+        const response = await httpClient.get<PaginatedResponse<RemoteTest>>(API_ROUTES.tests.list, {
+            params: { offset, limit },
         });
 
-        console.log('📨 Fetch tests response status:', response.status);
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                throw new Error('Unauthorized');
+        return {
+            ...response.data,
+            items: response.data.items.map(mapRemoteTest),
+        };
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+                throw new Error('Требуется авторизация');
             }
-            throw new Error(`Failed to fetch tests: ${response.status}`);
         }
 
-        const data = await response.json();
-        console.log('✅ Tests fetched:', data);
-
-        return data;
-    } catch (error) {
-        console.error('❌ Error fetching tests:', error);
-        throw error;
+        throw new Error('Не удалось загрузить список тестов');
     }
 };
 
 export const fetchTestById = async (testId: number): Promise<Test> => {
-    const token = getToken();
+    try {
+        const response = await httpClient.get<RemoteTest>(API_ROUTES.tests.details(testId));
+        return mapRemoteTest(response.data);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 404) {
+                throw new Error('Тест не найден');
+            }
+        }
 
-    if (!token) {
-        throw new Error('Not authenticated');
+        throw new Error('Не удалось загрузить тест');
     }
-
-    const response = await fetch(`${API_BASE_URL}/tests/${testId}`, {
-        method: 'GET',
-        headers: {
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch test: ${response.status}`);
-    }
-
-    return await response.json();
 };

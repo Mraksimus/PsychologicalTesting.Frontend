@@ -12,7 +12,8 @@ import {
     RingProgress,
 } from '@mantine/core';
 import Header from '../components/Header';
-import {sessionUtils} from "../../test-utils/sessionUtils";
+import { sessionUtils } from "../../test-utils/sessionUtils";
+import { TestSession } from "@/types/session";
 
 interface AnalysisResult {
     resultLevel: 'low' | 'medium' | 'high';
@@ -248,7 +249,7 @@ const ResultsPage: React.FC = () => {
     const resultsData = location.state;
 
     // Получаем историю сессий для этого теста
-    const [testSessions, setTestSessions] = useState<any[]>([]);
+    const [testSessions, setTestSessions] = useState<TestSession[]>([]);
 
     useEffect(() => {
         if (resultsData?.testId) {
@@ -272,15 +273,32 @@ const ResultsPage: React.FC = () => {
     const { testId, testTitle, category, percentile } = resultsData;
     const analysis = analysisTemplates[testTitle] || analysisTemplates['Тест на уровень стресса'];
     const getRiskColor = () => {
-        if (analysis.resultLevel === 'high') return 'teal';
-        if (analysis.resultLevel === 'medium') return 'yellow';
+        if (analysis.resultLevel === 'high') {
+            return 'teal';
+        }
+        if (analysis.resultLevel === 'medium') {
+            return 'yellow';
+        }
         return 'red';
     };
 
     const getRiskLabel = () => {
-        if (analysis.resultLevel === 'high') return '🟢 Высокий результат';
-        if (analysis.resultLevel === 'medium') return '🟡 Средний результат';
+        if (analysis.resultLevel === 'high') {
+            return '🟢 Высокий результат';
+        }
+        if (analysis.resultLevel === 'medium') {
+            return '🟡 Средний результат';
+        }
         return '🔴 Низкий результат';
+    };
+
+    const recentSessions = testSessions.slice(0, 5);
+
+    const formatSessionDate = (timestamp?: number) => {
+        if (!timestamp) {
+            return '—';
+        }
+        return new Date(timestamp).toLocaleString('ru-RU');
     };
 
     return (
@@ -355,6 +373,49 @@ const ResultsPage: React.FC = () => {
                         {analysis.mainFindings}
                     </Text>
                 </Card>
+
+                {/* История прохождения */}
+                {recentSessions.length > 0 && (
+                    <Card
+                        shadow="md"
+                        p="xl"
+                        mb="xl"
+                        style={{
+                            background: 'rgba(255,255,255,0.95)',
+                            borderRadius: '16px',
+                            border: '1px solid #e8e8f0'
+                        }}
+                    >
+                        <Group mb="lg">
+                            <span style={{ fontSize: '1.4rem' }}>📚</span>
+                            <Title order={3} style={{ margin: 0, color: '#333' }}>История прохождения</Title>
+                        </Group>
+                        <Stack gap="md">
+                            {recentSessions.map(session => (
+                                <Group
+                                    key={session.id}
+                                    justify="space-between"
+                                    style={{ borderBottom: '1px solid #f0f0f5', paddingBottom: '0.75rem' }}
+                                >
+                                    <div>
+                                        <Text fw={600}>{formatSessionDate(session.completedAt ?? session.startedAt)}</Text>
+                                        <Text size="sm" c="dimmed">
+                                            Статус: {session.status === 'completed' ? 'Завершен' : 'В процессе'}
+                                        </Text>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <Text fw={600}>
+                                            {session.result?.percentile ? `${session.result.percentile}%` : '—'}
+                                        </Text>
+                                        <Text size="sm" c="dimmed">
+                                            {session.result?.category ?? 'Без категории'}
+                                        </Text>
+                                    </div>
+                                </Group>
+                            ))}
+                        </Stack>
+                    </Card>
+                )}
 
                 {/* Кнопки */}
                 <Card

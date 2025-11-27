@@ -4,6 +4,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { notifications } from "@mantine/notifications";
 import { Center, Stack, Text } from "@mantine/core";
+import { EMAIL_REGEX, NAME_REGEX } from "@/shared/validation/patterns";
 
 // Используем именованный экспорт
 export const RegisterPage: React.FC = () => {
@@ -55,8 +56,7 @@ export const RegisterPage: React.FC = () => {
             }
 
             // Валидация email
-            const emailRegex = /^(?!\\.)([a-z0-9._-]{1,250})(?<!\\.)@([a-zA-Z0-9.-]{1,64}|[а-яА-Я0-9.-]{1,64}|xn--[a-zA-Z0-9-]{1,61})$/;
-            if (!emailRegex.test(values.email)) {
+            if (!EMAIL_REGEX.test(values.email)) {
                 notifications.show({
                     color: "red",
                     title: "Ошибка",
@@ -94,8 +94,7 @@ export const RegisterPage: React.FC = () => {
             }
 
             // Валидация имени и фамилии (только буквы)
-            const nameRegex = /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/;
-            if (!nameRegex.test(values.name)) {
+            if (!NAME_REGEX.test(values.name)) {
                 notifications.show({
                     color: "red",
                     title: "Ошибка",
@@ -104,7 +103,7 @@ export const RegisterPage: React.FC = () => {
                 return;
             }
 
-            if (!nameRegex.test(values.surname)) {
+            if (!NAME_REGEX.test(values.surname)) {
                 notifications.show({
                     color: "red",
                     title: "Ошибка",
@@ -114,7 +113,7 @@ export const RegisterPage: React.FC = () => {
             }
 
             // Валидация отчества (если указано)
-            if (values.patronymic && values.patronymic.trim() && !nameRegex.test(values.patronymic)) {
+            if (values.patronymic && values.patronymic.trim() && !NAME_REGEX.test(values.patronymic)) {
                 notifications.show({
                     color: "red",
                     title: "Ошибка",
@@ -153,7 +152,7 @@ export const RegisterPage: React.FC = () => {
                     title="Регистрация"
                     submitLabel="Зарегистрироваться"
                     onSubmit={handleSubmit}
-                    isRegister={true}
+                    isRegister
                 />
                 <Text>
                     Уже есть аккаунт? <Link to="/login">Войти</Link>
