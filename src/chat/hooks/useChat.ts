@@ -67,7 +67,10 @@ export const useChat = (): UseChatReturn => {
             setError('Для использования чата необходимо авторизоваться');
             return;
         }
-        if (!text.trim()) return;
+
+        if (!text.trim()) {
+            return;
+        }
 
         const userMessage: ChatMessage = {
             id: Date.now(),

@@ -15,10 +15,12 @@ import {
     TextInput,
     Select,
     LoadingOverlay,
-    Box
+    Box,
+    Alert,
 } from '@mantine/core';
 import Header from '../components/Header';
-import {fetchTests} from "@/api/tests";
+import { fetchTests } from "@/api/tests";
+import { enrichTests } from '@/utils/testAdapters';
 
 const categories = [
     { value: 'all', label: 'Все категории' },
@@ -42,35 +44,40 @@ const TestsPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('popular');
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        let active = true;
+
         const loadTests = async () => {
+            setLoading(true);
+            setError(null);
             try {
-                setLoading(true);
-                const data = await fetchTests();
-                setTests(data.items);
-                setFilteredTests(data.items);
-            } catch (error) {
-                console.error('Failed to load tests:', error);
-                // Здесь можно показать ошибку пользователю
+                const data = await fetchTests({ offset: 0, limit: 50 });
+                if (!active) {
+                    return;
+                }
+                const enriched = enrichTests(data.items);
+                setTests(enriched);
+                setFilteredTests(enriched);
+            } catch (err) {
+                if (!active) {
+                    return;
+                }
+                setError(err instanceof Error ? err.message : 'Не удалось загрузить тесты');
             } finally {
-                setLoading(false);
+                if (active) {
+                    setLoading(false);
+                }
             }
         };
 
         loadTests();
+
+        return () => {
+            active = false;
+        };
     }, []);
-
-
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //         setTests(allTests);
-    //         setFilteredTests(allTests);
-    //         setLoading(false);
-    //     }, 1000);
-    //
-    //     return () => clearTimeout(timer);
-    // }, []);
 
     useEffect(() => {
         let result = [...tests];
@@ -78,38 +85,37 @@ const TestsPage: React.FC = () => {
         if (searchQuery) {
             result = result.filter(test =>
                 test.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                test.description.toLowerCase().includes(searchQuery.toLowerCase())
+                test.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                test.transcript.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
-        // if (selectedCategory !== 'all') {
-        //     result = result.filter(test => test.category === selectedCategory);
-        // }
+        if (selectedCategory !== 'all') {
+            result = result.filter(test => (test.category || 'all') === selectedCategory);
+        }
 
-        // switch (sortBy) {
-        //     case 'popular':
-        //         result.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-        //         break;
-        //     case 'new':
-        //         result.sort((a, b) => {
-        //             if (a.isNew && !b.isNew) return -1;
-        //             if (!a.isNew && b.isNew) return 1;
-        //             return 0;
-        //         });
-        //         break;
-        //     case 'time':
-        //         result.sort((a, b) => a.time - b.time);
-        //         break;
-        //     case 'questions':
-        //         result.sort((a, b) => a.questionsCount - b.questionsCount);
-        //         break;
-        // }
+        switch (sortBy) {
+            case 'popular':
+                result.sort((a, b) => (a.position || 0) - (b.position || 0));
+                break;
+            case 'new':
+                result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                break;
+            case 'time':
+                result.sort((a, b) => Number(a.durationMins || 0) - Number(b.durationMins || 0));
+                break;
+            case 'questions':
+                result.sort((a, b) => (a.questionsCount || 0) - (b.questionsCount || 0));
+                break;
+            default:
+                break;
+        }
 
         setFilteredTests(result);
     }, [tests, searchQuery, selectedCategory, sortBy]);
 
-    const handleStartTest = (testId: number) => {
-        navigate(`/test/${testId}`);
+    const handleStartTest = (test: Test) => {
+        navigate(`/test/${test.id}`, { state: { test } });
     };
 
     const getCategoryColor = (category: string) => {
@@ -139,21 +145,12 @@ const TestsPage: React.FC = () => {
         setSortBy('popular');
     };
 
-    if (loading) {
-        return (
-            <>
-                <Header />
-                <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
-                    <LoadingOverlay visible={loading} />
-                </Container>
-            </>
-        );
-    }
-
     return (
         <>
             <Header />
-            <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
+            <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0', position: 'relative' }}>
+                {loading && <LoadingOverlay visible />}
+
                 {/* Заголовок и описание */}
                 <Stack gap="lg" mb="xl">
                     <Title order={1} ta="center" style={{ color: 'white' }}>
@@ -203,6 +200,12 @@ const TestsPage: React.FC = () => {
                     </Grid>
                 </Card>
 
+                {error && (
+                    <Alert color="red" mb="xl" withCloseButton onClose={() => setError(null)}>
+                        {error}
+                    </Alert>
+                )}
+
                 {/* Результаты поиска */}
                 <Group justify="space-between" mb="md">
                     <Text size="lg" style={{ color: 'white' }}>
@@ -239,35 +242,27 @@ const TestsPage: React.FC = () => {
                                         <Text size="lg" fw={600} style={{ flex: 1 }}>
                                             {test.name}
                                         </Text>
-                                        {true && ( // Новый ли тест
-                                            <Badge color="red" variant="filled">
-                                                Новый
-                                            </Badge>
-                                        )}
                                     </Group>
 
                                     {/* Категория и популярность */}
                                     <Group gap="xs" style={{ flexShrink: 0 }}>
-                                        <Badge color={getCategoryColor("Психология")} variant="light">
-                                            {"Психология"}
+                                        <Badge color={getCategoryColor(test.category || 'Психология')} variant="light">
+                                            {test.category || 'Психология'}
                                         </Badge>
-                                        {true && (
-                                            <Badge color="gray" variant="outline">
-                                                {"100"}%
-                                            </Badge>
-                                        )}
                                     </Group>
 
                                     {/* Описание */}
                                     <Text size="sm" c="dimmed" style={{ flex: 1, minHeight: '60px' }}>
-                                        {test.description}
+                                        {test.description || test.transcript}
                                     </Text>
 
                                     {/* Статистика */}
                                     <Group gap="lg" style={{ flexShrink: 0 }}>
                                         <Group gap="xs">
                                             <IconQuestionMark size={16} />
-                                            <Text size="sm">{"10"} вопросов</Text>
+                                            <Text size="sm">
+                                                {typeof test.questionsCount === 'number' ? `${test.questionsCount} вопросов` : 'Количество вопросов уточняется'}
+                                            </Text>
                                         </Group>
                                         <Group gap="xs">
                                             <IconClock size={16} />
@@ -280,7 +275,7 @@ const TestsPage: React.FC = () => {
                                         fullWidth
                                         variant="gradient"
                                         gradient={{ from: 'blue', to: 'cyan' }}
-                                        onClick={() => handleStartTest(test.id.length)}
+                                        onClick={() => handleStartTest(test)}
                                         style={{ flexShrink: 0 }}
                                     >
                                         Начать тест

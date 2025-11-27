@@ -1,66 +1,23 @@
-import { getToken } from './auth';
-import {PaginatedResponse, Test} from "@/types";
+import { PaginatedResponse, Test } from '@/types';
+import { httpClient } from '@/shared/http/httpClient';
 
-const API_BASE_URL = 'https://psychological-testing.mraksimus.ru';
+interface FetchTestsParams {
+    offset?: number;
+    limit?: number;
+}
 
-export const fetchTests = async (offset: number = 0, limit: number = 10): Promise<PaginatedResponse<Test>> => {
-    const token = getToken();
-
-    if (!token) {
-        throw new Error('Not authenticated');
-    }
-
-    const params = new URLSearchParams({
-        offset: offset.toString(),
-        limit: limit.toString(),
-    });
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/testing/tests?${params}`, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-        });
-
-        console.log('📨 Fetch tests response status:', response.status);
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                throw new Error('Unauthorized');
-            }
-            throw new Error(`Failed to fetch tests: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('✅ Tests fetched:', data);
-
-        return data;
-    } catch (error) {
-        console.error('❌ Error fetching tests:', error);
-        throw error;
-    }
+const DEFAULT_PARAMS: Required<FetchTestsParams> = {
+    offset: 0,
+    limit: 50,
 };
 
-export const fetchTestById = async (testId: number): Promise<Test> => {
-    const token = getToken();
-
-    if (!token) {
-        throw new Error('Not authenticated');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/tests/${testId}`, {
-        method: 'GET',
-        headers: {
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
+export const fetchTests = async (params?: FetchTestsParams): Promise<PaginatedResponse<Test>> => {
+    const { data } = await httpClient.get<PaginatedResponse<Test>>('/testing/tests', {
+        params: {
+            offset: params?.offset ?? DEFAULT_PARAMS.offset,
+            limit: params?.limit ?? DEFAULT_PARAMS.limit,
         },
     });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch test: ${response.status}`);
-    }
-
-    return await response.json();
+    return data;
 };

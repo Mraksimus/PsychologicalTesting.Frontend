@@ -127,7 +127,6 @@ const ProfilePage: React.FC = () => {
             setNewName(mockProfile.fullName);
 
         } catch (error) {
-            console.error('Error loading profile:', error);
             setMessage('Ошибка загрузки профиля');
 
             // Fallback данные
@@ -162,7 +161,6 @@ const ProfilePage: React.FC = () => {
             setActionHistory(prev => [newAction, ...prev]);
 
         } catch (error) {
-            console.error('Error updating name:', error);
             setMessage('Ошибка обновления ФИО');
         }
     };

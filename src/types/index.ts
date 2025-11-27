@@ -2,8 +2,17 @@ export interface Test {
     id: string;
     name: string;
     description: string;
+    transcript: string;
     durationMins: string;
-    position: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    position: number;
+    /**
+     * Дополнительные поля для UI (рассчитываются на клиенте).
+     */
+    category?: string;
+    questionsCount?: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -13,18 +22,6 @@ export interface PaginatedResponse<T> {
     limit: number;
 }
 
-export interface Question {
-    id: number;
-    text: string;
-    options: string[];
-    correctAnswer: number;
-}
-
-export interface PopupState {
-    isOpen: boolean;
-    testId: number | null;
-}
-
 export interface ChatMessage {
     id: number;
     text: string;
@@ -32,9 +29,63 @@ export interface ChatMessage {
     timestamp: Date;
 }
 
-export interface AnalysisResult {
-    hasConcerns: boolean;
-    riskLevel: 'low' | 'medium' | 'high';
-    recommendations: string[];
-    suggestedActions: string[];
+export type QuestionChoiceMod = 'SINGLE' | 'MULTIPLE' | 'BINARY' | 'SCALE';
+
+export interface AnswerOption {
+    index: number;
+    text: string;
+    isSelected?: boolean | null;
+    isCorrect?: boolean | null;
+    score?: number | null;
+}
+
+export interface ChoiceQuestionContent {
+    type?: 'Choice';
+    text: string;
+    mod: QuestionChoiceMod;
+    options: AnswerOption[];
+}
+
+export interface QuestionResponse {
+    id: string;
+    testId: string;
+    position: number;
+    content: ChoiceQuestionContent;
+}
+
+export type TestingSessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
+
+export interface TestingSession {
+    id: string;
+    userId: string;
+    testId: string;
+    questionResponses: QuestionResponse[];
+    status: TestingSessionStatus;
+    createdAt: string;
+    closedAt?: string | null;
+    result?: string | null;
+}
+
+export interface UpdateAnswersSessionRequest {
+    questionResponses: QuestionResponsePayload[];
+}
+
+export interface QuestionResponsePayload {
+    id: string;
+    testId: string;
+    position: number;
+    content: ChoiceQuestionContentPayload;
+}
+
+interface ChoiceQuestionContentPayload {
+    type: 'Choice';
+    text: string;
+    mod: QuestionChoiceMod;
+    options: ClientAnswerPayload[];
+}
+
+export interface ClientAnswerPayload {
+    index: number;
+    text: string;
+    isSelected: boolean;
 }

@@ -1,0 +1,820 @@
+openapi: 3.0.0
+info:
+  title: Psychological testing
+  version: 1
+servers:
+  - url: https://psychological-testing.mraksimus.ru
+    description: Remote development server
+  - url: http://localhost:1488
+    description: Local development server
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        description:
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+          description:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log into an existing account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        description:
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+          description:
+        401:
+          description:
+  /chat:
+    post:
+      tags:
+        - Chat with LLM
+      summary: Send a message to the chat
+      security:
+        - user: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+        description:
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMResponse'
+          description:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+          description:
+    get:
+      tags:
+        - Chat with LLM
+      summary: Get all messages
+      security:
+        - user: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/LLMMessage'
+          description:
+  /testing/tests:
+    get:
+      tags:
+        - Tests
+      summary: Get all tests
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: "integer"
+            format: INT64
+          required: true
+        - in: query
+          name: limit
+          schema:
+            type: "integer"
+            format: INT32
+          required: true
+      security:
+        - user: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExistingTest'
+          description:
+  /testing/sessions/{test_id}:
+    post:
+      tags:
+        - Testing sessions
+      summary: Create a new testing session
+      parameters:
+        - in: path
+          name: test_id
+          schema:
+            type: "string"
+            format: UUID
+          required: true
+      security:
+        - user: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExistingTestingSession'
+          description:
+        409:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictResponse'
+          description:
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+          description:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+          description:
+  /testing/sessions:
+    get:
+      tags:
+        - Testing sessions
+      summary: Get all user sessions
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: "integer"
+            format: INT64
+          required: true
+        - in: query
+          name: limit
+          schema:
+            type: "integer"
+            format: INT32
+          required: true
+      security:
+        - user: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionExistingTestingSession'
+          description:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+          description:
+  /testing/sessions/{session_id}:
+    get:
+      tags:
+        - Testing sessions
+      summary: Get user session
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: "string"
+            format: UUID
+          required: true
+      security:
+        - user: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExistingTestingSession'
+          description:
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+          description:
+  /testing/sessions/{session_id}/answers:
+    put:
+      tags:
+        - Testing sessions
+      summary: Update session answers
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: "string"
+            format: UUID
+          required: true
+      security:
+        - user: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAnswersSessionRequest'
+        description:
+      responses:
+        200:
+          description:
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+          description:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+          description:
+  /testing/sessions/{session_id}/complete:
+    put:
+      tags:
+        - Testing sessions
+      summary: Complete session
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: "string"
+            format: UUID
+          required: true
+      security:
+        - user: []
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExistingTestingSession'
+          description:
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+          description:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+          description:
+  /testing/sessions/{session_id}/close:
+    put:
+      tags:
+        - Testing sessions
+      summary: Close session
+      parameters:
+        - in: path
+          name: session_id
+          schema:
+            type: "string"
+            format: UUID
+          required: true
+      security:
+        - user: []
+      responses:
+        200:
+          description:
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+          description:
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+          description:
+components:
+  securitySchemes:
+    user:
+      type: "http"
+      scheme: bearer
+  schemas:
+    RegisterRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        name:
+          type: "string"
+        password:
+          type: "string"
+        patronymic:
+          type: "string"
+        surname:
+          type: "string"
+      required:
+        - name
+        - surname
+        - email
+        - password
+    AuthenticationResponse:
+      type: "object"
+      properties:
+        token:
+          type: "object"
+          properties:
+            createdAt:
+              type: "string"
+              format: date-time
+            expiresAt:
+              type: "string"
+              format: date-time
+            userId:
+              type: "string"
+              format: UUID
+            value:
+              type: "string"
+          required:
+            - userId
+            - value
+            - createdAt
+            - expiresAt
+      required:
+        - token
+    LoginRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        password:
+          type: "string"
+      required:
+        - email
+        - password
+    ChatRequest:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+      required:
+        - message
+    LLMResponse:
+      type: "object"
+      properties:
+        message:
+          type: "string"
+      required:
+        - message
+    BadRequestResponse:
+      type: "object"
+      properties:
+        description:
+          type: "string"
+        errors:
+          type: "object"
+          properties:
+            entries:
+              type: "object"
+              properties:
+                size:
+                  type: "integer"
+                  format: INT32
+            keys:
+              type: "object"
+              properties:
+                size:
+                  type: "integer"
+                  format: INT32
+            size:
+              type: "integer"
+              format: INT32
+            values:
+              type: "object"
+              properties:
+                size:
+                  type: "integer"
+                  format: INT32
+    LLMMessage:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+        role:
+          type: "string"
+          enum:
+            - SYSTEM
+            - USER
+            - ASSISTANT
+      required:
+        - role
+        - content
+    ExistingTest:
+      type: "object"
+      properties:
+        items:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              createdAt:
+                type: "string"
+                format: date-time
+              description:
+                type: "string"
+              durationMins:
+                type: "string"
+              id:
+                type: "string"
+                format: UUID
+              isActive:
+                type: "boolean"
+              name:
+                type: "string"
+              position:
+                type: "integer"
+                format: INT32
+              transcript:
+                type: "string"
+              updatedAt:
+                type: "string"
+                format: date-time
+            required:
+              - id
+              - name
+              - description
+              - transcript
+              - durationMins
+              - isActive
+              - createdAt
+              - updatedAt
+              - position
+        limit:
+          type: "integer"
+          format: INT32
+        offset:
+          type: "integer"
+          format: INT64
+        total:
+          type: "integer"
+          format: INT64
+      required:
+        - total
+        - offset
+        - limit
+        - items
+    ExistingTestingSession:
+      type: "object"
+      properties:
+        closedAt:
+          type: "string"
+          format: date-time
+        createdAt:
+          type: "string"
+          format: date-time
+        id:
+          type: "string"
+          format: UUID
+        questionResponses:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              content:
+                oneOf:
+                  - type: "object"
+                    properties:
+                      mod:
+                        type: "string"
+                        enum:
+                          - SINGLE
+                          - MULTIPLE
+                          - BINARY
+                          - SCALE
+                      options:
+                        type: "array"
+                        items:
+                          oneOf:
+                            - type: "object"
+                              properties:
+                                index:
+                                  type: "integer"
+                                  format: INT32
+                                isSelected:
+                                  type: "boolean"
+                                text:
+                                  type: "string"
+                              required:
+                                - index
+                                - text
+                                - isSelected
+                              title: ClientAnswer
+                            - type: "object"
+                              properties:
+                                index:
+                                  type: "integer"
+                                  format: INT32
+                                isCorrect:
+                                  type: "boolean"
+                                score:
+                                  type: "integer"
+                                  format: INT32
+                                text:
+                                  type: "string"
+                              required:
+                                - index
+                                - text
+                              title: FullAnswer
+                      text:
+                        type: "string"
+                    required:
+                      - text
+                      - mod
+                      - options
+                    title: Choice
+              id:
+                type: "string"
+                format: UUID
+              position:
+                type: "integer"
+                format: INT32
+              testId:
+                type: "string"
+                format: UUID
+            required:
+              - id
+              - testId
+              - content
+              - position
+        result:
+          type: "string"
+        status:
+          type: "string"
+          enum:
+            - IN_PROGRESS
+            - COMPLETED
+            - CLOSED
+        testId:
+          type: "string"
+          format: UUID
+        userId:
+          type: "string"
+          format: UUID
+      required:
+        - id
+        - userId
+        - testId
+        - questionResponses
+        - status
+        - createdAt
+    ConflictResponse:
+      type: "object"
+      properties:
+        description:
+          type: "string"
+        errors:
+          type: "object"
+          properties:
+            entries:
+              type: "object"
+              properties:
+                size:
+                  type: "integer"
+                  format: INT32
+            keys:
+              type: "object"
+              properties:
+                size:
+                  type: "integer"
+                  format: INT32
+            size:
+              type: "integer"
+              format: INT32
+            values:
+              type: "object"
+              properties:
+                size:
+                  type: "integer"
+                  format: INT32
+    NotFoundResponse:
+      type: "object"
+      properties:
+        description:
+          type: "string"
+      required:
+        - description
+    SessionExistingTestingSession:
+      type: "object"
+      properties:
+        items:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              closedAt:
+                type: "string"
+                format: date-time
+              createdAt:
+                type: "string"
+                format: date-time
+              id:
+                type: "string"
+                format: UUID
+              questionResponses:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    content:
+                      oneOf:
+                        - type: "object"
+                          properties:
+                            mod:
+                              type: "string"
+                              enum:
+                                - SINGLE
+                                - MULTIPLE
+                                - BINARY
+                                - SCALE
+                            options:
+                              type: "array"
+                              items:
+                                oneOf:
+                                  - type: "object"
+                                    properties:
+                                      index:
+                                        type: "integer"
+                                        format: INT32
+                                      isSelected:
+                                        type: "boolean"
+                                      text:
+                                        type: "string"
+                                    required:
+                                      - index
+                                      - text
+                                      - isSelected
+                                    title: ClientAnswer
+                                  - type: "object"
+                                    properties:
+                                      index:
+                                        type: "integer"
+                                        format: INT32
+                                      isCorrect:
+                                        type: "boolean"
+                                      score:
+                                        type: "integer"
+                                        format: INT32
+                                      text:
+                                        type: "string"
+                                    required:
+                                      - index
+                                      - text
+                                    title: FullAnswer
+                            text:
+                              type: "string"
+                          required:
+                            - text
+                            - mod
+                            - options
+                          title: Choice
+                    id:
+                      type: "string"
+                      format: UUID
+                    position:
+                      type: "integer"
+                      format: INT32
+                    testId:
+                      type: "string"
+                      format: UUID
+                  required:
+                    - id
+                    - testId
+                    - content
+                    - position
+              result:
+                type: "string"
+              status:
+                type: "string"
+                enum:
+                  - IN_PROGRESS
+                  - COMPLETED
+                  - CLOSED
+              testId:
+                type: "string"
+                format: UUID
+              userId:
+                type: "string"
+                format: UUID
+            required:
+              - id
+              - userId
+              - testId
+              - questionResponses
+              - status
+              - createdAt
+        limit:
+          type: "integer"
+          format: INT32
+        offset:
+          type: "integer"
+          format: INT64
+        total:
+          type: "integer"
+          format: INT64
+      required:
+        - total
+        - offset
+        - limit
+        - items
+    UpdateAnswersSessionRequest:
+      type: "object"
+      properties:
+        questionResponses:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              content:
+                oneOf:
+                  - type: "object"
+                    properties:
+                      mod:
+                        type: "string"
+                        enum:
+                          - SINGLE
+                          - MULTIPLE
+                          - BINARY
+                          - SCALE
+                      options:
+                        type: "array"
+                        items:
+                          oneOf:
+                            - type: "object"
+                              properties:
+                                index:
+                                  type: "integer"
+                                  format: INT32
+                                isSelected:
+                                  type: "boolean"
+                                text:
+                                  type: "string"
+                              required:
+                                - index
+                                - text
+                                - isSelected
+                              title: ClientAnswer
+                            - type: "object"
+                              properties:
+                                index:
+                                  type: "integer"
+                                  format: INT32
+                                isCorrect:
+                                  type: "boolean"
+                                score:
+                                  type: "integer"
+                                  format: INT32
+                                text:
+                                  type: "string"
+                              required:
+                                - index
+                                - text
+                              title: FullAnswer
+                      text:
+                        type: "string"
+                    required:
+                      - text
+                      - mod
+                      - options
+                    title: Choice
+              id:
+                type: "string"
+                format: UUID
+              position:
+                type: "integer"
+                format: INT32
+              testId:
+                type: "string"
+                format: UUID
+            required:
+              - id
+              - testId
+              - content
+              - position
+      required:
+        - questionResponses
