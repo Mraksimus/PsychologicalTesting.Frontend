@@ -50,7 +50,7 @@ const TestsPage: React.FC = () => {
         let active = true;
 
         const loadTests = async () => {
-            setLoading(true);
+                setLoading(true);
             setError(null);
             try {
                 const data = await fetchTests({ offset: 0, limit: 50 });
@@ -67,7 +67,7 @@ const TestsPage: React.FC = () => {
                 setError(err instanceof Error ? err.message : 'Не удалось загрузить тесты');
             } finally {
                 if (active) {
-                    setLoading(false);
+                setLoading(false);
                 }
             }
         };

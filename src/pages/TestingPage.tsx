@@ -50,6 +50,7 @@ const buildPayloadFromResponses = (responses: QuestionResponse[]): QuestionRespo
             text: response.content.text,
             mod: response.content.mod,
             options: response.content.options.map(option => ({
+                type: 'ClientAnswer',
                 index: option.index,
                 text: option.text,
                 isSelected: Boolean(option.isSelected),

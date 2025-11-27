@@ -41,7 +41,7 @@ export const testingSessionsApi = {
     },
     async complete(sessionId: string): Promise<TestingSession> {
         const { data } = await httpClient.put<TestingSession>(`/testing/sessions/${sessionId}/complete`);
-        return data;
+        return (data as any)?.session ?? data;
     },
     async close(sessionId: string): Promise<void> {
         await httpClient.put(`/testing/sessions/${sessionId}/close`);

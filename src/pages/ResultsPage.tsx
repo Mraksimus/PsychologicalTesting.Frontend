@@ -134,7 +134,7 @@ const ResultsPage: React.FC = () => {
     }
 
     const resultText = session.result ?? 'Результат появится чуть позже. Попробуйте обновить страницу через пару минут.';
-    const answeredQuestions = session.questionResponses.filter(question =>
+    const answeredQuestions = session.questionResponses?.filter(question =>
         question.content.options.some(option => option.isSelected),
     );
 
