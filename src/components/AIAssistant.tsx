@@ -229,7 +229,7 @@ const AIAssistant: React.FC = () => {
                                         borderRadius: '50%',
                                         background: '#666',
                                         animation: 'typing 1.4s infinite ease-in-out'
-                                    }}/>
+                                    }} />
                                     <span style={{
                                         width: '6px',
                                         height: '6px',
@@ -237,7 +237,7 @@ const AIAssistant: React.FC = () => {
                                         background: '#666',
                                         animation: 'typing 1.4s infinite ease-in-out',
                                         animationDelay: '-0.16s'
-                                    }}/>
+                                    }} />
                                     <span style={{
                                         width: '6px',
                                         height: '6px',
@@ -245,7 +245,7 @@ const AIAssistant: React.FC = () => {
                                         background: '#666',
                                         animation: 'typing 1.4s infinite ease-in-out',
                                         animationDelay: '-0.32s'
-                                    }}/>
+                                    }} />
                                 </div>
                             </div>
                         </div>
@@ -342,7 +342,7 @@ const AIAssistant: React.FC = () => {
                                                     borderRadius: '50%',
                                                     background: '#666',
                                                     animation: 'typing 1.4s infinite ease-in-out'
-                                                }}/>
+                                                }} />
                                                 <span style={{
                                                     width: '6px',
                                                     height: '6px',
@@ -350,7 +350,7 @@ const AIAssistant: React.FC = () => {
                                                     background: '#666',
                                                     animation: 'typing 1.4s infinite ease-in-out',
                                                     animationDelay: '-0.16s'
-                                                }}/>
+                                                }} />
                                                 <span style={{
                                                     width: '6px',
                                                     height: '6px',
@@ -358,7 +358,7 @@ const AIAssistant: React.FC = () => {
                                                     background: '#666',
                                                     animation: 'typing 1.4s infinite ease-in-out',
                                                     animationDelay: '-0.32s'
-                                                }}/>
+                                                }} />
                                             </div>
                                         </div>
                                     </div>

@@ -1,8 +1,10 @@
 import React from "react";
 import { Button, TextInput, PasswordInput, Paper, Title, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { EMAIL_REGEX, NAME_REGEX, PASSWORD_REGEX } from "@/shared/validation/patterns";
 
+const EMAIL_REGEX = /^(?!\.)([a-z0-9._-]{1,250})(?<!\.)@([a-zA-Z0-9.-]{1,64}|[а-яА-Я0-9.-]{1,64}|xn--[a-zA-Z0-9-]{1,61})$/u;
+const PASSWORD_REGEX = /^[\w~!@#$%^&*_()[\]-]{6,32}$/u;
+const NAME_REGEX = /^[\p{L}\s-]+$/u;
 const SURNAME_REGEX = NAME_REGEX;
 const PATRONYMIC_REGEX = NAME_REGEX;
 
@@ -23,11 +25,11 @@ interface AuthFormProps {
     isRegister?: boolean;
 }
 
-export const AuthForm: React.FC<AuthFormProps> =  ({
-   onSubmit,
-   title,
-   submitLabel,
-   isRegister = false
+export const AuthForm: React.FC<AuthFormProps> = ({
+    onSubmit,
+    title,
+    submitLabel,
+    isRegister = false,
 }) => {
     const baseValidation = {
         email: (value: string) => {
@@ -99,7 +101,7 @@ export const AuthForm: React.FC<AuthFormProps> =  ({
             patronymic: "",
             email: "",
             password: "",
-            confirmPassword: ""
+            confirmPassword: "",
         },
         validate: {
             ...baseValidation,

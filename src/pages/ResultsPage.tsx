@@ -1,458 +1,207 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-    Container,
-    Stack,
-    Card,
-    Group,
-    Button,
-    Title,
-    Text,
+    Alert,
     Badge,
-    RingProgress,
+    Button,
+    Card,
+    Container,
+    Group,
+    Stack,
+    Text,
+    Title,
 } from '@mantine/core';
 import Header from '../components/Header';
-import { sessionUtils } from "../../test-utils/sessionUtils";
-import { TestSession } from "@/types/session";
+import { Test, TestingSession } from '@/types';
+import { testingSessionsApi } from '@/api/testingSessions';
+import { fetchTests } from '@/api/tests';
+import { enrichTest } from '@/utils/testAdapters';
+import ReactMarkdown from 'react-markdown';
 
-interface AnalysisResult {
-    resultLevel: 'low' | 'medium' | 'high';
-    percentile: number;
-    mainFindings: string;
-    recommendations: string[];
-    suggestedActions: string[];
+interface LocationState {
+    session?: TestingSession;
+    test?: Test;
 }
 
-
-const analysisTemplates: { [key: string]: AnalysisResult } = {
-    'Тест на уровень стресса': {
-        resultLevel: 'medium',
-        percentile: 55,
-        mainFindings: 'Вы испытываете высокий уровень стресса. Необходимо срочно принять меры для улучшения здоровья.',
-        recommendations: [
-            'Практикуйте регулярные упражнения (30 мин в день)',
-            'Медитируйте не менее 10 минут ежедневно',
-            'Обеспечьте полноценный сон (7-8 часов)',
-            'Ограничьте кофеин и энергетические напитки',
-            'Проводите время с близкими людьми'
-        ],
-        suggestedActions: [
-            '→ Записаться на йогу или пилатес',
-            '→ Установить приложение для медитации',
-            '→ Создать график регулярного отдыха',
-            '→ Консультация психолога (при необходимости)'
-        ]
-    },
-    'Тест на эмоциональный интеллект': {
-        resultLevel: 'high',
-        percentile: 72,
-        mainFindings: 'Вы обладаете высоким эмоциональным интеллектом. Это ваша сила в отношениях.',
-        recommendations: [
-            'Развивайте навыки активного слушания',
-            'Работайте над самосознанием и саморефлексией',
-            'Практикуйте эмпатию в повседневной жизни',
-            'Изучайте психологию эмоций',
-            'Участвуйте в групповых обсуждениях'
-        ],
-        suggestedActions: [
-            '→ Прочитать книги по эмоциональному интеллекту',
-            '→ Посетить тренинг по коммуникации',
-            '→ Практиковать медитацию любящей доброты',
-            '→ Найти ментора для развития навыков'
-        ]
-    },
-    'Тест на адаптацию к изменениям': {
-        resultLevel: 'medium',
-        percentile: 60,
-        mainFindings: 'Ваша адаптивность находится на среднем уровне. Развитие гибкости поможет лучше адаптироваться.',
-        recommendations: [
-            'Культивируйте позитивное отношение к переменам',
-            'Учитесь видеть возможности в новых ситуациях',
-            'Развивайте план B для критических ситуаций',
-            'Практикуйте гибкость в решении проблем',
-            'Общайтесь с людьми, успешно адаптирующимися'
-        ],
-        suggestedActions: [
-            '→ Начните новый проект или хобби',
-            '→ Измените 3 привычные рутины',
-            '→ Запишитесь на тренинг по управлению',
-            '→ Практикуйте воздействие на стрессовые ситуации'
-        ]
-    },
-    'Тест на тревожность': {
-        resultLevel: 'low',
-        percentile: 45,
-        mainFindings: 'Ваш уровень тревожности повышен. Рекомендуется обратиться к специалисту.',
-        recommendations: [
-            'Практикуйте дыхательные упражнения при тревоге',
-            'Используйте технику прогрессивной релаксации',
-            'Ограничьте кофеин и энергетические напитки',
-            'Избегайте прокрастинации',
-            'Ведите дневник триггеров тревоги'
-        ],
-        suggestedActions: [
-            '→ Посетить когнитивно-поведенческую терапию',
-            '→ Установить приложение для управления тревогой',
-            '→ Заниматься физической активностью регулярно',
-            '→ Разработать план действий для тревожных ситуаций'
-        ]
-    },
-    'Тест на выгорание': {
-        resultLevel: 'high',
-        percentile: 70,
-        mainFindings: 'Вы хорошо справляетесь с профессиональной нагрузкой. Продолжайте поддерживать здоровые привычки.',
-        recommendations: [
-            'Поддерживайте баланс работа-отдых',
-            'Продолжайте регулярный отпуск',
-            'Развивайте интересы вне работы',
-            'Общайтесь с коллегами неформально',
-            'Цените свои профессиональные достижения'
-        ],
-        suggestedActions: [
-            '→ Поставить новые профессиональные цели',
-            '→ Запланировать отпуск на следующие месяцы',
-            '→ Развивать новые навыки в профессии',
-            '→ Укреплять отношения с коллегами'
-        ]
-    },
-    'Тест коммуникативных навыков': {
-        resultLevel: 'medium',
-        percentile: 58,
-        mainFindings: 'Ваши коммуникативные навыки требуют развития. Это поможет улучшить отношения.',
-        recommendations: [
-            'Развивайте навык активного слушания',
-            'Работайте над ясностью изложения',
-            'Практикуйте эмпатию в общении',
-            'Учитесь читать невербальные сигналы',
-            'Регулярно общайтесь в неформальной обстановке'
-        ],
-        suggestedActions: [
-            '→ Посетить тренинг по публичным выступлениям',
-            '→ Звонить друзьям чаще',
-            '→ Присоединиться к клубу или группе',
-            '→ Прочитать книги о коммуникации'
-        ]
-    },
-    'Тест на самооценку': {
-        resultLevel: 'medium',
-        percentile: 62,
-        mainFindings: 'У вас здоровая самооценка. Есть возможность для укрепления уверенности.',
-        recommendations: [
-            'Ведите дневник достижений и побед',
-            'Практикуйте позитивное самоговорение',
-            'Принимайте комплименты с благодарностью',
-            'Устанавливайте реалистичные цели',
-            'Окружайте себя поддерживающими людьми'
-        ],
-        suggestedActions: [
-            '→ Завести дневник достижений',
-            '→ Практиковать самокомпассию',
-            '→ Устанавливать и достигать малых целей',
-            '→ Помогать другим для собственной ценности'
-        ]
-    },
-    'Тест на профориентацию': {
-        resultLevel: 'medium',
-        percentile: 65,
-        mainFindings: 'Вы имеете представление о карьерном пути. Есть возможность для уточнения целей.',
-        recommendations: [
-            'Проведите анализ интересов и способностей',
-            'Исследуйте разные профессиональные области',
-            'Общайтесь с успешными профессионалами',
-            'Получайте дополнительное образование',
-            'Создайте долгосрочный план развития'
-        ],
-        suggestedActions: [
-            '→ Посетить консультацию карьерного консультанта',
-            '→ Пройти тесты на профессиональное соответствие',
-            '→ Взять интервью у профессионалов',
-            '→ Разработить 5-летний план развития'
-        ]
-    },
-    'Тест на креативность': {
-        resultLevel: 'high',
-        percentile: 75,
-        mainFindings: 'Вы обладаете высокой креативностью. Продолжайте развивать творческий потенциал.',
-        recommendations: [
-            'Экспериментируйте с новыми идеями без страха',
-            'Ищите необычные связи между предметами',
-            'Практикуйте брейнсторминг с другими',
-            'Погружайтесь в разные области знания',
-            'Выделяйте время для творческих занятий'
-        ],
-        suggestedActions: [
-            '→ Заняться новым творческим хобби',
-            '→ Посетить мастер-класс по креативности',
-            '→ Создавать регулярно (рисовать, писать)',
-            '→ Изучить методики творческого мышления'
-        ]
-    },
-    'Тест на устойчивость к стрессу': {
-        resultLevel: 'high',
-        percentile: 78,
-        mainFindings: 'Вы обладаете высокой стрессоустойчивостью. Продолжайте поддерживать ресурсы.',
-        recommendations: [
-            'Развивайте физическую активность',
-            'Укрепляйте социальные связи',
-            'Практикуйте медитацию и осознанность',
-            'Четко определите жизненные цели',
-            'Найдите способы релаксации и отдыха'
-        ],
-        suggestedActions: [
-            '→ Начать программу упражнений',
-            '→ Записаться на йогу или медитацию',
-            '→ Развивать позитивное мышление',
-            '→ Обратиться к консультанту по стрессу'
-        ]
-    },
-    'Тест на лидерские качества': {
-        resultLevel: 'medium',
-        percentile: 68,
-        mainFindings: 'У вас хорошие лидерские способности. Есть возможность для совершенствования.',
-        recommendations: [
-            'Развивайте навыки принятия решений',
-            'Работайте над мотивацией команды',
-            'Учитесь эффективно разрешать конфликты',
-            'Развивайте эмоциональный интеллект',
-            'Передавайте знания и опыт другим'
-        ],
-        suggestedActions: [
-            '→ Посетить программу развития лидерства',
-            '→ Найти ментора-лидера',
-            '→ Взять руководящую роль в проекте',
-            '→ Прочитать книги о лидерстве'
-        ]
-    },
-    'Тест на эмоциональное выгорание': {
-        resultLevel: 'low',
-        percentile: 40,
-        mainFindings: 'Вы находитесь на пути к выгоранию. Требуется действие для восстановления.',
-        recommendations: [
-            'Перераспределите рабочую нагрузку',
-            'Установите границы между работой и отдыхом',
-            'Займитесь восстанавливающей деятельностью',
-            'Укрепляйте социальные связи',
-            'Займитесь деятельностью, приносящей удовлетворение'
-        ],
-        suggestedActions: [
-            '→ Возьмите перерыв на работе',
-            '→ Обратиться к психотерапевту',
-            '→ Рассмотреть смену должности',
-            '→ Разработить план восстановления'
-        ]
-    }
-};
-
 const ResultsPage: React.FC = () => {
-    const location = useLocation();
     const navigate = useNavigate();
-    const resultsData = location.state;
+    const location = useLocation();
+    const { testId: routeTestId } = useParams<{ testId: string }>();
+    const [searchParams] = useSearchParams();
+    const locationState = (location.state as LocationState | undefined) ?? {};
 
-    // Получаем историю сессий для этого теста
-    const [testSessions, setTestSessions] = useState<TestSession[]>([]);
+    const [session, setSession] = useState<TestingSession | null>(locationState.session ?? null);
+    const [testDetails, setTestDetails] = useState<Test | null>(locationState.test ?? null);
+    const [loading, setLoading] = useState(!session);
+    const [error, setError] = useState<string | null>(null);
+
+    const sessionIdFromParams = searchParams.get('sessionId');
+    const sessionId = session?.id ?? sessionIdFromParams ?? '';
+
+    const loadSession = useCallback(async () => {
+        if (session || !sessionId) {
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await testingSessionsApi.get(sessionId);
+            setSession(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Не удалось загрузить результаты теста');
+        } finally {
+            setLoading(false);
+        }
+    }, [session, sessionId]);
 
     useEffect(() => {
-        if (resultsData?.testId) {
-            const allSessions = sessionUtils.getAllSessions();
-            const testSessions = allSessions
-                .filter(session => session.testId === resultsData.testId)
-                .sort((a, b) => b.startedAt - a.startedAt);
-            setTestSessions(testSessions);
-        }
-    }, [resultsData?.testId]);
+        loadSession();
+    }, [loadSession]);
 
-    if (!resultsData) {
+    const loadTestDetails = useCallback(async () => {
+        if (testDetails || !session) {
+            return;
+        }
+
+        try {
+            const data = await fetchTests({ offset: 0, limit: 50 });
+            const match = data.items.find(item => item.id === session.testId);
+            if (match) {
+                setTestDetails(enrichTest(match));
+            }
+        } catch {
+            // описание не обязательно
+        }
+    }, [session, testDetails]);
+
+    useEffect(() => {
+        loadTestDetails();
+    }, [loadTestDetails]);
+
+    const handleRetake = () => {
+        const targetTestId = session?.testId ?? routeTestId ?? '';
+        if (!targetTestId) {
+            navigate('/tests');
+            return;
+        }
+        navigate(`/test/${targetTestId}`);
+    };
+
+    const handleBackToTests = () => {
+        navigate('/tests');
+    };
+
+    if (!sessionId) {
         return (
-            <Container>
-                <Text>Данные результатов не найдены</Text>
-                <Button onClick={() => navigate('/tests')}>Вернуться к тестам</Button>
-            </Container>
+            <>
+                <Header />
+                <Container size="sm" py="xl">
+                    <Alert color="red" title="Ошибка">
+                        Не указан идентификатор сессии. Пожалуйста, вернитесь на страницу тестов и попробуйте снова.
+                    </Alert>
+                    <Button mt="lg" onClick={handleBackToTests}>
+                        К списку тестов
+                    </Button>
+                </Container>
+            </>
         );
     }
 
-    const { testId, testTitle, category, percentile } = resultsData;
-    const analysis = analysisTemplates[testTitle] || analysisTemplates['Тест на уровень стресса'];
-    const getRiskColor = () => {
-        if (analysis.resultLevel === 'high') {
-            return 'teal';
-        }
-        if (analysis.resultLevel === 'medium') {
-            return 'yellow';
-        }
-        return 'red';
-    };
+    if (loading || !session) {
+        return (
+            <>
+                <Header />
+                <Container size="sm" py="xl">
+                    <Text>Загрузка результатов...</Text>
+                </Container>
+            </>
+        );
+    }
 
-    const getRiskLabel = () => {
-        if (analysis.resultLevel === 'high') {
-            return '🟢 Высокий результат';
-        }
-        if (analysis.resultLevel === 'medium') {
-            return '🟡 Средний результат';
-        }
-        return '🔴 Низкий результат';
-    };
+    if (error) {
+        return (
+            <>
+                <Header />
+                <Container size="sm" py="xl">
+                    <Alert color="red" mb="lg" title="Ошибка">
+                        {error}
+                    </Alert>
+                    <Button onClick={loadSession}>Попробовать снова</Button>
+                </Container>
+            </>
+        );
+    }
 
-    const recentSessions = testSessions.slice(0, 5);
-
-    const formatSessionDate = (timestamp?: number) => {
-        if (!timestamp) {
-            return '—';
-        }
-        return new Date(timestamp).toLocaleString('ru-RU');
-    };
+    const resultText = session.result ?? 'Результат появится чуть позже. Попробуйте обновить страницу через пару минут.';
+    const answeredQuestions = session.questionResponses?.filter(question =>
+        question.content.options.some(option => option.isSelected),
+    );
 
     return (
         <>
             <Header />
-            <Container size="xl" style={{ padding: '40px 0' }}>
-
-                {/* Заголовок */}
-                <div style={{ textAlign: 'center', color: 'white', marginBottom: '50px' }}>
-                    <Title order={1} style={{ color: 'white', fontSize: '2.5rem', marginBottom: '10px' }}>
-                        📊 Ваши результаты
-                    </Title>
-                    <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                        {testTitle}
+            <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
+                <Stack gap="lg" mb="xl" align="center" style={{ color: 'white' }}>
+                    <Title order={1}>Результаты теста</Title>
+                    <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'center' }}>
+                        {testDetails?.name ?? 'Психологический тест'}
                     </Text>
-                </div>
-
-
-                {/* Результат с процентилем */}
-                <Card
-                    shadow="md"
-                    p="xl"
-                    mb="xl"
-                    style={{
-                        background: 'rgba(255,255,255,0.95)',
-                        borderRadius: '16px',
-                        border: '1px solid #e8e8f0'
-                    }}
-                >
-                    <Group justify="space-between" align="flex-start">
-                        <div>
-                            <Title order={2} size="h2" style={{ color: '#333' }}>{getRiskLabel()}</Title>
-                            <Badge size="lg" color={getRiskColor()} mt="md">
-                                {category}
-                            </Badge>
-                            <Text size="md" style={{ color: '#666', marginTop: '15px' }}>
-                                Процентиль: <strong style={{ color: '#333' }}>{percentile}%</strong>
-                            </Text>
-                        </div>
-
-                        <RingProgress
-                            sections={[{ value: percentile, color: getRiskColor() }]}
-                            label={
-                                <div style={{ textAlign: 'center' }}>
-                                    <Text size="xl" fw={700} style={{ color: '#333' }}>{percentile}%</Text>
-                                    <Text size="xs" style={{ color: '#666' }}>Процентиль</Text>
-                                </div>
-                            }
-                            thickness={8}
-                            size={140}
-                        />
+                    <Group gap="sm">
+                        <Badge color="violet">
+                            Статус: {session.status === 'COMPLETED' ? 'Завершен' : session.status}
+                        </Badge>
+                        {testDetails?.category && <Badge color="blue">{testDetails.category}</Badge>}
                     </Group>
-                </Card>
+                </Stack>
 
-                {/* AI Анализ */}
-                <Card
-                    shadow="md"
-                    p="xl"
-                    mb="xl"
-                    style={{
-                        background: 'rgba(255,255,255,0.95)',
-                        borderRadius: '16px',
-                        border: '1px solid #e8e8f0',
-                        borderLeft: '4px solid #667eea'
-                    }}
-                >
-                    <Group mb="lg">
-                        <span style={{ fontSize: '1.4rem' }}>🔵</span>
-                        <Title order={3} style={{ margin: 0, color: '#333' }}>AI Анализ</Title>
-                    </Group>
-                    <Text style={{ color: '#333', lineHeight: 1.8, fontSize: '15px' }}>
-                        {analysis.mainFindings}
-                    </Text>
-                </Card>
-
-                {/* История прохождения */}
-                {recentSessions.length > 0 && (
-                    <Card
-                        shadow="md"
-                        p="xl"
-                        mb="xl"
-                        style={{
-                            background: 'rgba(255,255,255,0.95)',
-                            borderRadius: '16px',
-                            border: '1px solid #e8e8f0'
-                        }}
-                    >
-                        <Group mb="lg">
-                            <span style={{ fontSize: '1.4rem' }}>📚</span>
-                            <Title order={3} style={{ margin: 0, color: '#333' }}>История прохождения</Title>
-                        </Group>
-                        <Stack gap="md">
-                            {recentSessions.map(session => (
-                                <Group
-                                    key={session.id}
-                                    justify="space-between"
-                                    style={{ borderBottom: '1px solid #f0f0f5', paddingBottom: '0.75rem' }}
-                                >
-                                    <div>
-                                        <Text fw={600}>{formatSessionDate(session.completedAt ?? session.startedAt)}</Text>
-                                        <Text size="sm" c="dimmed">
-                                            Статус: {session.status === 'completed' ? 'Завершен' : 'В процессе'}
-                                        </Text>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <Text fw={600}>
-                                            {session.result?.percentile ? `${session.result.percentile}%` : '—'}
-                                        </Text>
-                                        <Text size="sm" c="dimmed">
-                                            {session.result?.category ?? 'Без категории'}
-                                        </Text>
-                                    </div>
-                                </Group>
-                            ))}
-                        </Stack>
-                    </Card>
-                )}
-
-                {/* Кнопки */}
-                <Card
-                    shadow="md"
-                    p="xl"
-                    style={{
-                        background: 'rgba(255,255,255,0.95)',
-                        borderRadius: '16px',
-                        border: '1px solid #e8e8f0'
-                    }}
-                >
+                <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
                     <Stack gap="md">
-                        <Group justify="center" grow>
-                            <Button
-                                size="md"
-                                variant="light"
-                                onClick={() => navigate(`/test/${testId}`)}
-                            >
-                                🔄 Пройти тест заново
-                            </Button>
-                            <Button
-                                size="md"
-                                gradient={{ from: 'blue', to: 'cyan' }}
-                                onClick={() => navigate('/tests')}
-                            >
-                                📋 К другим тестам
-                            </Button>
-                        </Group>
-
-                        <Text size="xs" ta="center" style={{ color: '#999', marginTop: '10px' }}>
-                            💾 Ваши результаты автоматически сохранены
-                        </Text>
+                        <Title order={3}>Анализ результата</Title>
+                        <ReactMarkdown>{resultText}</ReactMarkdown>
                     </Stack>
                 </Card>
+
+                <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                    <Group mb="lg">
+                        <Text fw={600} size="lg">Ответы</Text>
+                        <Badge color="green">{answeredQuestions.length} / {session.questionResponses.length}</Badge>
+                    </Group>
+                    <Stack gap="md">
+                        {session.questionResponses.map(question => {
+                            const selectedOptions = question.content.options.filter(option => option.isSelected);
+                            return (
+                                <Card key={question.id} withBorder radius="md">
+                                    <Stack gap="xs">
+                                        <Text fw={600}>{question.content.text}</Text>
+                                        {selectedOptions.length ? (
+                                            <Stack gap={4}>
+                                                {selectedOptions.map(option => (
+                                                    <Text key={option.index} size="sm">• {option.text}</Text>
+                                                ))}
+                                            </Stack>
+                                        ) : (
+                                            <Text size="sm" c="dimmed">Ответ не выбран</Text>
+                                        )}
+                                    </Stack>
+                                </Card>
+                            );
+                        })}
+                    </Stack>
+                </Card>
+
+                <Group justify="center" mt="lg">
+                    <Button variant="light" onClick={handleRetake}>
+                        Пройти еще раз
+                    </Button>
+                    <Button onClick={handleBackToTests}>
+                        К другим тестам
+                    </Button>
+                </Group>
             </Container>
         </>
     );
 };
 
 export default ResultsPage;
+

@@ -7,11 +7,17 @@ export const API_ROUTES = {
     },
     tests: {
         list: '/testing/tests',
-        details: (testId: number | string) => `/tests/${testId}`,
+    },
+    testingSessions: {
+        base: '/testing/sessions',
+        create: (testId: string) => `/testing/sessions/${testId}`,
+        session: (sessionId: string) => `/testing/sessions/${sessionId}`,
+        answers: (sessionId: string) => `/testing/sessions/${sessionId}/answers`,
+        complete: (sessionId: string) => `/testing/sessions/${sessionId}/complete`,
+        close: (sessionId: string) => `/testing/sessions/${sessionId}/close`,
     },
     chat: {
-        history: '/chat/history',
-        message: '/chat/message',
+        history: '/chat',
     },
 } as const;
 
@@ -20,5 +26,4 @@ export const STORAGE_KEYS = {
     tokenExpiresAt: 'token_expires',
     userId: 'user_id',
 } as const;
-
 

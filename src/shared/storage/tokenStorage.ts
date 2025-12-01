@@ -33,10 +33,6 @@ export const readUserId = (): string | null => {
     return withStorage(() => localStorage.getItem(STORAGE_KEYS.userId));
 };
 
-export const readUserEmail = (): string | null => {
-    return withStorage(() => localStorage.getItem(STORAGE_KEYS.userId));
-};
-
 export const clearToken = (): void => {
     withStorage(() => {
         localStorage.removeItem(STORAGE_KEYS.token);

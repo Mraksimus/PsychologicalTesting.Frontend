@@ -55,10 +55,9 @@ const Header: React.FC = () => {
                                 textShadow: '0 2px 4px rgba(0,0,0,0.1)',
                                 background: 'none',
                                 border: 'none',
-                                padding: 0
+                                padding: 0,
                             }}
                             onClick={() => handleNavigation('/home')}
-                            aria-label="Перейти на главную MindCheck"
                         >
                             MindCheck
                         </button>
@@ -224,7 +223,6 @@ const Header: React.FC = () => {
                                 e.currentTarget.style.color = '#333';
                             }}
                             title="Перейти в профиль"
-                            aria-label="Перейти в профиль"
                         >
                             {currentUser.fullName}
                         </button>

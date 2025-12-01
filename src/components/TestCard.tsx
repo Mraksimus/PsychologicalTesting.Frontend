@@ -1,9 +1,9 @@
 import React from 'react';
-import { FeaturedTest } from '@/types';
+import { Test } from '@/types';
 
 interface TestCardProps {
-    test: FeaturedTest;
-    onStartTest: (testId: number) => void;
+    test: Test;
+    onStartTest: (test: Test) => void;
 }
 
 const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
@@ -27,6 +27,10 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
         return icons[category] || '📊';
     };
 
+    const category = test.category ?? 'Психология';
+    const questionsCount = typeof test.questionsCount === 'number' ? test.questionsCount : '—';
+    const duration = test.durationMins || '—';
+
     return (
         <div style={{
             background: 'white',
@@ -39,7 +43,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
         }}>
             <div
                 style={{
-                    background: getGradientByCategory(test.category),
+                    background: getGradientByCategory(category),
                     height: '120px',
                     display: 'flex',
                     alignItems: 'center',
@@ -50,7 +54,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 }}
             >
                 <div style={{ fontSize: '3rem', marginRight: '1rem' }}>
-                    {getIconByCategory(test.category)}
+                    {getIconByCategory(category)}
                 </div>
                 <div style={{
                     position: 'absolute',
@@ -65,7 +69,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                     fontWeight: '500',
                     border: '1px solid rgba(255,255,255,0.3)'
                 }}>
-                    {test.category}
+                    {category}
                 </div>
             </div>
 
@@ -76,20 +80,20 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 flex: 1
             }}>
                 <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#2c3e50', marginTop: 0 }}>
-                    {test.title}
+                    {test.name}
                 </h3>
                 <p style={{ color: '#666', marginBottom: '1rem', lineHeight: '1.5', marginTop: 0 }}>
-                    {test.description}
+                    {test.description || test.transcript}
                 </p>
 
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', marginTop: 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>❓</span>
-                        <span>{test.questionsCount} вопросов</span>
+                        <span>{questionsCount} вопросов</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>⏱️</span>
-                        <span>{test.time} мин</span>
+                        <span>{duration} мин</span>
                     </div>
                 </div>
 
@@ -107,7 +111,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                         cursor: 'pointer',
                         marginTop: 'auto'
                     }}
-                    onClick={() => onStartTest(test.id)}
+                    onClick={() => onStartTest(test)}
                 >
                     Начать тест
                 </button>

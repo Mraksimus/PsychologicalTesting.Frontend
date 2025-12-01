@@ -4,7 +4,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { notifications } from "@mantine/notifications";
 import { Center, Stack, Text } from "@mantine/core";
-import { EMAIL_REGEX, NAME_REGEX } from "@/shared/validation/patterns";
+import { EMAIL_REGEX, NAME_REGEX, PASSWORD_REGEX } from '@/shared/validation/patterns';
 
 // Используем именованный экспорт
 export const RegisterPage: React.FC = () => {
@@ -70,6 +70,15 @@ export const RegisterPage: React.FC = () => {
                     color: "red",
                     title: "Ошибка",
                     message: "Введите пароль",
+                });
+                return;
+            }
+
+            if (!PASSWORD_REGEX.test(values.password)) {
+                notifications.show({
+                    color: "red",
+                    title: "Ошибка",
+                    message: "Пароль слишком короткий (минимум 6 символов)",
                 });
                 return;
             }

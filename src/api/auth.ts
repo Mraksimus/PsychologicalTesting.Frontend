@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { httpClient } from '@/shared/http/httpClient';
-import { API_ROUTES } from '@/shared/config/apiConfig';
 import {
     clearToken,
     hasValidToken,
@@ -52,7 +51,7 @@ export const register = async (
     password: string,
 ): Promise<void> => {
     try {
-        const response = await httpClient.post<AuthSuccessResponse>(API_ROUTES.auth.register, {
+        const response = await httpClient.post<AuthSuccessResponse>('/auth/register', {
             name,
             surname,
             patronymic,
@@ -77,7 +76,7 @@ export const register = async (
 
 export const login = async (email: string, password: string): Promise<void> => {
     try {
-        const response = await httpClient.post<AuthSuccessResponse>(API_ROUTES.auth.login, { email, password });
+        const response = await httpClient.post<AuthSuccessResponse>('/auth/login', { email, password });
         persistToken(normalizeTokenPayload(response.data));
     } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -101,7 +100,7 @@ export const getCurrentUser = (): { id: string | null } => {
     }
 
     return {
-        id: readUserId()
+        id: readUserId(),
     };
 };
 
