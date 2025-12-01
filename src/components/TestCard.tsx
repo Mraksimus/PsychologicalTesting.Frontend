@@ -1,5 +1,6 @@
 import React from 'react';
 import { Test } from '@/types';
+import { getCategoryLabel, getCategoryGradient, getCategoryIcon } from '@/utils/testAdapters';
 
 interface TestCardProps {
     test: Test;
@@ -7,28 +8,10 @@ interface TestCardProps {
 }
 
 const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
-    const getGradientByCategory = (category: string): string => {
-        const gradients: { [key: string]: string } = {
-            'Психология': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            'Развитие': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            'Коммуникации': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            'Здоровье': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
-        };
-        return gradients[category] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    };
-
-    const getIconByCategory = (category: string): string => {
-        const icons: { [key: string]: string } = {
-            'Психология': '🧠',
-            'Развитие': '📈',
-            'Коммуникации': '💬',
-            'Здоровье': '❤️'
-        };
-        return icons[category] || '📊';
-    };
-
-    const category = test.category ?? 'Психология';
-    const questionsCount = typeof test.questionsCount === 'number' ? test.questionsCount : '—';
+    const categoryLabel = getCategoryLabel(test.category);
+    const categoryGradient = getCategoryGradient(test.category);
+    const categoryIcon = getCategoryIcon(test.category);
+    const questionsCount = test.questionsCount;
     const duration = test.durationMins || '—';
 
     return (
@@ -43,7 +26,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
         }}>
             <div
                 style={{
-                    background: getGradientByCategory(category),
+                    background: categoryGradient,
                     height: '120px',
                     display: 'flex',
                     alignItems: 'center',
@@ -54,7 +37,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 }}
             >
                 <div style={{ fontSize: '3rem', marginRight: '1rem' }}>
-                    {getIconByCategory(category)}
+                    {categoryIcon}
                 </div>
                 <div style={{
                     position: 'absolute',
@@ -69,7 +52,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                     fontWeight: '500',
                     border: '1px solid rgba(255,255,255,0.3)'
                 }}>
-                    {category}
+                    {categoryLabel}
                 </div>
             </div>
 

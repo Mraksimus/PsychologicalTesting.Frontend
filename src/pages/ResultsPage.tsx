@@ -10,12 +10,13 @@ import {
     Stack,
     Text,
     Title,
+    Loader,
+    Center,
 } from '@mantine/core';
-import Header from '../components/Header';
 import { Test, TestingSession } from '@/types';
 import { testingSessionsApi } from '@/api/testingSessions';
 import { fetchTests } from '@/api/tests';
-import { enrichTest } from '@/utils/testAdapters';
+import { enrichTest, getCategoryLabel, getCategoryColor } from '@/utils/testAdapters';
 import ReactMarkdown from 'react-markdown';
 
 interface LocationState {
@@ -32,17 +33,20 @@ const ResultsPage: React.FC = () => {
 
     const [session, setSession] = useState<TestingSession | null>(locationState.session ?? null);
     const [testDetails, setTestDetails] = useState<Test | null>(locationState.test ?? null);
-    const [loading, setLoading] = useState(!session);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const sessionIdFromParams = searchParams.get('sessionId');
     const sessionId = session?.id ?? sessionIdFromParams ?? '';
 
     const loadSession = useCallback(async () => {
-        if (session || !sessionId) {
+        if (!sessionId) {
+            setError('Идентификатор сессии не найден');
+            setLoading(false);
             return;
         }
 
+        // Если session уже есть в state, все равно загружаем свежие данные
         setLoading(true);
         setError(null);
         try {
@@ -53,7 +57,7 @@ const ResultsPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [session, sessionId]);
+    }, [sessionId]);
 
     useEffect(() => {
         loadSession();
@@ -95,7 +99,6 @@ const ResultsPage: React.FC = () => {
     if (!sessionId) {
         return (
             <>
-                <Header />
                 <Container size="sm" py="xl">
                     <Alert color="red" title="Ошибка">
                         Не указан идентификатор сессии. Пожалуйста, вернитесь на страницу тестов и попробуйте снова.
@@ -111,9 +114,13 @@ const ResultsPage: React.FC = () => {
     if (loading || !session) {
         return (
             <>
-                <Header />
-                <Container size="sm" py="xl">
-                    <Text>Загрузка результатов...</Text>
+                <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
+                    <Center style={{ minHeight: '60vh' }}>
+                        <Stack align="center" gap="md">
+                            <Loader size="lg" />
+                            <Text c="white">Загрузка результатов...</Text>
+                        </Stack>
+                    </Center>
                 </Container>
             </>
         );
@@ -122,7 +129,6 @@ const ResultsPage: React.FC = () => {
     if (error) {
         return (
             <>
-                <Header />
                 <Container size="sm" py="xl">
                     <Alert color="red" mb="lg" title="Ошибка">
                         {error}
@@ -140,7 +146,6 @@ const ResultsPage: React.FC = () => {
 
     return (
         <>
-            <Header />
             <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
                 <Stack gap="lg" mb="xl" align="center" style={{ color: 'white' }}>
                     <Title order={1}>Результаты теста</Title>
@@ -151,7 +156,11 @@ const ResultsPage: React.FC = () => {
                         <Badge color="violet">
                             Статус: {session.status === 'COMPLETED' ? 'Завершен' : session.status}
                         </Badge>
-                        {testDetails?.category && <Badge color="blue">{testDetails.category}</Badge>}
+                        {testDetails?.category && (
+                            <Badge color={getCategoryColor(testDetails.category)}>
+                                {getCategoryLabel(testDetails.category)}
+                            </Badge>
+                        )}
                     </Group>
                 </Stack>
 

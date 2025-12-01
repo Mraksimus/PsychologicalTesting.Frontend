@@ -1,3 +1,5 @@
+export type TestCategory = 'PERSONALITY' | 'EMOTIONS' | 'INTELLECT' | 'CAREER' | 'RELATIONSHIPS' | 'DEVELOPMENT' | 'OTHER';
+
 export interface Test {
     id: string;
     name: string;
@@ -8,11 +10,8 @@ export interface Test {
     createdAt: string;
     updatedAt: string;
     position: number;
-    /**
-     * Дополнительные поля для UI (рассчитываются на клиенте).
-     */
-    category?: string;
-    questionsCount?: number;
+    category: TestCategory;
+    questionsCount: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -89,3 +88,24 @@ export interface ClientAnswerPayload {
     text: string;
     isSelected: boolean;
 }
+
+export interface UserProfile {
+    email: string;
+    name: string;
+    surname: string;
+    patronymic?: string | null;
+    registeredAt: string;
+    lastLoginAt?: string | null;
+    sessionsCount: number;
+    completedSessionsCount: number;
+    inProgressSessionsCount: number;
+}
+
+export interface TestingSessionCard {
+    id: string;
+    testName: string;
+    status: TestingSessionStatus;
+    createdAt: string;
+}
+
+export interface TestingSessionCardResponse extends PaginatedResponse<TestingSessionCard> {}

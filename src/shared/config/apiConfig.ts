@@ -19,6 +19,12 @@ export const API_ROUTES = {
     chat: {
         history: '/chat',
     },
+    profile: {
+        get: '/user/profile',
+        update: '/user/profile',
+        delete: '/user/profile',
+        sessions: '/user/profile/sessions',
+    },
 } as const;
 
 export const STORAGE_KEYS = {

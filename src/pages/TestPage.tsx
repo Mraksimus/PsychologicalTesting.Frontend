@@ -18,15 +18,18 @@ import {
     Box,
     Alert,
 } from '@mantine/core';
-import Header from '../components/Header';
 import { fetchTests } from "@/api/tests";
-import { enrichTests } from '@/utils/testAdapters';
+import { enrichTests, getCategoryLabel, getCategoryColor } from '@/utils/testAdapters';
 
 const categories = [
     { value: 'all', label: 'Все категории' },
-    { value: 'Психология', label: 'Психология' },
-    { value: 'Развитие', label: 'Развитие' },
-    { value: 'Профессия', label: 'Профессия' },
+    { value: 'PERSONALITY', label: 'Личность' },
+    { value: 'EMOTIONS', label: 'Эмоции' },
+    { value: 'INTELLECT', label: 'Интеллект' },
+    { value: 'CAREER', label: 'Карьера' },
+    { value: 'RELATIONSHIPS', label: 'Отношения' },
+    { value: 'DEVELOPMENT', label: 'Развитие' },
+    { value: 'OTHER', label: 'Другое' },
 ];
 
 const sortOptions = [
@@ -91,7 +94,7 @@ const TestsPage: React.FC = () => {
         }
 
         if (selectedCategory !== 'all') {
-            result = result.filter(test => (test.category || 'all') === selectedCategory);
+            result = result.filter(test => test.category === selectedCategory);
         }
 
         switch (sortBy) {
@@ -105,7 +108,7 @@ const TestsPage: React.FC = () => {
                 result.sort((a, b) => Number(a.durationMins || 0) - Number(b.durationMins || 0));
                 break;
             case 'questions':
-                result.sort((a, b) => (a.questionsCount || 0) - (b.questionsCount || 0));
+                result.sort((a, b) => a.questionsCount - b.questionsCount);
                 break;
             default:
                 break;
@@ -118,14 +121,6 @@ const TestsPage: React.FC = () => {
         navigate(`/test/${test.id}`, { state: { test } });
     };
 
-    const getCategoryColor = (category: string) => {
-        switch (category) {
-            case 'Психология': return 'blue';
-            case 'Развитие': return 'green';
-            case 'Профессия': return 'orange';
-            default: return 'gray';
-        }
-    };
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(event.target.value);
@@ -147,7 +142,6 @@ const TestsPage: React.FC = () => {
 
     return (
         <>
-            <Header />
             <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0', position: 'relative' }}>
                 {loading && <LoadingOverlay visible />}
 
@@ -246,8 +240,8 @@ const TestsPage: React.FC = () => {
 
                                     {/* Категория и популярность */}
                                     <Group gap="xs" style={{ flexShrink: 0 }}>
-                                        <Badge color={getCategoryColor(test.category || 'Психология')} variant="light">
-                                            {test.category || 'Психология'}
+                                        <Badge color={getCategoryColor(test.category)} variant="light">
+                                            {getCategoryLabel(test.category)}
                                         </Badge>
                                     </Group>
 
@@ -261,7 +255,7 @@ const TestsPage: React.FC = () => {
                                         <Group gap="xs">
                                             <IconQuestionMark size={16} />
                                             <Text size="sm">
-                                                {typeof test.questionsCount === 'number' ? `${test.questionsCount} вопросов` : 'Количество вопросов уточняется'}
+                                                {test.questionsCount} вопросов
                                             </Text>
                                         </Group>
                                         <Group gap="xs">

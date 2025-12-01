@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { profileApi } from '@/api/profile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
+    const [fullName, setFullName] = useState<string>('Пользователь');
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            if (user) {
+                try {
+                    const profile = await profileApi.get();
+                    const parts = [profile.surname, profile.name];
+                    if (profile.patronymic) {
+                        parts.push(profile.patronymic);
+                    }
+                    setFullName(parts.join(' '));
+                } catch {
+                    // Если не удалось загрузить, оставляем дефолтное значение
+                }
+            }
+        };
+        loadProfile();
+    }, [user]);
 
     const handleProfileClick = () => {
         navigate('/profile');
@@ -11,11 +33,6 @@ const Header: React.FC = () => {
 
     const handleNavigation = (path: string) => {
         navigate(path);
-    };
-
-    // Mock данные пользователя
-    const currentUser = {
-        fullName: 'Иванов Иван Иванович'
     };
 
     // Функция для определения активной страницы
@@ -224,7 +241,7 @@ const Header: React.FC = () => {
                             }}
                             title="Перейти в профиль"
                         >
-                            {currentUser.fullName}
+                            {fullName}
                         </button>
 
                         {/* Кнопка профиля */}

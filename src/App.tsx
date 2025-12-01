@@ -26,7 +26,8 @@ import TestPage from "@/pages/TestPage";
 // Компонент для условного отображения Header
 const Layout: React.FC = () => {
     const location = useLocation();
-    const showHeader = location.pathname === '/home' || location.pathname === '/profile';
+    // Показываем Header на всех страницах, кроме login и register
+    const showHeader = !location.pathname.startsWith('/login') && !location.pathname.startsWith('/register');
 
     return (
         <>
@@ -74,7 +75,7 @@ const Layout: React.FC = () => {
 const App: React.FC = () => {
     return (
         <MantineProvider theme={theme}>
-            <Notifications position="top-right" />
+            <Notifications position="top-right" zIndex={2000} />
             <AuthProvider>
                 <BrowserRouter>
                     <div className="mindcheck-background">

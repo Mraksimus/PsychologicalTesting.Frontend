@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
     Alert,
@@ -15,7 +15,6 @@ import {
     Text,
     Title,
 } from '@mantine/core';
-import Header from '../components/Header';
 import {
     AnswerOption,
     QuestionResponse,
@@ -77,7 +76,7 @@ const TestingPage: React.FC = () => {
     const testId = testIdParam ?? '';
     const navigate = useNavigate();
     const location = useLocation();
-    const locationState = (location.state as { test?: Test } | undefined) ?? {};
+    const locationState = (location.state as { test?: Test; continueFromProfile?: boolean } | undefined) ?? {};
 
     const [testDetails, setTestDetails] = useState<Test | null>(locationState.test ?? null);
     const [session, setSession] = useState<TestingSession | null>(null);
@@ -90,6 +89,8 @@ const TestingPage: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
     const [isRestarting, setIsRestarting] = useState(false);
+    const isNewlyCreatedRef = useRef(false);
+    const isInitializingRef = useRef(false);
 
     const currentQuestion = useMemo(
         () => questionResponses[currentQuestionIndex],
@@ -125,10 +126,25 @@ const TestingPage: React.FC = () => {
         );
     }, [testId]);
 
+    const createNewSessionRef = useRef(false);
+    
     const createNewSession = useCallback(async () => {
-        const newSession = await testingSessionsApi.create(testId);
-        testingSessionStorage.saveSessionId(testId, newSession.id);
-        setSession(newSession);
+        // Защита от двойного вызова
+        if (createNewSessionRef.current) {
+            return;
+        }
+        createNewSessionRef.current = true;
+        try {
+            const newSession = await testingSessionsApi.create(testId);
+            testingSessionStorage.saveSessionId(testId, newSession.id);
+            // Флаг уже установлен в initializeSession перед вызовом createNewSession
+            setSession(newSession);
+        } finally {
+            // Сбрасываем флаг после небольшой задержки, чтобы избежать двойного вызова
+            setTimeout(() => {
+                createNewSessionRef.current = false;
+            }, 1000);
+        }
     }, [testId]);
 
     const initializeSession = useCallback(async () => {
@@ -136,6 +152,12 @@ const TestingPage: React.FC = () => {
             return;
         }
 
+        // Защита от двойного вызова
+        if (isInitializingRef.current) {
+            return;
+        }
+
+        isInitializingRef.current = true;
         setLoading(true);
         setError(null);
 
@@ -147,34 +169,57 @@ const TestingPage: React.FC = () => {
                 if (existing.status === 'COMPLETED' || existing.status === 'CLOSED') {
                     testingSessionStorage.clearSessionId(testId);
                 } else {
+                    // Сессия существует и активна - не новая
+                    isNewlyCreatedRef.current = false;
                     setSession(existing);
                     setLoading(false);
+                    isInitializingRef.current = false;
                     return;
                 }
             }
 
-            try {
-                await createNewSession();
-            } catch (err) {
-                if (isConflictError(err)) {
-                    const remote = await findRemoteActiveSession();
-                    if (remote) {
-                        testingSessionStorage.saveSessionId(testId, remote.id);
-                        setSession(remote);
-                        return;
-                    }
-                }
-                throw err;
+            // Проверяем, есть ли активная сессия на сервере
+            const remote = await findRemoteActiveSession();
+            if (remote) {
+                testingSessionStorage.saveSessionId(testId, remote.id);
+                isNewlyCreatedRef.current = false;
+                setSession(remote);
+                setLoading(false);
+                isInitializingRef.current = false;
+                return;
             }
+
+            // Нет активных сессий - создаем новую
+            isNewlyCreatedRef.current = true;
+            await createNewSession();
         } catch (err) {
+            if (isConflictError(err)) {
+                // Если конфликт, проверяем еще раз
+                const remote = await findRemoteActiveSession();
+                if (remote) {
+                    testingSessionStorage.saveSessionId(testId, remote.id);
+                    isNewlyCreatedRef.current = false;
+                    setSession(remote);
+                    setLoading(false);
+                    isInitializingRef.current = false;
+                    return;
+                }
+            }
             setError(err instanceof Error ? err.message : 'Не удалось загрузить сессию');
         } finally {
             setLoading(false);
+            isInitializingRef.current = false;
         }
     }, [createNewSession, findRemoteActiveSession, testId]);
 
     useEffect(() => {
+        // Сбрасываем флаг при размонтировании или изменении testId
+        isInitializingRef.current = false;
         initializeSession();
+        
+        return () => {
+            isInitializingRef.current = false;
+        };
     }, [initializeSession]);
 
     useEffect(() => {
@@ -185,12 +230,14 @@ const TestingPage: React.FC = () => {
         setQuestionResponses(session.questionResponses);
         const initialIndex = getInitialQuestionIndex(session.questionResponses);
         setCurrentQuestionIndex(initialIndex);
-        setShowContinueModal(
-            session.status === 'IN_PROGRESS' &&
-            session.questionResponses.some(isQuestionAnswered) &&
-            initialIndex > 0,
-        );
-    }, [session]);
+        // Не показываем модальное окно, если пользователь переходит из профиля или сессия только что создана
+        // Показываем модальное окно только если сессия IN_PROGRESS и она уже существовала (не только что создана)
+        if (!locationState.continueFromProfile && session.status === 'IN_PROGRESS' && !isNewlyCreatedRef.current) {
+            setShowContinueModal(true);
+        }
+        // Сбрасываем флаг после обработки
+        isNewlyCreatedRef.current = false;
+    }, [session, locationState.continueFromProfile]);
 
     const updateLocalQuestionSelection = (questionId: string, optionIndex: number) => {
         setQuestionResponses(prev =>
@@ -281,15 +328,19 @@ const TestingPage: React.FC = () => {
     };
 
     const handleRestartConfirm = async () => {
-        if (!session) {
+        if (!session || isRestarting) {
             return;
         }
         setIsRestarting(true);
         try {
             await testingSessionsApi.close(session.id);
             testingSessionStorage.clearSessionId(testId);
+            // Сбрасываем флаг инициализации перед созданием новой сессии
+            isInitializingRef.current = false;
+            isNewlyCreatedRef.current = true;
             await createNewSession();
             setIsRestartModalOpen(false);
+            setShowContinueModal(false);
         } catch (err) {
             notifications.show({
                 title: 'Не удалось перезапустить тест',
@@ -330,7 +381,6 @@ const TestingPage: React.FC = () => {
     if (loading) {
         return (
             <>
-                <Header />
                 <Center style={{ minHeight: '60vh' }}>
                     <Loader />
                 </Center>
@@ -341,7 +391,6 @@ const TestingPage: React.FC = () => {
     if (error) {
         return (
             <>
-                <Header />
                 <Container size="sm" py="xl">
                     <Alert color="red" mb="lg" title="Ошибка">
                         {error}
@@ -357,7 +406,6 @@ const TestingPage: React.FC = () => {
     if (!session || !totalQuestions) {
         return (
             <>
-                <Header />
                 <Container size="sm" py="xl">
                     <Text>Вопросы для этого теста отсутствуют.</Text>
                 </Container>
@@ -367,7 +415,6 @@ const TestingPage: React.FC = () => {
 
     return (
         <>
-            <Header />
             <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0' }}>
                 <Modal
                     opened={showContinueModal}
