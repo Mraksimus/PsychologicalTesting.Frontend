@@ -31,19 +31,17 @@ export const useChat = (): UseChatReturn => {
         try {
             const history = await ChatApiService.getHistory();
 
-            // Преобразуем историю в наш формат
             const historyMessages: ChatMessage[] = history.map((item, index) => ({
                 id: index + 1,
                 text: item.content,
                 isUser: item.role === 'USER',
-                timestamp: new Date() // Используем текущее время, так как API не предоставляет временные метки
+                timestamp: new Date(),
             }));
 
             setMessages(historyMessages);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки истории';
 
-            // Если ошибка 401 - разлогиниваем пользователя
             if (errorMessage.includes('401')) {
                 logout();
                 setError('Сессия истекла. Пожалуйста, войдите снова.');
@@ -67,7 +65,10 @@ export const useChat = (): UseChatReturn => {
             setError('Для использования чата необходимо авторизоваться');
             return;
         }
-        if (!text.trim()) return;
+
+        if (!text.trim()) {
+            return;
+        }
 
         const userMessage: ChatMessage = {
             id: Date.now(),

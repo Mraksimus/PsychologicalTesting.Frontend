@@ -1,24 +1,24 @@
+export type TestCategory = 'PERSONALITY' | 'EMOTIONS' | 'INTELLECT' | 'CAREER' | 'RELATIONSHIPS' | 'DEVELOPMENT' | 'OTHER';
+
 export interface Test {
-    id: number;
-    title: string;
+    id: string;
+    name: string;
     description: string;
+    transcript: string;
+    durationMins: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    position: number;
+    category: TestCategory;
     questionsCount: number;
-    time: number;
-    category: string;
-    popularity?: number;
-    isNew?: boolean;
 }
 
-export interface Question {
-    id: number;
-    text: string;
-    options: string[];
-    correctAnswer: number;
-}
-
-export interface PopupState {
-    isOpen: boolean;
-    testId: number | null;
+export interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    offset: number;
+    limit: number;
 }
 
 export interface ChatMessage {
@@ -28,9 +28,84 @@ export interface ChatMessage {
     timestamp: Date;
 }
 
-export interface AnalysisResult {
-    hasConcerns: boolean;
-    riskLevel: 'low' | 'medium' | 'high';
-    recommendations: string[];
-    suggestedActions: string[];
+export type QuestionChoiceMod = 'SINGLE' | 'MULTIPLE' | 'BINARY' | 'SCALE';
+
+export interface AnswerOption {
+    index: number;
+    text: string;
+    isSelected?: boolean | null;
+    isCorrect?: boolean | null;
+    score?: number | null;
 }
+
+export interface ChoiceQuestionContent {
+    type?: 'Choice';
+    text: string;
+    mod: QuestionChoiceMod;
+    options: AnswerOption[];
+}
+
+export interface QuestionResponse {
+    id: string;
+    testId: string;
+    position: number;
+    content: ChoiceQuestionContent;
+}
+
+export type TestingSessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
+
+export interface TestingSession {
+    id: string;
+    userId: string;
+    testId: string;
+    questionResponses: QuestionResponse[];
+    status: TestingSessionStatus;
+    createdAt: string;
+    closedAt?: string | null;
+    result?: string | null;
+}
+
+export interface UpdateAnswersSessionRequest {
+    questionResponses: QuestionResponsePayload[];
+}
+
+export interface QuestionResponsePayload {
+    id: string;
+    testId: string;
+    position: number;
+    content: ChoiceQuestionContentPayload;
+}
+
+interface ChoiceQuestionContentPayload {
+    type: 'Choice';
+    text: string;
+    mod: QuestionChoiceMod;
+    options: ClientAnswerPayload[];
+}
+
+export interface ClientAnswerPayload {
+    index: number;
+    text: string;
+    isSelected: boolean;
+}
+
+export interface UserProfile {
+    email: string;
+    name: string;
+    surname: string;
+    patronymic?: string | null;
+    registeredAt: string;
+    lastLoginAt?: string | null;
+    sessionsCount: number;
+    completedSessionsCount: number;
+    inProgressSessionsCount: number;
+}
+
+export interface TestingSessionCard {
+    id: string;
+    testName: string;
+    status: TestingSessionStatus;
+    createdAt: string;
+}
+
+export interface TestingSessionCardResponse extends PaginatedResponse<TestingSessionCard> {}

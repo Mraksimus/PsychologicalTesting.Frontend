@@ -1,142 +1,111 @@
-const API_BASE_URL = 'https://psychological-testing.mraksimus.ru';
+import axios from 'axios';
+import { httpClient } from '@/shared/http/httpClient';
+import {
+    clearToken,
+    hasValidToken,
+    persistToken,
+    readToken,
+    readUserId,
+    StoredTokenPayload,
+} from '@/shared/storage/tokenStorage';
 
-export interface Token {
-    userId: string;
-    value: string;
-    createdAt: string;
-    expiresAt: string;
+interface AuthSuccessResponse {
+    token: StoredTokenPayload | { value: string; userId: string; expiresAt: string };
 }
 
-export interface ApiError {
+interface ApiErrorField {
+    message: string;
+    path: string;
+}
+
+interface ApiErrorResponse {
     status: number;
-    fields?: Array<{
-        message: string;
-        path: string;
-    }>;
+    fields?: ApiErrorField[];
 }
 
-// Сохраняем токен в localStorage с обработкой разных структур
-const saveToken = (tokenData: any): void => {
-    console.log('📦 Token data received:', tokenData);
-
-    let token: string;
-    let userId: string;
-    let expiresAt: string;
-
-    // Проверяем структуру ответа
-    if (tokenData.value && tokenData.userId) {
-        // Прямой объект Token { value, userId, createdAt, expiresAt }
-        token = tokenData.value;
-        userId = tokenData.userId;
-        expiresAt = tokenData.expiresAt;
-    } else if (tokenData.token && tokenData.token.value) {
-        // Объект { token: { value, userId, createdAt, expiresAt } }
-        token = tokenData.token.value;
-        userId = tokenData.token.userId;
-        expiresAt = tokenData.token.expiresAt;
-    } else {
-        console.error('❌ Unexpected token structure:', tokenData);
-        throw new Error('Unexpected response structure from server');
+const normalizeTokenPayload = (payload: AuthSuccessResponse | StoredTokenPayload): StoredTokenPayload => {
+    if ('value' in payload && 'userId' in payload) {
+        return {
+            value: payload.value,
+            userId: payload.userId,
+            expiresAt: payload.expiresAt,
+        };
     }
 
-    console.log('💾 Saving token:', { token, userId, expiresAt });
+    if ('token' in payload && payload.token) {
+        return {
+            value: payload.token.value,
+            userId: payload.token.userId,
+            expiresAt: payload.token.expiresAt,
+        };
+    }
 
-    localStorage.setItem('token', token);
-    localStorage.setItem('token_expires', expiresAt);
-    localStorage.setItem('user_id', userId);
+    throw new Error('Unexpected token structure received from the server');
 };
 
-// Получаем токен из localStorage
-export const getToken = (): string | null => {
-    return localStorage.getItem('token');
-};
+export const register = async (
+    name: string,
+    surname: string,
+    patronymic: string | undefined,
+    email: string,
+    password: string,
+): Promise<void> => {
+    try {
+        const response = await httpClient.post<AuthSuccessResponse>('/auth/register', {
+            name,
+            surname,
+            patronymic,
+            email,
+            password,
+        });
 
-// Проверяем валидность токена
-const isTokenValid = (): boolean => {
-    const expiresAt = localStorage.getItem('token_expires');
-    if (!expiresAt) return false;
-
-    return new Date(expiresAt) > new Date();
-};
-
-// Регистрация
-export const register = async (name: string, surname: string, patronymic: string | undefined, email: string, password: string): Promise<void> => {
-    console.log('📝 Register attempt:', email);
-
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, surname, patronymic, email, password }),
-    });
-
-    console.log('📨 Register response status:', response.status);
-
-    if (!response.ok) {
-        if (response.status === 422) {
-            const error: ApiError = await response.json();
-            const message = error.fields?.[0]?.message;
-            throw new Error(message);
+        persistToken(normalizeTokenPayload(response.data));
+    } catch (error) {
+        if (axios.isAxiosError<ApiErrorResponse>(error)) {
+            if (error.response?.status === 422) {
+                throw new Error(error.response.data.fields?.[0]?.message ?? 'Некорректные данные');
+            }
+            if (error.response?.status === 409) {
+                throw new Error('Пользователь с таким email уже существует');
+            }
         }
-        throw new Error(`Registration failed: ${response.status}`);
-    }
 
-    const data = await response.json();
-    console.log('✅ Register success data:', data);
-    saveToken(data);
+        throw new Error('Не удалось завершить регистрацию. Попробуйте позже.');
+    }
 };
 
-// Вход
 export const login = async (email: string, password: string): Promise<void> => {
-    console.log('🔐 Login attempt:', email);
-
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-    });
-
-    console.log('📨 Login response status:', response.status);
-
-    if (!response.ok) {
-        if (response.status === 401) {
-            throw new Error('Invalid email or password');
+    try {
+        const response = await httpClient.post<AuthSuccessResponse>('/auth/login', { email, password });
+        persistToken(normalizeTokenPayload(response.data));
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+                throw new Error('Неверный email или пароль');
+            }
         }
-        throw new Error(`Login failed: ${response.status}`);
+
+        throw new Error('Не удалось выполнить вход. Попробуйте позже.');
     }
-
-    const data = await response.json();
-    console.log('✅ Login success data:', data);
-    saveToken(data);
 };
 
-// Выход
 export const logout = (): void => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('token_expires');
-    localStorage.removeItem('user_id');
+    clearToken();
 };
 
-// Получение текущего пользователя
-export const getCurrentUser = async (): Promise<any> => {
-    const token = getToken();
-
-    if (!token || !isTokenValid()) {
+export const getCurrentUser = (): { id: string | null } => {
+    if (!hasValidToken()) {
         logout();
         throw new Error('Not authenticated');
     }
 
     return {
-        id: localStorage.getItem('user_id'),
+        id: readUserId(),
     };
 };
 
-// Проверка авторизации
 export const isAuthenticated = (): boolean => {
-    return !!getToken() && isTokenValid();
+    return Boolean(readToken()) && hasValidToken();
 };
+
+export const getToken = (): string | null => readToken();

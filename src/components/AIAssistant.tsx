@@ -17,7 +17,10 @@ const AIAssistant: React.FC = () => {
     }, [messages, isLoading]);
 
     const handleSendMessage = async () => {
-        if (!inputMessage.trim()) return;
+        if (!inputMessage.trim()) {
+            return;
+        }
+
         setInputMessage('');
         await sendMessage(inputMessage);
     };
@@ -36,7 +39,7 @@ const AIAssistant: React.FC = () => {
         "Как улучшить психическое здоровье?"
     ];
 
-    const handleQuickQuestion = async(question: string) => {
+    const handleQuickQuestion = async (question: string) => {
         await sendMessage(question);
     };
 
@@ -134,6 +137,7 @@ const AIAssistant: React.FC = () => {
                     }
                 </p>
                 <button
+                    type="button"
                     style={{
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         color: 'white',
@@ -144,7 +148,9 @@ const AIAssistant: React.FC = () => {
                         fontWeight: '500',
                         cursor: 'pointer'
                     }}
-                    onClick={() => window.location.href = '/login'}
+                    onClick={() => {
+                        window.location.href = '/login';
+                    }}
                 >
                     Войти в систему
                 </button>
@@ -223,7 +229,7 @@ const AIAssistant: React.FC = () => {
                                         borderRadius: '50%',
                                         background: '#666',
                                         animation: 'typing 1.4s infinite ease-in-out'
-                                    }}></span>
+                                    }} />
                                     <span style={{
                                         width: '6px',
                                         height: '6px',
@@ -231,7 +237,7 @@ const AIAssistant: React.FC = () => {
                                         background: '#666',
                                         animation: 'typing 1.4s infinite ease-in-out',
                                         animationDelay: '-0.16s'
-                                    }}></span>
+                                    }} />
                                     <span style={{
                                         width: '6px',
                                         height: '6px',
@@ -239,7 +245,7 @@ const AIAssistant: React.FC = () => {
                                         background: '#666',
                                         animation: 'typing 1.4s infinite ease-in-out',
                                         animationDelay: '-0.32s'
-                                    }}></span>
+                                    }} />
                                 </div>
                             </div>
                         </div>
@@ -336,7 +342,7 @@ const AIAssistant: React.FC = () => {
                                                     borderRadius: '50%',
                                                     background: '#666',
                                                     animation: 'typing 1.4s infinite ease-in-out'
-                                                }}></span>
+                                                }} />
                                                 <span style={{
                                                     width: '6px',
                                                     height: '6px',
@@ -344,7 +350,7 @@ const AIAssistant: React.FC = () => {
                                                     background: '#666',
                                                     animation: 'typing 1.4s infinite ease-in-out',
                                                     animationDelay: '-0.16s'
-                                                }}></span>
+                                                }} />
                                                 <span style={{
                                                     width: '6px',
                                                     height: '6px',
@@ -352,7 +358,7 @@ const AIAssistant: React.FC = () => {
                                                     background: '#666',
                                                     animation: 'typing 1.4s infinite ease-in-out',
                                                     animationDelay: '-0.32s'
-                                                }}></span>
+                                                }} />
                                             </div>
                                         </div>
                                     </div>
@@ -383,6 +389,7 @@ const AIAssistant: React.FC = () => {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                         {quickQuestions.map((question, index) => (
                             <button
+                                type="button"
                                 key={index}
                                 style={{
                                     background: '#f8f9fa',
@@ -433,6 +440,7 @@ const AIAssistant: React.FC = () => {
                         rows={3}
                     />
                     <button
+                        type="button"
                         onClick={handleSendMessage}
                         disabled={!inputMessage.trim() || isLoading || isLoadingHistory}
                         style={{

@@ -1,38 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Welcome } from '../components/Welcome/Welcome';
+import { Welcome } from '@/components/Welcome/Welcome';
 import TestCard from '../components/TestCard';
-import Popup from '../components/Popup';
 import AIAssistant from '../components/AIAssistant';
-import { Test, PopupState } from '../types';
+import { Test } from '@/types';
 import { useNavigate } from 'react-router-dom';
-
-// Моковые данные тестов
-const mockTests: Test[] = [
-    {
-        id: 1,
-        title: "Тест на уровень стресса",
-        description: "Определите ваш текущий уровень стресса и получите рекомендации по его снижению",
-        questionsCount: 15,
-        time: 10,
-        category: "Психология"
-    },
-    {
-        id: 2,
-        title: "Тест на эмоциональный интеллект",
-        description: "Проверьте ваш EQ и узнайте сильные стороны вашего эмоционального интеллекта",
-        questionsCount: 20,
-        time: 15,
-        category: "Психология"
-    },
-    {
-        id: 3,
-        title: "Тест на адаптацию к изменениям",
-        description: "Узнайте, насколько хорошо вы справляетесь с переменами в жизни",
-        questionsCount: 12,
-        time: 8,
-        category: "Развитие"
-    }
-];
+import { fetchTests } from '@/api/tests';
+import { enrichTests } from '@/utils/testAdapters';
 
 // Данные психологов команды
 const teamPsychologists = [
@@ -90,29 +63,43 @@ const HomePage: React.FC = () => {
     const navigate = useNavigate();
     const [tests, setTests] = useState<Test[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [popup, setPopup] = useState<PopupState>({
-        isOpen: false,
-        testId: null
-    });
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // СКРОЛЛИМ НАВЕРХ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
         window.scrollTo(0, 0);
 
-        const timer = setTimeout(() => {
-            setTests(mockTests);
-            setLoading(false);
-        }, 1000);
+        let active = true;
 
-        return () => clearTimeout(timer);
+        const loadTests = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetchTests({ offset: 0, limit: 6 });
+                if (!active) {
+                    return;
+                }
+                setTests(enrichTests(response.items));
+            } catch (err) {
+                if (!active) {
+                    return;
+                }
+                setError(err instanceof Error ? err.message : 'Не удалось загрузить тесты');
+            } finally {
+                if (active) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadTests();
+
+        return () => {
+            active = false;
+        };
     }, []);
 
-    const handleOpenTest = (testId: number) => {
-        setPopup({ isOpen: true, testId });
-    };
-
-    const handleClosePopup = () => {
-        setPopup({ isOpen: false, testId: null });
+    const handleOpenTest = (test: Test) => {
+        navigate(`/test/${test.id}`, { state: { test } });
     };
 
     const handleViewAllTests = () => {
@@ -167,7 +154,7 @@ const HomePage: React.FC = () => {
                                     borderRadius: '50%',
                                     animation: 'spin 1s linear infinite',
                                     marginBottom: '1.5rem'
-                                }}></div>
+                                }} />
                                 <p style={{
                                     color: 'white',
                                     fontSize: '1.1rem',
@@ -175,6 +162,30 @@ const HomePage: React.FC = () => {
                                 }}>
                                     Загрузка тестов...
                                 </p>
+                            </div>
+                        ) : error ? (
+                            <div style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                padding: '2rem'
+                            }}>
+                                <p style={{ marginBottom: '1rem' }}>Не удалось загрузить тесты.</p>
+                                <button
+                                    type="button"
+                                    onClick={handleViewAllTests}
+                                    style={{
+                                        background: 'white',
+                                        border: 'none',
+                                        borderRadius: '50px',
+                                        padding: '14px 36px',
+                                        fontSize: '1.1rem',
+                                        fontWeight: '600',
+                                        color: '#4a6cf7',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Попробовать еще раз
+                                </button>
                             </div>
                         ) : (
                             <>
@@ -209,10 +220,11 @@ const HomePage: React.FC = () => {
                                         height: '1px',
                                         background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
                                         zIndex: 1
-                                    }}></div>
+                                    }} />
 
                                     {/* Кнопка */}
                                     <button
+                                        type="button"
                                         onClick={handleViewAllTests}
                                         style={{
                                             position: 'relative',
@@ -446,13 +458,6 @@ const HomePage: React.FC = () => {
                     </section>
                 </div>
             </main>
-
-            {popup.isOpen && (
-                <Popup
-                    testId={popup.testId!}
-                    onClose={handleClosePopup}
-                />
-            )}
 
             <style>
                 {`

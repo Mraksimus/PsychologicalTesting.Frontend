@@ -1,0 +1,70 @@
+name: psychological-testing-app
+
+services:
+  app:
+    image: ghcr.io/mraksimus/psychologicaltesting.backend/main:latest
+    working_dir: /home/app/main
+    command: ["-config=config/application.conf"]
+    container_name: psychological-testing-main
+    depends_on:
+      - psql
+      - llm
+    ports:
+      - "1488:1488"
+    volumes:
+      - ./configs/main:/home/app/main/config
+    restart: unless-stopped
+
+  llm:
+    image: ghcr.io/mraksimus/psychologicaltesting.backend/llm:latest
+    working_dir: /home/app/llm
+    command: ["-config=config/application.conf"]
+    container_name: psychological-testing-llm
+    ports:
+      - "1489:1489"
+    volumes:
+      - ./configs/llm:/home/app/llm/config
+      - ./configs/llm/api.json:/home/app/llm/api.json
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  psql:
+    image: postgres:latest
+    ports:
+      - "4343:5432"
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/mraksimus/psychologicaltesting.frontend/frontend:latest
+    container_name: psychological-testing-frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  ollama_data:
+    driver: local
+

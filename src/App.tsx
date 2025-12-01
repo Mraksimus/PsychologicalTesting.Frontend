@@ -8,7 +8,8 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import TestsPage from "@/pages/TestPage";
+import TestingPage from "@/pages/TestingPage";
+import ResultsPage from "@/pages/ResultsPage";
 
 // Компоненты
 import Header from "./components/Header";
@@ -20,11 +21,13 @@ import { theme } from "./theme";
 // Стили
 import "./styles/Background.css";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import TestPage from "@/pages/TestPage";
 
 // Компонент для условного отображения Header
 const Layout: React.FC = () => {
     const location = useLocation();
-    const showHeader = location.pathname === '/home' || location.pathname === '/profile';
+    // Показываем Header на всех страницах, кроме login и register
+    const showHeader = !location.pathname.startsWith('/login') && !location.pathname.startsWith('/register');
 
     return (
         <>
@@ -43,8 +46,27 @@ const Layout: React.FC = () => {
                         <ProfilePage />
                     </ProtectedRoute>
                 } />
+                <Route path="/tests" element={
+                    <ProtectedRoute>
+                        <TestPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/test/:testId" element={
+                    <ProtectedRoute>
+                        <TestingPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/test/:testId/results" element={
+                    <ProtectedRoute>
+                        <ResultsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/result" element={
+                    <ProtectedRoute>
+                        <ResultsPage />
+                    </ProtectedRoute>
+                } />
                 <Route path="*" element={<Navigate to="/home" replace />} />
-                <Route path="/tests" element={<TestsPage />} />
             </Routes>
         </>
     );
@@ -53,7 +75,7 @@ const Layout: React.FC = () => {
 const App: React.FC = () => {
     return (
         <MantineProvider theme={theme}>
-            <Notifications position="top-right" />
+            <Notifications position="top-right" zIndex={2000} />
             <AuthProvider>
                 <BrowserRouter>
                     <div className="mindcheck-background">
