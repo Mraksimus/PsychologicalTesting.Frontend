@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://psychological-testing.mraksimus.ru';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://psychological-testing.mraksimus.ru';
 
 export const API_ROUTES = {
     auth: {
