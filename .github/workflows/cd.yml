@@ -1,0 +1,84 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'nginx.conf'
+      - 'package.json'
+      - 'vite.config.mjs'
+      - 'cd.yml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/frontend
+  API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL || 'https://psychological-testing.mraksimus.ru' }}
+
+jobs:
+  publish-main:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 🔧 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run linter
+        run: npm run lint
+
+      - name: ✅ Run type check
+        run: npm run typecheck
+
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ env.API_BASE_URL }}
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            VITE_API_BASE_URL=${{ env.API_BASE_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Restart application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/psychological-testing
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            docker compose pull frontend
+            docker compose up -d frontend

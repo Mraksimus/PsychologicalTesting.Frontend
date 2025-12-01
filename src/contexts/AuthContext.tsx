@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(null);
             }
         } catch (error) {
-            console.error("Auth check failed:", error);
+            setError(error instanceof Error ? error.message : 'Не удалось проверить авторизацию');
             setUser(null);
         } finally {
             setIsLoading(false);
