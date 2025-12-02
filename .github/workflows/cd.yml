@@ -32,7 +32,9 @@ jobs:
         id: image
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=$REPO_LOWER/frontend" >> $GITHUB_ENV
+          IMAGE_NAME="$REPO_LOWER/frontend"
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: 🔧 Set up Node.js
         uses: actions/setup-node@v4
@@ -70,7 +72,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.REGISTRY }}/${{ steps.image.outputs.image_name }}:latest
           build-args: |
             VITE_API_BASE_URL=${{ env.API_BASE_URL }}
           cache-from: type=gha
