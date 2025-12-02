@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IconSearch, IconClock, IconQuestionMark } from '@tabler/icons-react';
+import { IconSearch } from '@tabler/icons-react';
 import { Test } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -9,7 +9,6 @@ import {
     Grid,
     Card,
     Group,
-    Badge,
     Button,
     Stack,
     TextInput,
@@ -19,7 +18,8 @@ import {
     Alert,
 } from '@mantine/core';
 import { fetchTests } from "@/api/tests";
-import { enrichTests, getCategoryLabel, getCategoryColor } from '@/utils/testAdapters';
+import { enrichTests } from '@/utils/testAdapters';
+import TestCard from '@/components/TestCard';
 
 const categories = [
     { value: 'all', label: 'Все категории' },
@@ -208,77 +208,21 @@ const TestsPage: React.FC = () => {
                 </Group>
 
                 {/* Сетка тестов */}
-                <Grid>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                    gap: '25px',
+                    marginBottom: '40px',
+                    justifyContent: 'center'
+                }}>
                     {filteredTests.map((test) => (
-                        <Grid.Col key={test.id} span={{ xs: 12, sm: 6, lg: 4 }}>
-                            <Card
-                                shadow="sm"
-                                p="lg"
-                                radius="md"
-                                withBorder
-                                style={{
-                                    height: '100%',
-                                    background: 'rgba(255,255,255,0.95)',
-                                    transition: 'transform 0.2s ease',
-                                    display: 'flex',
-                                    flexDirection: 'column'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                }}
-                            >
-                                <Stack gap="sm" style={{ height: '100%', flex: 1 }}>
-                                    {/* Заголовок и бейджи */}
-                                    <Group justify="space-between" align="flex-start" style={{ flexShrink: 0 }}>
-                                        <Text size="lg" fw={600} style={{ flex: 1 }}>
-                                            {test.name}
-                                        </Text>
-                                    </Group>
-
-                                    {/* Категория и популярность */}
-                                    <Group gap="xs" style={{ flexShrink: 0 }}>
-                                        <Badge color={getCategoryColor(test.category)} variant="light">
-                                            {getCategoryLabel(test.category)}
-                                        </Badge>
-                                    </Group>
-
-                                    {/* Описание */}
-                                    <Text size="sm" c="dimmed" style={{ flex: 1, minHeight: '60px' }}>
-                                        {test.description || test.transcript}
-                                    </Text>
-
-                                    {/* Статистика */}
-                                    <Group gap="lg" style={{ flexShrink: 0 }}>
-                                        <Group gap="xs">
-                                            <IconQuestionMark size={16} />
-                                            <Text size="sm">
-                                                {test.questionsCount} вопросов
-                                            </Text>
-                                        </Group>
-                                        <Group gap="xs">
-                                            <IconClock size={16} />
-                                            <Text size="sm">{test.durationMins} мин</Text>
-                                        </Group>
-                                    </Group>
-
-                                    {/* Кнопка начала */}
-                                    <Button
-                                        fullWidth
-                                        variant="gradient"
-                                        gradient={{ from: 'blue', to: 'cyan' }}
-                                        onClick={() => handleStartTest(test)}
-                                        style={{ flexShrink: 0 }}
-                                    >
-                                        Начать тест
-                                    </Button>
-                                </Stack>
-                            </Card>
-                        </Grid.Col>
+                        <TestCard
+                            key={test.id}
+                            test={test}
+                            onStartTest={handleStartTest}
+                        />
                     ))}
-                </Grid>
+                </div>
 
                 {/* Сообщение если ничего не найдено */}
                 {filteredTests.length === 0 && (

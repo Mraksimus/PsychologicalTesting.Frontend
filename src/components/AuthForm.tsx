@@ -31,29 +31,27 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     submitLabel,
     isRegister = false,
 }) => {
-    const baseValidation = {
-        email: (value: string) => {
-            if (!value) {
-                return "Не введен email";
-            }
-            if (!EMAIL_REGEX.test(value.trim())) {
-                return "Некорректный формат email";
-            }
-            return null;
-        },
-        password: (value: string) => {
-            if (!value) {
-                return "Не введен пароль";
-            }
-            if (!PASSWORD_REGEX.test(value)) {
-                return "Пароль слишком короткий (минимум 6 символов)";
-            }
-            return null;
-        },
-    };
-
+    // Валидация только для регистрации
     const registerValidation = isRegister
         ? {
+            email: (value: string) => {
+                if (!value) {
+                    return "Не введен email";
+                }
+                if (!EMAIL_REGEX.test(value.trim())) {
+                    return "Некорректный формат email";
+                }
+                return null;
+            },
+            password: (value: string) => {
+                if (!value) {
+                    return "Не введен пароль";
+                }
+                if (!PASSWORD_REGEX.test(value)) {
+                    return "Пароль слишком короткий (минимум 6 символов)";
+                }
+                return null;
+            },
             surname: (value: string) => {
                 if (!value) {
                     return "Не введена фамилия";
@@ -92,7 +90,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                 return null;
             },
         }
-        : {};
+        : {
+            // Для логина - без валидации
+            email: () => null,
+            password: () => null,
+        };
 
     const form = useForm({
         initialValues: {
@@ -103,10 +105,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             password: "",
             confirmPassword: "",
         },
-        validate: {
-            ...baseValidation,
-            ...registerValidation,
-        },
+        validate: registerValidation,
     });
 
     return (

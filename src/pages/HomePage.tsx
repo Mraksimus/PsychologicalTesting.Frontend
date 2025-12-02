@@ -74,7 +74,7 @@ const HomePage: React.FC = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetchTests({ offset: 0, limit: 6 });
+                const response = await fetchTests({ offset: 0, limit: 3 });
                 if (!active) {
                     return;
                 }
@@ -189,11 +189,13 @@ const HomePage: React.FC = () => {
                             </div>
                         ) : (
                             <>
-                                <div style={{
+                                <div className="tests-grid" style={{
                                     display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                                    gap: '25px',
-                                    marginBottom: '40px'
+                                    gridTemplateColumns: 'repeat(3, 1fr)',
+                                    gap: '15px',
+                                    marginBottom: '40px',
+                                    maxWidth: '1300px',
+                                    margin: '0 auto 40px auto'
                                 }}>
                                     {tests.map(test => (
                                         <TestCard
@@ -483,6 +485,19 @@ const HomePage: React.FC = () => {
                     
                     .team-scroll-container::-webkit-scrollbar-thumb:hover {
                         background: rgba(255,255,255,0.5);
+                    }
+                    
+                    /* Адаптивность для карточек тестов */
+                    @media (max-width: 1024px) {
+                        .tests-grid {
+                            grid-template-columns: repeat(2, 1fr) !important;
+                        }
+                    }
+                    
+                    @media (max-width: 768px) {
+                        .tests-grid {
+                            grid-template-columns: 1fr !important;
+                        }
                     }
                 `}
             </style>

@@ -22,7 +22,9 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
             transition: 'transform 0.3s, box-shadow 0.3s',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            width: '100%',
+            height: '100%'
         }}>
             <div
                 style={{
@@ -36,7 +38,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                     position: 'relative'
                 }}
             >
-                <div style={{ fontSize: '3rem', marginRight: '1rem' }}>
+                <div style={{ fontSize: '3rem' }}>
                     {categoryIcon}
                 </div>
                 <div style={{
