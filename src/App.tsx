@@ -19,7 +19,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { theme } from "./theme";
 
 // Стили
-import "./styles/Background.css";
+import "./styles/background.css";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import TestPage from "@/pages/TestPage";
 
