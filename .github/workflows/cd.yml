@@ -16,7 +16,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/frontend
   API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL || 'https://psychological-testing.mraksimus.ru' }}
 
 jobs:
@@ -28,6 +27,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: 🔧 Set image name
+        id: image
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=$REPO_LOWER/frontend" >> $GITHUB_ENV
 
       - name: 🔧 Set up Node.js
         uses: actions/setup-node@v4
