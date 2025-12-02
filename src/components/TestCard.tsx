@@ -67,11 +67,23 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#2c3e50', marginTop: 0 }}>
                     {test.name}
                 </h3>
-                <p style={{ color: '#666', marginBottom: '1rem', lineHeight: '1.5', marginTop: 0 }}>
+                <p style={{ 
+                    color: '#666', 
+                    marginBottom: 'auto', 
+                    lineHeight: '1.5', 
+                    marginTop: 0,
+                    flex: 1,
+                    minHeight: '60px'
+                }}>
                     {test.description || test.transcript}
                 </p>
 
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', marginTop: 'auto' }}>
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '1rem', 
+                    marginBottom: '1rem', 
+                    marginTop: '1rem'
+                }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>❓</span>
                         <span>{questionsCount} вопросов</span>
@@ -94,7 +106,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                         fontSize: '1rem',
                         fontWeight: '500',
                         cursor: 'pointer',
-                        marginTop: 'auto'
+                        marginTop: 0
                     }}
                     onClick={() => onStartTest(test)}
                 >
