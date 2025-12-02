@@ -3,12 +3,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json yarn.lock* ./
+# Copy package files (npm использует package-lock.json)
+COPY package*.json package-lock.json ./
 
-# Install dependencies
-RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
-    else npm ci; fi
+# Install dependencies using npm
+RUN npm ci
 
 # Copy source code
 COPY . .
