@@ -16,7 +16,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL || 'https://psychological-testing.mraksimus.ru' }}
+  API_BASE_URL: ${{ secrets.API_BASE_URL || vars.API_BASE_URL || 'https://psychological-testing.mraksimus.ru/api' }}
 
 jobs:
   publish-main:
