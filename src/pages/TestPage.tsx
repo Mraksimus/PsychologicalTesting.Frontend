@@ -108,7 +108,7 @@ const TestsPage: React.FC = () => {
                 result.sort((a, b) => Number(a.durationMins || 0) - Number(b.durationMins || 0));
                 break;
             case 'questions':
-                result.sort((a, b) => a.questionsCount - b.questionsCount);
+                result.sort((a, b) => (a.questionsCount ?? 0) - (b.questionsCount ?? 0));
                 break;
             default:
                 break;

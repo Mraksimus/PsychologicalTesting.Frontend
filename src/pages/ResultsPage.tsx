@@ -13,14 +13,14 @@ import {
     Loader,
     Center,
 } from '@mantine/core';
-import { Test, TestingSession } from '@/types';
+import { FullTestingSession, Test } from '@/types';
 import { testingSessionsApi } from '@/api/testingSessions';
 import { fetchTests } from '@/api/tests';
 import { enrichTest, getCategoryLabel, getCategoryColor } from '@/utils/testAdapters';
 import ReactMarkdown from 'react-markdown';
 
 interface LocationState {
-    session?: TestingSession;
+    session?: FullTestingSession;
     test?: Test;
 }
 
@@ -31,7 +31,7 @@ const ResultsPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const locationState = (location.state as LocationState | undefined) ?? {};
 
-    const [session, setSession] = useState<TestingSession | null>(locationState.session ?? null);
+    const [session, setSession] = useState<FullTestingSession | null>(locationState.session ?? null);
     const [testDetails, setTestDetails] = useState<Test | null>(locationState.test ?? null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -140,9 +140,12 @@ const ResultsPage: React.FC = () => {
     }
 
     const resultText = session.result ?? 'Результат появится чуть позже. Попробуйте обновить страницу через пару минут.';
-    const answeredQuestions = session.questionResponses?.filter(question =>
-        question.content.options.some(option => option.isSelected),
-    );
+    const sortedQuestions = [...session.questions].sort((a, b) => a.position - b.position);
+    const answersByQuestion = new Map(session.answers.map(a => [a.questionId, a.selectedIndex]));
+    const answeredCount = sortedQuestions.filter(q => {
+        const idx = answersByQuestion.get(q.id);
+        return idx !== undefined && idx !== null;
+    }).length;
 
     return (
         <>
@@ -174,21 +177,21 @@ const ResultsPage: React.FC = () => {
                 <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
                     <Group mb="lg">
                         <Text fw={600} size="lg">Ответы</Text>
-                        <Badge color="green">{answeredQuestions.length} / {session.questionResponses.length}</Badge>
+                        <Badge color="green">{answeredCount} / {sortedQuestions.length}</Badge>
                     </Group>
                     <Stack gap="md">
-                        {session.questionResponses.map(question => {
-                            const selectedOptions = question.content.options.filter(option => option.isSelected);
+                        {sortedQuestions.map(question => {
+                            const selectedIdx = answersByQuestion.get(question.id);
+                            const selectedOption =
+                                question.content.type === 'Choice' && selectedIdx != null
+                                    ? question.content.options.find(opt => opt.index === selectedIdx)
+                                    : null;
                             return (
                                 <Card key={question.id} withBorder radius="md">
                                     <Stack gap="xs">
                                         <Text fw={600}>{question.content.text}</Text>
-                                        {selectedOptions.length ? (
-                                            <Stack gap={4}>
-                                                {selectedOptions.map(option => (
-                                                    <Text key={option.index} size="sm">• {option.text}</Text>
-                                                ))}
-                                            </Stack>
+                                        {selectedOption ? (
+                                            <Text size="sm">• {selectedOption.text}</Text>
                                         ) : (
                                             <Text size="sm" c="dimmed">Ответ не выбран</Text>
                                         )}

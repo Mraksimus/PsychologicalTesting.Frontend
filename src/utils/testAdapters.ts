@@ -1,7 +1,12 @@
 import { Test, TestCategory } from '@/types';
 
-// Категории теперь приходят с бэкенда, адаптер просто возвращает тест как есть
-export const enrichTest = (test: Test): Test => test;
+// Бек категории и количество вопросов в публичном API не возвращает,
+// поэтому подставляем безопасные дефолты для UI.
+export const enrichTest = (test: Test): Test => ({
+    ...test,
+    category: test.category ?? 'OTHER',
+    questionsCount: test.questionsCount ?? 0,
+});
 
 export const enrichTests = (tests: Test[]): Test[] => tests.map(enrichTest);
 

@@ -8,10 +8,11 @@ interface TestCardProps {
 }
 
 const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
-    const categoryLabel = getCategoryLabel(test.category);
-    const categoryGradient = getCategoryGradient(test.category);
-    const categoryIcon = getCategoryIcon(test.category);
-    const questionsCount = test.questionsCount;
+    const category = test.category ?? 'OTHER';
+    const categoryLabel = getCategoryLabel(category);
+    const categoryGradient = getCategoryGradient(category);
+    const categoryIcon = getCategoryIcon(category);
+    const questionsCount = test.questionsCount ?? 0;
     const duration = test.durationMins || '—';
 
     return (

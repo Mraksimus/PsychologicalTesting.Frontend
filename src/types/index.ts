@@ -1,4 +1,14 @@
-export type TestCategory = 'PERSONALITY' | 'EMOTIONS' | 'INTELLECT' | 'CAREER' | 'RELATIONSHIPS' | 'DEVELOPMENT' | 'OTHER';
+// ───────── Tests ─────────
+
+// Категории — фронтовая мета (бек категории не возвращает).
+export type TestCategory =
+    | 'PERSONALITY'
+    | 'EMOTIONS'
+    | 'INTELLECT'
+    | 'CAREER'
+    | 'RELATIONSHIPS'
+    | 'DEVELOPMENT'
+    | 'OTHER';
 
 export interface Test {
     id: string;
@@ -10,8 +20,10 @@ export interface Test {
     createdAt: string;
     updatedAt: string;
     position: number;
-    category: TestCategory;
-    questionsCount: number;
+    /** Категория проставляется только на фронте (см. testAdapters). */
+    category?: TestCategory;
+    /** Количество вопросов теста публично с бека сейчас не приходит. */
+    questionsCount?: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -21,6 +33,8 @@ export interface PaginatedResponse<T> {
     limit: number;
 }
 
+// ───────── Chat (UI) ─────────
+
 export interface ChatMessage {
     id: number;
     text: string;
@@ -28,66 +42,76 @@ export interface ChatMessage {
     timestamp: Date;
 }
 
-export type QuestionChoiceMod = 'SINGLE' | 'MULTIPLE' | 'BINARY' | 'SCALE';
+// ───────── Questions ─────────
 
-export interface AnswerOption {
+/** Бек поддерживает только SINGLE и SCALE для Choice-вопросов. */
+export type QuestionChoiceMod = 'SINGLE' | 'SCALE';
+
+export interface Answer {
     index: number;
     text: string;
-    isSelected?: boolean | null;
-    isCorrect?: boolean | null;
-    score?: number | null;
+    score: number;
 }
 
 export interface ChoiceQuestionContent {
-    type?: 'Choice';
+    type: 'Choice';
     text: string;
     mod: QuestionChoiceMod;
-    options: AnswerOption[];
+    options: Answer[];
 }
 
-export interface QuestionResponse {
+export interface InputQuestionContent {
+    type: 'Input';
+    text: string;
+    correctInputs?: string[] | null;
+}
+
+export type QuestionContent = ChoiceQuestionContent | InputQuestionContent;
+
+export interface ExistingQuestion {
     id: string;
     testId: string;
+    content: QuestionContent;
     position: number;
-    content: ChoiceQuestionContent;
 }
+
+// ───────── Sessions ─────────
 
 export type TestingSessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
 
-export interface TestingSession {
+/** Ответ пользователя на вопрос: индекс выбранного варианта (для Choice). */
+export interface SessionAnswer {
+    questionId: string;
+    selectedIndex: number | null;
+}
+
+/** Сессия без списка вопросов (используется в списках). */
+export interface ExistingTestingSession {
     id: string;
     userId: string;
     testId: string;
-    questionResponses: QuestionResponse[];
+    answers: SessionAnswer[];
     status: TestingSessionStatus;
     createdAt: string;
     closedAt?: string | null;
     result?: string | null;
 }
 
+/** Полная сессия (используется при создании, открытии, завершении). */
+export interface FullTestingSession extends ExistingTestingSession {
+    questions: ExistingQuestion[];
+}
+
+/** Алиас для совместимости с существующими импортами. */
+export type TestingSession = FullTestingSession;
+
+// ───────── Session API requests ─────────
+
 export interface UpdateAnswersSessionRequest {
-    questionResponses: QuestionResponsePayload[];
+    answers: SessionAnswer[];
 }
 
-export interface QuestionResponsePayload {
-    id: string;
-    testId: string;
-    position: number;
-    content: ChoiceQuestionContentPayload;
-}
-
-interface ChoiceQuestionContentPayload {
-    type: 'Choice';
-    text: string;
-    mod: QuestionChoiceMod;
-    options: ClientAnswerPayload[];
-}
-
-export interface ClientAnswerPayload {
-    index: number;
-    text: string;
-    isSelected: boolean;
-}
+// ───────── User profile ─────────
 
 export interface UserProfile {
     email: string;
@@ -108,4 +132,4 @@ export interface TestingSessionCard {
     createdAt: string;
 }
 
-export interface TestingSessionCardResponse extends PaginatedResponse<TestingSessionCard> {}
+export type TestingSessionCardResponse = PaginatedResponse<TestingSessionCard>;

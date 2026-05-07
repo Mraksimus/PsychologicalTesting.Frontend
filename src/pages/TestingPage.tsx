@@ -16,59 +16,54 @@ import {
     Title,
 } from '@mantine/core';
 import {
-    AnswerOption,
-    QuestionResponse,
-    QuestionResponsePayload,
+    ExistingQuestion,
+    FullTestingSession,
+    SessionAnswer,
     Test,
-    TestingSession,
 } from '@/types';
 import { fetchTests } from '@/api/tests';
 import { enrichTest } from '@/utils/testAdapters';
-import { testingSessionsApi, isConflictError } from '@/api/testingSessions';
+import {
+    testingSessionsApi,
+    isConflictError,
+    isInactiveTestError,
+    extractApiErrorMessage,
+} from '@/api/testingSessions';
 import { testingSessionStorage } from '@/utils/testingSessionStorage';
 import { notifications } from '@mantine/notifications';
 
-const isQuestionAnswered = (question: QuestionResponse): boolean =>
-    question.content.options.some(option => Boolean(option.isSelected));
+type AnswersMap = Record<string, number | null>;
 
-const getInitialQuestionIndex = (responses: QuestionResponse[]): number => {
-    if (!responses.length) {
-        return 0;
-    }
-    const firstUnanswered = responses.findIndex(response => !isQuestionAnswered(response));
-    return firstUnanswered === -1 ? responses.length - 1 : firstUnanswered;
-};
+const buildAnswersMap = (answers: SessionAnswer[]): AnswersMap =>
+    answers.reduce<AnswersMap>((acc, item) => {
+        acc[item.questionId] = item.selectedIndex ?? null;
+        return acc;
+    }, {});
 
-const buildPayloadFromResponses = (responses: QuestionResponse[]): QuestionResponsePayload[] =>
-    responses.map(response => ({
-        id: response.id,
-        testId: response.testId,
-        position: response.position,
-        content: {
-            type: response.content.type ?? 'Choice',
-            text: response.content.text,
-            mod: response.content.mod,
-            options: response.content.options.map(option => ({
-                type: 'ClientAnswer',
-                index: option.index,
-                text: option.text,
-                isSelected: Boolean(option.isSelected),
-            })),
-        },
+const buildAnswersPayload = (
+    questions: ExistingQuestion[],
+    answersMap: AnswersMap,
+): SessionAnswer[] =>
+    questions.map(question => ({
+        questionId: question.id,
+        selectedIndex:
+            answersMap[question.id] === undefined ? null : answersMap[question.id],
     }));
 
-const toggleOptionSelection = (
-    question: QuestionResponse,
-    optionIndex: number,
-): AnswerOption[] => {
-    const isMulti = question.content.mod === 'MULTIPLE';
-    return question.content.options.map(option => {
-        if (option.index !== optionIndex) {
-            return isMulti ? option : { ...option, isSelected: false };
-        }
-        const nextSelected = isMulti ? !option.isSelected : true;
-        return { ...option, isSelected: nextSelected };
-    });
+const isQuestionAnswered = (question: ExistingQuestion, answersMap: AnswersMap): boolean => {
+    const value = answersMap[question.id];
+    return value !== undefined && value !== null;
+};
+
+const getInitialQuestionIndex = (
+    questions: ExistingQuestion[],
+    answersMap: AnswersMap,
+): number => {
+    if (!questions.length) {
+        return 0;
+    }
+    const firstUnanswered = questions.findIndex(q => !isQuestionAnswered(q, answersMap));
+    return firstUnanswered === -1 ? questions.length - 1 : firstUnanswered;
 };
 
 const TestingPage: React.FC = () => {
@@ -79,8 +74,9 @@ const TestingPage: React.FC = () => {
     const locationState = (location.state as { test?: Test; continueFromProfile?: boolean } | undefined) ?? {};
 
     const [testDetails, setTestDetails] = useState<Test | null>(locationState.test ?? null);
-    const [session, setSession] = useState<TestingSession | null>(null);
-    const [questionResponses, setQuestionResponses] = useState<QuestionResponse[]>([]);
+    const [session, setSession] = useState<FullTestingSession | null>(null);
+    const [questions, setQuestions] = useState<ExistingQuestion[]>([]);
+    const [answersMap, setAnswersMap] = useState<AnswersMap>({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -89,14 +85,15 @@ const TestingPage: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
     const [isRestarting, setIsRestarting] = useState(false);
+    const [isTestInactive, setIsTestInactive] = useState(false);
     const isNewlyCreatedRef = useRef(false);
     const isInitializingRef = useRef(false);
 
     const currentQuestion = useMemo(
-        () => questionResponses[currentQuestionIndex],
-        [questionResponses, currentQuestionIndex],
+        () => questions[currentQuestionIndex],
+        [questions, currentQuestionIndex],
     );
-    const totalQuestions = questionResponses.length;
+    const totalQuestions = questions.length;
     const progress = totalQuestions ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
 
     const loadTestDetails = useCallback(async () => {
@@ -119,17 +116,21 @@ const TestingPage: React.FC = () => {
         loadTestDetails();
     }, [loadTestDetails]);
 
-    const findRemoteActiveSession = useCallback(async (): Promise<TestingSession | null> => {
+    const findRemoteActiveSession = useCallback(async (): Promise<FullTestingSession | null> => {
         const sessions = await testingSessionsApi.list({ offset: 0, limit: 50 });
-        return (
-            sessions.items.find(item => item.testId === testId && item.status === 'IN_PROGRESS') ?? null
+        const match = sessions.items.find(
+            item => item.testId === testId && item.status === 'IN_PROGRESS',
         );
+        if (!match) {
+            return null;
+        }
+        // В list нет questions, поэтому грузим полную сессию.
+        return testingSessionsApi.get(match.id);
     }, [testId]);
 
     const createNewSessionRef = useRef(false);
-    
+
     const createNewSession = useCallback(async () => {
-        // Защита от двойного вызова
         if (createNewSessionRef.current) {
             return;
         }
@@ -137,10 +138,8 @@ const TestingPage: React.FC = () => {
         try {
             const newSession = await testingSessionsApi.create(testId);
             testingSessionStorage.saveSessionId(testId, newSession.id);
-            // Флаг уже установлен в initializeSession перед вызовом createNewSession
             setSession(newSession);
         } finally {
-            // Сбрасываем флаг после небольшой задержки, чтобы избежать двойного вызова
             setTimeout(() => {
                 createNewSessionRef.current = false;
             }, 1000);
@@ -152,7 +151,6 @@ const TestingPage: React.FC = () => {
             return;
         }
 
-        // Защита от двойного вызова
         if (isInitializingRef.current) {
             return;
         }
@@ -169,7 +167,6 @@ const TestingPage: React.FC = () => {
                 if (existing.status === 'COMPLETED' || existing.status === 'CLOSED') {
                     testingSessionStorage.clearSessionId(testId);
                 } else {
-                    // Сессия существует и активна - не новая
                     isNewlyCreatedRef.current = false;
                     setSession(existing);
                     setLoading(false);
@@ -178,7 +175,6 @@ const TestingPage: React.FC = () => {
                 }
             }
 
-            // Проверяем, есть ли активная сессия на сервере
             const remote = await findRemoteActiveSession();
             if (remote) {
                 testingSessionStorage.saveSessionId(testId, remote.id);
@@ -189,12 +185,10 @@ const TestingPage: React.FC = () => {
                 return;
             }
 
-            // Нет активных сессий - создаем новую
             isNewlyCreatedRef.current = true;
             await createNewSession();
         } catch (err) {
             if (isConflictError(err)) {
-                // Если конфликт, проверяем еще раз
                 const remote = await findRemoteActiveSession();
                 if (remote) {
                     testingSessionStorage.saveSessionId(testId, remote.id);
@@ -205,7 +199,13 @@ const TestingPage: React.FC = () => {
                     return;
                 }
             }
-            setError(err instanceof Error ? err.message : 'Не удалось загрузить сессию');
+            if (isInactiveTestError(err)) {
+                setIsTestInactive(true);
+                testingSessionStorage.clearSessionId(testId);
+                setError(null);
+                return;
+            }
+            setError(extractApiErrorMessage(err, 'Не удалось загрузить сессию'));
         } finally {
             setLoading(false);
             isInitializingRef.current = false;
@@ -213,10 +213,9 @@ const TestingPage: React.FC = () => {
     }, [createNewSession, findRemoteActiveSession, testId]);
 
     useEffect(() => {
-        // Сбрасываем флаг при размонтировании или изменении testId
         isInitializingRef.current = false;
         initializeSession();
-        
+
         return () => {
             isInitializingRef.current = false;
         };
@@ -227,57 +226,72 @@ const TestingPage: React.FC = () => {
             return;
         }
 
-        setQuestionResponses(session.questionResponses);
-        const initialIndex = getInitialQuestionIndex(session.questionResponses);
-        setCurrentQuestionIndex(initialIndex);
-        // Не показываем модальное окно, если пользователь переходит из профиля или сессия только что создана
-        // Показываем модальное окно только если сессия IN_PROGRESS и она уже существовала (не только что создана)
-        if (!locationState.continueFromProfile && session.status === 'IN_PROGRESS' && !isNewlyCreatedRef.current) {
+        const sortedQuestions = [...session.questions].sort((a, b) => a.position - b.position);
+        const map = buildAnswersMap(session.answers);
+
+        setQuestions(sortedQuestions);
+        setAnswersMap(map);
+        setCurrentQuestionIndex(getInitialQuestionIndex(sortedQuestions, map));
+
+        if (
+            !locationState.continueFromProfile &&
+            session.status === 'IN_PROGRESS' &&
+            !isNewlyCreatedRef.current
+        ) {
             setShowContinueModal(true);
         }
-        // Сбрасываем флаг после обработки
         isNewlyCreatedRef.current = false;
     }, [session, locationState.continueFromProfile]);
-
-    const updateLocalQuestionSelection = (questionId: string, optionIndex: number) => {
-        setQuestionResponses(prev =>
-            prev.map(question => {
-                if (question.id !== questionId) {
-                    return question;
-                }
-                return {
-                    ...question,
-                    content: {
-                        ...question.content,
-                        type: question.content.type ?? 'Choice',
-                        options: toggleOptionSelection(question, optionIndex),
-                    },
-                };
-            }),
-        );
-    };
 
     const handleSelectAnswer = (optionIndex: number) => {
         if (!currentQuestion) {
             return;
         }
-        updateLocalQuestionSelection(currentQuestion.id, optionIndex);
+        if (currentQuestion.content.type !== 'Choice') {
+            // Бек поддерживает Input, но UI пока работает только с Choice.
+            return;
+        }
+        setAnswersMap(prev => ({ ...prev, [currentQuestion.id]: optionIndex }));
     };
 
     const persistAnswers = useCallback(async () => {
         if (!session) {
             return;
         }
-        const payload = buildPayloadFromResponses(questionResponses);
+        const payload = buildAnswersPayload(questions, answersMap);
         await testingSessionsApi.updateAnswers(session.id, payload);
-    }, [questionResponses, session]);
+    }, [answersMap, questions, session]);
+
+    const completeTest = async () => {
+        if (!session) {
+            return;
+        }
+        setIsCompleting(true);
+        try {
+            await persistAnswers();
+            const completedSession = await testingSessionsApi.complete(session.id);
+            testingSessionStorage.clearSessionId(testId);
+            navigate(`/test/${testId}/results?sessionId=${completedSession.id}`, {
+                state: { session: completedSession, test: testDetails },
+                replace: true,
+            });
+        } catch (err) {
+            notifications.show({
+                title: 'Не удалось завершить тест',
+                message: extractApiErrorMessage(err, 'Попробуйте еще раз'),
+                color: 'red',
+            });
+        } finally {
+            setIsCompleting(false);
+        }
+    };
 
     const handleNextQuestion = async () => {
         if (!session || !currentQuestion) {
             return;
         }
 
-        if (!isQuestionAnswered(currentQuestion)) {
+        if (!isQuestionAnswered(currentQuestion, answersMap)) {
             notifications.show({
                 title: 'Ответ не выбран',
                 message: 'Пожалуйста, отметьте хотя бы один вариант перед продолжением.',
@@ -300,7 +314,7 @@ const TestingPage: React.FC = () => {
         } catch (err) {
             notifications.show({
                 title: 'Не удалось сохранить ответ',
-                message: err instanceof Error ? err.message : 'Попробуйте еще раз',
+                message: extractApiErrorMessage(err, 'Попробуйте еще раз'),
                 color: 'red',
             });
         } finally {
@@ -335,7 +349,6 @@ const TestingPage: React.FC = () => {
         try {
             await testingSessionsApi.close(session.id);
             testingSessionStorage.clearSessionId(testId);
-            // Сбрасываем флаг инициализации перед созданием новой сессии
             isInitializingRef.current = false;
             isNewlyCreatedRef.current = true;
             await createNewSession();
@@ -344,7 +357,7 @@ const TestingPage: React.FC = () => {
         } catch (err) {
             notifications.show({
                 title: 'Не удалось перезапустить тест',
-                message: err instanceof Error ? err.message : 'Попробуйте еще раз',
+                message: extractApiErrorMessage(err, 'Попробуйте еще раз'),
                 color: 'red',
             });
         } finally {
@@ -352,31 +365,23 @@ const TestingPage: React.FC = () => {
         }
     };
 
-    const completeTest = async () => {
-        if (!session) {
-            return;
-        }
-        setIsCompleting(true);
-        try {
-            await persistAnswers();
-            const completedSession = await testingSessionsApi.complete(session.id);
-            testingSessionStorage.clearSessionId(testId);
-            navigate(`/test/${testId}/results?sessionId=${completedSession.id}`, {
-                state: { session: completedSession, test: testDetails },
-                replace: true,
-            });
-        } catch (err) {
-            notifications.show({
-                title: 'Не удалось завершить тест',
-                message: err instanceof Error ? err.message : 'Попробуйте еще раз',
-                color: 'red',
-            });
-        } finally {
-            setIsCompleting(false);
-        }
-    };
-
     const disabledControls = isSaving || isCompleting || loading;
+
+    if (isTestInactive) {
+        return (
+            <>
+                <Container size="sm" py="xl">
+                    <Alert color="yellow" mb="lg" title="Тест недоступен">
+                        Этот тест сейчас не опубликован, пройти его нельзя.
+                        Попробуйте выбрать другой тест из каталога.
+                    </Alert>
+                    <Button variant="light" onClick={() => navigate('/tests')}>
+                        К списку тестов
+                    </Button>
+                </Container>
+            </>
+        );
+    }
 
     if (loading) {
         return (
@@ -412,6 +417,11 @@ const TestingPage: React.FC = () => {
             </>
         );
     }
+
+    const choiceContent =
+        currentQuestion?.content.type === 'Choice' ? currentQuestion.content : null;
+    const selectedIndex =
+        currentQuestion ? answersMap[currentQuestion.id] ?? null : null;
 
     return (
         <>
@@ -484,63 +494,69 @@ const TestingPage: React.FC = () => {
                             </Title>
                         </div>
 
-                        <Stack gap="md">
-                            {currentQuestion?.content.options.map(option => {
-                                const selected = Boolean(option.isSelected);
-                                return (
-                                    <Card
-                                        key={option.index}
-                                        p="md"
-                                        radius="md"
-                                        style={{
-                                            border: selected ? '2px solid #667eea' : '2px solid #e0e0e0',
-                                            background: selected
-                                                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                                : 'white',
-                                            cursor: disabledControls ? 'not-allowed' : 'pointer',
-                                            opacity: disabledControls ? 0.7 : 1,
-                                            transition: 'all 0.2s ease',
-                                        }}
-                                        onClick={() => !disabledControls && handleSelectAnswer(option.index)}
-                                        withBorder
-                                    >
-                                        <Group>
-                                            <div
-                                                style={{
-                                                    width: '24px',
-                                                    height: '24px',
-                                                    borderRadius: '50%',
-                                                    border: `2px solid ${selected ? 'white' : '#ccc'}`,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    backgroundColor: selected ? 'white' : 'transparent',
-                                                }}
-                                            >
-                                                {selected && (
-                                                    <div
-                                                        style={{
-                                                            width: '8px',
-                                                            height: '8px',
-                                                            backgroundColor: '#667eea',
-                                                            borderRadius: '50%',
-                                                        }}
-                                                    />
-                                                )}
-                                            </div>
-                                            <Text
-                                                fw={500}
-                                                style={{
-                                                    color: selected ? 'white' : '#333',
-                                                }}
-                                            >
-                                                {option.text}
-                                            </Text>
-                                        </Group>
-                                    </Card>
-                                );
-                            })}
-                        </Stack>
+                        {choiceContent ? (
+                            <Stack gap="md">
+                                {choiceContent.options.map(option => {
+                                    const selected = selectedIndex === option.index;
+                                    return (
+                                        <Card
+                                            key={option.index}
+                                            p="md"
+                                            radius="md"
+                                            style={{
+                                                border: selected ? '2px solid #667eea' : '2px solid #e0e0e0',
+                                                background: selected
+                                                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                                    : 'white',
+                                                cursor: disabledControls ? 'not-allowed' : 'pointer',
+                                                opacity: disabledControls ? 0.7 : 1,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                            onClick={() => !disabledControls && handleSelectAnswer(option.index)}
+                                            withBorder
+                                        >
+                                            <Group>
+                                                <div
+                                                    style={{
+                                                        width: '24px',
+                                                        height: '24px',
+                                                        borderRadius: '50%',
+                                                        border: `2px solid ${selected ? 'white' : '#ccc'}`,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selected ? 'white' : 'transparent',
+                                                    }}
+                                                >
+                                                    {selected && (
+                                                        <div
+                                                            style={{
+                                                                width: '8px',
+                                                                height: '8px',
+                                                                backgroundColor: '#667eea',
+                                                                borderRadius: '50%',
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <Text
+                                                    fw={500}
+                                                    style={{
+                                                        color: selected ? 'white' : '#333',
+                                                    }}
+                                                >
+                                                    {option.text}
+                                                </Text>
+                                            </Group>
+                                        </Card>
+                                    );
+                                })}
+                            </Stack>
+                        ) : (
+                            <Alert color="yellow">
+                                Этот тип вопроса пока не поддерживается в интерфейсе.
+                            </Alert>
+                        )}
                     </Stack>
 
                     <Group justify="space-between" mt="xl">
@@ -568,4 +584,3 @@ const TestingPage: React.FC = () => {
 };
 
 export default TestingPage;
-
