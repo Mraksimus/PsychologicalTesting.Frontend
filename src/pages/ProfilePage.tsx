@@ -7,7 +7,7 @@ import {
     Button,
     Group,
     Stack,
-    Loader,
+    Skeleton,
     Alert,
     TextInput,
     ActionIcon,
@@ -16,7 +16,6 @@ import {
     Grid,
     Box,
     Avatar,
-    Center,
     Modal,
     Badge,
     Paper,
@@ -306,61 +305,53 @@ const ProfilePage: React.FC = () => {
 
     if (loading) {
         return (
-            <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="mindcheck-background">
-                    <div className="floating-icons">
-                        <div className="icon">🧠</div>
-                        <div className="icon">❤️</div>
-                        <div className="icon">😊</div>
-                        <div className="icon">📊</div>
-                        <div className="icon">🌟</div>
-                        <div className="icon">💭</div>
-                        <div className="icon">🌈</div>
-                        <div className="icon">🔮</div>
-                        <div className="icon">🎯</div>
-                        <div className="icon">💫</div>
-                        <div className="icon">🌙</div>
-                        <div className="icon">⭐</div>
-                    </div>
-                </div>
-                <Container size="lg" py="xl">
-                    <Center>
-                        <Group>
-                            <Loader size="lg" />
-                            <Text c="white">Загрузка профиля...</Text>
-                        </Group>
-                    </Center>
-                </Container>
-            </div>
+            <Container size="lg" py="xl" style={{ position: 'relative' }}>
+                <Group justify="space-between" mb="xl">
+                    <Group>
+                        <IconUser size={32} style={{ color: 'white' }} />
+                        <Title order={1} c="white">Профиль пользователя</Title>
+                    </Group>
+                </Group>
+                <Grid gutter="xl" align="stretch">
+                    <Grid.Col span={{ md: 4 }}>
+                        <Card shadow="sm" p="lg" radius="md" withBorder style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+                            <Stack gap="md" align="center">
+                                <Skeleton height={56} circle />
+                                <Skeleton height={20} width="70%" />
+                                <Skeleton height={14} width="40%" />
+                                <Divider style={{ width: '100%' }} />
+                                <Skeleton height={28} width="30%" />
+                                <Skeleton height={14} width="60%" />
+                                <Divider style={{ width: '100%' }} />
+                                <Skeleton height={28} width="30%" />
+                                <Skeleton height={14} width="60%" />
+                            </Stack>
+                        </Card>
+                    </Grid.Col>
+                    <Grid.Col span={{ md: 8 }}>
+                        <Card shadow="sm" p="lg" radius="md" withBorder style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+                            <Skeleton height={28} width="40%" mb="lg" />
+                            <Stack gap="md">
+                                <Skeleton height={18} />
+                                <Skeleton height={18} width="80%" />
+                                <Skeleton height={18} width="60%" />
+                                <Skeleton height={18} width="70%" />
+                            </Stack>
+                        </Card>
+                    </Grid.Col>
+                </Grid>
+            </Container>
         );
     }
 
     if (error && !profile) {
         return (
-            <div style={{ position: 'relative', minHeight: '100vh' }}>
-                <div className="mindcheck-background">
-                    <div className="floating-icons">
-                        <div className="icon">🧠</div>
-                        <div className="icon">❤️</div>
-                        <div className="icon">😊</div>
-                        <div className="icon">📊</div>
-                        <div className="icon">🌟</div>
-                        <div className="icon">💭</div>
-                        <div className="icon">🌈</div>
-                        <div className="icon">🔮</div>
-                        <div className="icon">🎯</div>
-                        <div className="icon">💫</div>
-                        <div className="icon">🌙</div>
-                        <div className="icon">⭐</div>
-                    </div>
-                </div>
-                <Container size="lg" py="xl" style={{ position: 'relative' }}>
-                    <Alert color="red" title="Ошибка" mb="lg">
-                        {error}
-                    </Alert>
-                    <Button onClick={loadProfileData}>Попробовать снова</Button>
-                </Container>
-            </div>
+            <Container size="lg" py="xl" style={{ position: 'relative' }}>
+                <Alert color="red" title="Ошибка" mb="lg">
+                    {error}
+                </Alert>
+                <Button onClick={loadProfileData}>Попробовать снова</Button>
+            </Container>
         );
     }
 
@@ -370,23 +361,6 @@ const ProfilePage: React.FC = () => {
 
     return (
         <div style={{ position: 'relative', minHeight: '100vh' }}>
-            <div className="mindcheck-background">
-                <div className="floating-icons">
-                    <div className="icon">🧠</div>
-                    <div className="icon">❤️</div>
-                    <div className="icon">😊</div>
-                    <div className="icon">📊</div>
-                    <div className="icon">🌟</div>
-                    <div className="icon">💭</div>
-                    <div className="icon">🌈</div>
-                    <div className="icon">🔮</div>
-                    <div className="icon">🎯</div>
-                    <div className="icon">💫</div>
-                    <div className="icon">🌙</div>
-                    <div className="icon">⭐</div>
-                </div>
-            </div>
-
             <Container size="lg" py="xl" style={{ position: 'relative' }}>
                 <Group justify="space-between" mb="xl">
                     <Group>
@@ -592,9 +566,22 @@ const ProfilePage: React.FC = () => {
                     </Group>
 
                     {sessionsLoading ? (
-                        <Center py="xl">
-                            <Loader />
-                        </Center>
+                        <Stack gap="md">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <Paper key={i} p="md" withBorder>
+                                    <Group justify="space-between" mb="xs">
+                                        <Group>
+                                            <Skeleton height={16} width={180} />
+                                            <Skeleton height={20} width={90} radius="xl" />
+                                        </Group>
+                                        <Skeleton height={14} width={140} />
+                                    </Group>
+                                    <Group justify="flex-end" mt="md">
+                                        <Skeleton height={36} width={150} radius="sm" />
+                                    </Group>
+                                </Paper>
+                            ))}
+                        </Stack>
                     ) : sessionsError ? (
                         <Alert color="red" title="Ошибка загрузки" mb="md">
                             {sessionsError}

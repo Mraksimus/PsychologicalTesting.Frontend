@@ -29,7 +29,5 @@ export const API_ROUTES = {
 
 export const STORAGE_KEYS = {
     token: 'token',
-    tokenExpiresAt: 'token_expires',
-    userId: 'user_id',
 } as const;
 

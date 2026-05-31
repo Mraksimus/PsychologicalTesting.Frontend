@@ -1,9 +1,11 @@
 import { STORAGE_KEYS } from '@/shared/config/apiConfig';
 
-export interface StoredTokenPayload {
-    value: string;
-    userId: string;
-    expiresAt: string;
+interface JwtPayload {
+    sub?: string;
+    exp?: number;
+    iss?: string;
+    aud?: string | string[];
+    iat?: number;
 }
 
 const withStorage = <T>(action: () => T): T => {
@@ -13,11 +15,28 @@ const withStorage = <T>(action: () => T): T => {
     return action();
 };
 
-export const persistToken = (token: StoredTokenPayload): void => {
+const decodeBase64Url = (segment: string): string => {
+    const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4));
+    return atob(padded + padding);
+};
+
+export const decodeJwt = (token: string): JwtPayload | null => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        return null;
+    }
+    try {
+        const json = decodeBase64Url(parts[1]);
+        return JSON.parse(json) as JwtPayload;
+    } catch {
+        return null;
+    }
+};
+
+export const persistToken = (token: string): void => {
     withStorage(() => {
-        localStorage.setItem(STORAGE_KEYS.token, token.value);
-        localStorage.setItem(STORAGE_KEYS.tokenExpiresAt, token.expiresAt);
-        localStorage.setItem(STORAGE_KEYS.userId, token.userId);
+        localStorage.setItem(STORAGE_KEYS.token, token);
     });
 };
 
@@ -25,29 +44,28 @@ export const readToken = (): string | null => {
     return withStorage(() => localStorage.getItem(STORAGE_KEYS.token));
 };
 
-export const readTokenExpiry = (): string | null => {
-    return withStorage(() => localStorage.getItem(STORAGE_KEYS.tokenExpiresAt));
-};
-
-export const readUserId = (): string | null => {
-    return withStorage(() => localStorage.getItem(STORAGE_KEYS.userId));
+export const readSubject = (): string | null => {
+    const token = readToken();
+    if (!token) {
+        return null;
+    }
+    return decodeJwt(token)?.sub ?? null;
 };
 
 export const clearToken = (): void => {
     withStorage(() => {
         localStorage.removeItem(STORAGE_KEYS.token);
-        localStorage.removeItem(STORAGE_KEYS.tokenExpiresAt);
-        localStorage.removeItem(STORAGE_KEYS.userId);
     });
 };
 
 export const hasValidToken = (): boolean => {
-    const expiry = readTokenExpiry();
-
-    if (!expiry) {
+    const token = readToken();
+    if (!token) {
         return false;
     }
-
-    return new Date(expiry) > new Date();
+    const payload = decodeJwt(token);
+    if (!payload?.exp) {
+        return false;
+    }
+    return payload.exp * 1000 > Date.now();
 };
-

@@ -3,6 +3,51 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { profileApi } from '@/api/profile';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface NavButtonProps {
+    label: string;
+    active?: boolean;
+    onClick: () => void;
+}
+
+const NavButton: React.FC<NavButtonProps> = ({ label, active = false, onClick }) => {
+    const baseStyle: React.CSSProperties = {
+        background: 'none',
+        border: 'none',
+        textDecoration: 'none',
+        color: active ? '#007bff' : '#333',
+        fontWeight: 500,
+        transition: 'all 0.3s',
+        cursor: 'pointer',
+        fontSize: '1rem',
+        padding: '0.5rem 1rem',
+        borderRadius: '6px',
+        backgroundColor: active ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
+        whiteSpace: 'nowrap',
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            style={baseStyle}
+            onMouseEnter={(e) => {
+                if (!active) {
+                    e.currentTarget.style.color = '#007bff';
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+                }
+            }}
+            onMouseLeave={(e) => {
+                if (!active) {
+                    e.currentTarget.style.color = '#333';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                }
+            }}
+        >
+            {label}
+        </button>
+    );
+};
+
 const Header: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -35,9 +80,22 @@ const Header: React.FC = () => {
         navigate(path);
     };
 
-    // Функция для определения активной страницы
-    const isActivePage = (path: string) => {
-        return location.pathname === path;
+    const isActivePage = (path: string) => location.pathname === path;
+
+    const scrollToAbout = () => {
+        const element = document.getElementById('about');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const handleAboutClick = () => {
+        if (location.pathname === '/home') {
+            scrollToAbout();
+        } else {
+            navigate('/home');
+            setTimeout(scrollToAbout, 100);
+        }
     };
 
     return (
@@ -90,119 +148,24 @@ const Header: React.FC = () => {
                             padding: 0
                         }}>
                             <li>
-                                <button
-                                    type="button"
+                                <NavButton
+                                    label="Главная"
+                                    active={isActivePage('/home')}
                                     onClick={() => handleNavigation('/home')}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        textDecoration: 'none',
-                                        color: isActivePage('/home') ? '#007bff' : '#333',
-                                        fontWeight: '500',
-                                        transition: 'all 0.3s',
-                                        cursor: 'pointer',
-                                        fontSize: '1rem',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '6px',
-                                        backgroundColor: isActivePage('/home') ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (!isActivePage('/home')) {
-                                            e.currentTarget.style.color = '#007bff';
-                                            e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!isActivePage('/home')) {
-                                            e.currentTarget.style.color = '#333';
-                                            e.currentTarget.style.backgroundColor = 'transparent';
-                                        }
-                                    }}
-                                >
-                                    Главная
-                                </button>
+                                />
                             </li>
                             <li>
-                                <button
-                                    type="button"
+                                <NavButton
+                                    label="Тесты"
+                                    active={isActivePage('/tests')}
                                     onClick={() => handleNavigation('/tests')}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        textDecoration: 'none',
-                                        color: isActivePage('/tests') ? '#007bff' : '#333',
-                                        fontWeight: '500',
-                                        transition: 'all 0.3s',
-                                        cursor: 'pointer',
-                                        fontSize: '1rem',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '6px',
-                                        backgroundColor: isActivePage('/tests') ? 'rgba(0, 123, 255, 0.1)' : 'transparent',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (!isActivePage('/tests')) {
-                                            e.currentTarget.style.color = '#007bff';
-                                            e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!isActivePage('/tests')) {
-                                            e.currentTarget.style.color = '#333';
-                                            e.currentTarget.style.backgroundColor = 'transparent';
-                                        }
-                                    }}
-                                >
-                                    Тесты
-                                </button>
+                                />
                             </li>
                             <li>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        // ✅ Если на главной - скроллим к якорю
-                                        if (location.pathname === '/home') {
-                                            const element = document.getElementById('about');
-                                            if (element) {
-                                                element.scrollIntoView({ behavior: 'smooth' });
-                                            }
-                                        } else {
-                                            // Если на другой странице - идем на главную и скроллим
-                                            navigate('/home');
-                                            setTimeout(() => {
-                                                const element = document.getElementById('about');
-                                                if (element) {
-                                                    element.scrollIntoView({ behavior: 'smooth' });
-                                                }
-                                            }, 100);
-                                        }
-                                    }}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        textDecoration: 'none',
-                                        color: '#333',
-                                        fontWeight: '500',
-                                        transition: 'all 0.3s',
-                                        cursor: 'pointer',
-                                        fontSize: '1rem',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '6px',
-                                        backgroundColor: 'transparent',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.color = '#007bff';
-                                        e.currentTarget.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.color = '#333';
-                                        e.currentTarget.style.backgroundColor = 'transparent';
-                                    }}
-                                >
-                                    О проекте
-                                </button>
+                                <NavButton
+                                    label="О проекте"
+                                    onClick={handleAboutClick}
+                                />
                             </li>
                         </ul>
                     </nav>

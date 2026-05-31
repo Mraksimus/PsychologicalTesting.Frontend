@@ -13,13 +13,13 @@ import {
     Stack,
     TextInput,
     Select,
-    LoadingOverlay,
     Box,
     Alert,
 } from '@mantine/core';
 import { fetchTests } from "@/api/tests";
 import { enrichTests } from '@/utils/testAdapters';
 import TestCard from '@/components/TestCard';
+import TestCardSkeleton from '@/components/TestCardSkeleton';
 
 const categories = [
     { value: 'all', label: 'Все категории' },
@@ -143,8 +143,6 @@ const TestsPage: React.FC = () => {
     return (
         <>
             <Container size="xl" style={{ minHeight: '100vh', padding: '40px 0', position: 'relative' }}>
-                {loading && <LoadingOverlay visible />}
-
                 {/* Заголовок и описание */}
                 <Stack gap="lg" mb="xl">
                     <Title order={1} ta="center" style={{ color: 'white' }}>
@@ -203,7 +201,7 @@ const TestsPage: React.FC = () => {
                 {/* Результаты поиска */}
                 <Group justify="space-between" mb="md">
                     <Text size="lg" style={{ color: 'white' }}>
-                        Найдено тестов: {filteredTests.length}
+                        {loading ? 'Загрузка тестов...' : `Найдено тестов: ${filteredTests.length}`}
                     </Text>
                 </Group>
 
@@ -215,17 +213,19 @@ const TestsPage: React.FC = () => {
                     marginBottom: '40px',
                     justifyContent: 'center'
                 }}>
-                    {filteredTests.map((test) => (
-                        <TestCard
-                            key={test.id}
-                            test={test}
-                            onStartTest={handleStartTest}
-                        />
-                    ))}
+                    {loading
+                        ? Array.from({ length: 6 }).map((_, i) => <TestCardSkeleton key={i} />)
+                        : filteredTests.map((test) => (
+                            <TestCard
+                                key={test.id}
+                                test={test}
+                                onStartTest={handleStartTest}
+                            />
+                        ))}
                 </div>
 
                 {/* Сообщение если ничего не найдено */}
-                {filteredTests.length === 0 && (
+                {!loading && filteredTests.length === 0 && (
                     <Box ta="center" py="xl">
                         <Text size="xl" style={{ color: 'white' }} mb="md">
                             Тесты не найдены

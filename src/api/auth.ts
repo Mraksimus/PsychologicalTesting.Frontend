@@ -4,13 +4,12 @@ import {
     clearToken,
     hasValidToken,
     persistToken,
+    readSubject,
     readToken,
-    readUserId,
-    StoredTokenPayload,
 } from '@/shared/storage/tokenStorage';
 
 interface AuthSuccessResponse {
-    token: StoredTokenPayload | { value: string; userId: string; expiresAt: string };
+    token: string;
 }
 
 interface ApiErrorField {
@@ -22,26 +21,6 @@ interface ApiErrorResponse {
     status: number;
     fields?: ApiErrorField[];
 }
-
-const normalizeTokenPayload = (payload: AuthSuccessResponse | StoredTokenPayload): StoredTokenPayload => {
-    if ('value' in payload && 'userId' in payload) {
-        return {
-            value: payload.value,
-            userId: payload.userId,
-            expiresAt: payload.expiresAt,
-        };
-    }
-
-    if ('token' in payload && payload.token) {
-        return {
-            value: payload.token.value,
-            userId: payload.token.userId,
-            expiresAt: payload.token.expiresAt,
-        };
-    }
-
-    throw new Error('Unexpected token structure received from the server');
-};
 
 export const register = async (
     name: string,
@@ -59,7 +38,7 @@ export const register = async (
             password,
         });
 
-        persistToken(normalizeTokenPayload(response.data));
+        persistToken(response.data.token);
     } catch (error) {
         if (axios.isAxiosError<ApiErrorResponse>(error)) {
             if (error.response?.status === 422) {
@@ -77,7 +56,7 @@ export const register = async (
 export const login = async (email: string, password: string): Promise<void> => {
     try {
         const response = await httpClient.post<AuthSuccessResponse>('/auth/login', { email, password });
-        persistToken(normalizeTokenPayload(response.data));
+        persistToken(response.data.token);
     } catch (error) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 401) {
@@ -100,7 +79,7 @@ export const getCurrentUser = (): { id: string | null } => {
     }
 
     return {
-        id: readUserId(),
+        id: readSubject(),
     };
 };
 

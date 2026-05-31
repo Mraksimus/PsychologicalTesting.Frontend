@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Welcome } from '@/components/Welcome/Welcome';
 import TestCard from '../components/TestCard';
+import TestCardSkeleton from '../components/TestCardSkeleton';
 import AIAssistant from '../components/AIAssistant';
 import { Test } from '@/types';
 import { useNavigate } from 'react-router-dom';
@@ -138,30 +139,16 @@ const HomePage: React.FC = () => {
                         </div>
 
                         {loading ? (
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '4rem',
-                                color: 'white'
+                            <div className="tests-grid" style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                gap: '15px',
+                                maxWidth: '1300px',
+                                margin: '0 auto 40px auto'
                             }}>
-                                <div style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    border: '4px solid rgba(255,255,255,0.3)',
-                                    borderTop: '4px solid white',
-                                    borderRadius: '50%',
-                                    animation: 'spin 1s linear infinite',
-                                    marginBottom: '1.5rem'
-                                }} />
-                                <p style={{
-                                    color: 'white',
-                                    fontSize: '1.1rem',
-                                    opacity: 0.8
-                                }}>
-                                    Загрузка тестов...
-                                </p>
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <TestCardSkeleton key={i} />
+                                ))}
                             </div>
                         ) : error ? (
                             <div style={{
@@ -193,7 +180,6 @@ const HomePage: React.FC = () => {
                                     display: 'grid',
                                     gridTemplateColumns: 'repeat(3, 1fr)',
                                     gap: '15px',
-                                    marginBottom: '40px',
                                     maxWidth: '1300px',
                                     margin: '0 auto 40px auto'
                                 }}>
@@ -283,7 +269,7 @@ const HomePage: React.FC = () => {
 
                     {/* Секция "О проекте" */}
                     <section
-                        id="about"  // ✅ ДОБАВЬТЕ ID
+                        id="about"
                         style={{
                             marginTop: '100px',
                             padding: '60px 0',
@@ -339,7 +325,7 @@ const HomePage: React.FC = () => {
                                     color: '#333',
                                     marginBottom: '0'
                                 }}>
-                                    С помощью наших scientifically-validated тестов и AI-ассистента вы
+                                    С помощью наших научно валидированных тестов и AI-ассистента вы
                                     получите не просто результаты, а персонализированные рекомендации
                                     и практические инструменты для улучшения психологического благополучия
                                     и академической успеваемости.
@@ -360,7 +346,7 @@ const HomePage: React.FC = () => {
                                 Наша команда психологов
                             </h3>
 
-                            <div style={{
+                            <div className="team-scroll-container" style={{
                                 position: 'relative',
                                 maxWidth: '100%',
                                 overflowX: 'auto',

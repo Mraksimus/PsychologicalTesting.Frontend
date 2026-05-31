@@ -33,7 +33,8 @@ const ResultsPage: React.FC = () => {
 
     const [session, setSession] = useState<FullTestingSession | null>(locationState.session ?? null);
     const [testDetails, setTestDetails] = useState<Test | null>(locationState.test ?? null);
-    const [loading, setLoading] = useState(true);
+    // Если сессия пришла из location.state, не показываем спиннер — фоном подгрузим свежие данные.
+    const [loading, setLoading] = useState(!locationState.session);
     const [error, setError] = useState<string | null>(null);
 
     const sessionIdFromParams = searchParams.get('sessionId');
@@ -46,8 +47,11 @@ const ResultsPage: React.FC = () => {
             return;
         }
 
-        // Если session уже есть в state, все равно загружаем свежие данные
-        setLoading(true);
+        // Если session уже есть в state, все равно загружаем свежие данные —
+        // но без сброса в loading, чтобы UI не моргал.
+        if (!session) {
+            setLoading(true);
+        }
         setError(null);
         try {
             const data = await testingSessionsApi.get(sessionId);
@@ -57,6 +61,9 @@ const ResultsPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
+        // session используется только для решения о показе спиннера;
+        // зависимость намеренно опускаем, чтобы не перезапускать при каждом обновлении.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId]);
 
     useEffect(() => {
@@ -111,6 +118,19 @@ const ResultsPage: React.FC = () => {
         );
     }
 
+    if (error && !session) {
+        return (
+            <>
+                <Container size="sm" py="xl">
+                    <Alert color="red" mb="lg" title="Ошибка">
+                        {error}
+                    </Alert>
+                    <Button onClick={loadSession}>Попробовать снова</Button>
+                </Container>
+            </>
+        );
+    }
+
     if (loading || !session) {
         return (
             <>
@@ -121,19 +141,6 @@ const ResultsPage: React.FC = () => {
                             <Text c="white">Загрузка результатов...</Text>
                         </Stack>
                     </Center>
-                </Container>
-            </>
-        );
-    }
-
-    if (error) {
-        return (
-            <>
-                <Container size="sm" py="xl">
-                    <Alert color="red" mb="lg" title="Ошибка">
-                        {error}
-                    </Alert>
-                    <Button onClick={loadSession}>Попробовать снова</Button>
                 </Container>
             </>
         );
