@@ -19,6 +19,7 @@ import {
     Modal,
     Badge,
     Paper,
+    Tabs,
 } from '@mantine/core';
 import {
     IconUser,
@@ -36,10 +37,12 @@ import {
 } from '@tabler/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { notifications } from '@mantine/notifications';
-import { UserProfile, TestingSessionCard } from '@/types';
+import { UserProfile, TestingSessionCard, SurveySessionCard } from '@/types';
 import { profileApi } from '@/api/profile';
 import { testingSessionsApi } from '@/api/testingSessions';
+import { surveySessionsApi } from '@/api/surveySessions';
 import { testingSessionStorage } from '@/utils/testingSessionStorage';
+import { surveySessionStorage } from '@/utils/surveySessionStorage';
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -59,6 +62,15 @@ const ProfilePage: React.FC = () => {
     const [sessionsOffset, setSessionsOffset] = useState(0);
     const [sessionsTotal, setSessionsTotal] = useState(0);
     const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
+
+    const [surveySessions, setSurveySessions] = useState<SurveySessionCard[]>([]);
+    const [surveySessionsLoading, setSurveySessionsLoading] = useState(false);
+    const [surveySessionsError, setSurveySessionsError] = useState<string | null>(null);
+    const [surveySessionsOffset, setSurveySessionsOffset] = useState(0);
+    const [surveySessionsTotal, setSurveySessionsTotal] = useState(0);
+    const [loadingMoreSurveySessions, setLoadingMoreSurveySessions] = useState(false);
+
+    const [activeSessionsTab, setActiveSessionsTab] = useState<string>('tests');
     const SESSIONS_PER_PAGE = 10;
 
     useEffect(() => {
@@ -68,6 +80,7 @@ const ProfilePage: React.FC = () => {
         }
         loadProfileData();
         loadSessions(true);
+        loadSurveySessions(true);
     }, [user, navigate]);
 
     const loadProfileData = async () => {
@@ -217,6 +230,80 @@ const ProfilePage: React.FC = () => {
         loadSessions(false);
     };
 
+    const loadSurveySessions = async (reset: boolean = false) => {
+        try {
+            if (reset) {
+                setSurveySessionsLoading(true);
+                setSurveySessionsOffset(0);
+            } else {
+                setLoadingMoreSurveySessions(true);
+            }
+            setSurveySessionsError(null);
+            const offset = reset ? 0 : surveySessionsOffset;
+            const data = await profileApi.getSurveySessions({
+                offset,
+                limit: SESSIONS_PER_PAGE,
+            });
+            if (reset) {
+                setSurveySessions(data.items);
+            } else {
+                setSurveySessions(prev => [...prev, ...data.items]);
+            }
+            setSurveySessionsTotal(data.total);
+            setSurveySessionsOffset(offset + data.items.length);
+        } catch (err) {
+            const errorMessage =
+                err instanceof Error ? err.message : 'Не удалось загрузить сессии опросов';
+            setSurveySessionsError(errorMessage);
+        } finally {
+            setSurveySessionsLoading(false);
+            setLoadingMoreSurveySessions(false);
+        }
+    };
+
+    const loadMoreSurveySessions = () => {
+        loadSurveySessions(false);
+    };
+
+    const handleContinueSurveySession = async (sessionId: string) => {
+        try {
+            const fullSession = await surveySessionsApi.get(sessionId);
+            const surveyId = fullSession.surveyId;
+            surveySessionStorage.saveSessionId(surveyId, sessionId);
+            navigate(`/survey/${surveyId}`, {
+                state: { continueFromProfile: true },
+            });
+        } catch (err) {
+            notifications.show({
+                title: 'Ошибка',
+                message: err instanceof Error ? err.message : 'Не удалось загрузить сессию',
+                color: 'red',
+            });
+        }
+    };
+
+    const handleCloseSurveySession = async (sessionId: string) => {
+        try {
+            await surveySessionsApi.close(sessionId);
+            setSurveySessions(prev =>
+                prev.map(s =>
+                    s.id === sessionId ? { ...s, status: 'CLOSED' as const } : s,
+                ),
+            );
+            notifications.show({
+                title: 'Успешно',
+                message: 'Сессия закрыта',
+                color: 'green',
+            });
+        } catch (err) {
+            notifications.show({
+                title: 'Ошибка',
+                message: err instanceof Error ? err.message : 'Не удалось закрыть сессию',
+                color: 'red',
+            });
+        }
+    };
+
     const handleContinueSession = async (sessionId: string) => {
         try {
             const fullSession = await testingSessionsApi.get(sessionId);
@@ -302,6 +389,7 @@ const ProfilePage: React.FC = () => {
     };
 
     const hasMoreSessions = sessions.length < sessionsTotal;
+    const hasMoreSurveySessions = surveySessions.length < surveySessionsTotal;
 
     if (loading) {
         return (
@@ -562,107 +650,215 @@ const ProfilePage: React.FC = () => {
                 <Card shadow="sm" p="lg" radius="md" withBorder mt="xl" style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
                     <Group mb="md">
                         <IconHistory size={24} />
-                        <Title order={2}>Мои сессии тестирования</Title>
+                        <Title order={2}>Мои сессии</Title>
                     </Group>
 
-                    {sessionsLoading ? (
-                        <Stack gap="md">
-                            {Array.from({ length: 3 }).map((_, i) => (
-                                <Paper key={i} p="md" withBorder>
-                                    <Group justify="space-between" mb="xs">
-                                        <Group>
-                                            <Skeleton height={16} width={180} />
-                                            <Skeleton height={20} width={90} radius="xl" />
-                                        </Group>
-                                        <Skeleton height={14} width={140} />
-                                    </Group>
-                                    <Group justify="flex-end" mt="md">
-                                        <Skeleton height={36} width={150} radius="sm" />
-                                    </Group>
-                                </Paper>
-                            ))}
-                        </Stack>
-                    ) : sessionsError ? (
-                        <Alert color="red" title="Ошибка загрузки" mb="md">
-                            {sessionsError}
-                        </Alert>
-                    ) : sessions.length === 0 ? (
-                        <Box py="xl" style={{ textAlign: 'center' }}>
-                            <Text c="dimmed" mb="sm">У вас пока нет сессий тестирования</Text>
-                            <Text size="sm" c="dimmed">
-                                Начните прохождение теста, чтобы увидеть его здесь
-                            </Text>
-                        </Box>
-                    ) : (
-                        <Stack gap="md">
-                            {sessions.map((session) => (
-                                <Paper key={session.id} p="md" withBorder>
-                                    <Group justify="space-between" mb="xs">
-                                        <Group>
-                                            <Text fw={600}>{session.testName}</Text>
-                                            {getStatusBadge(session.status)}
-                                        </Group>
-                                        <Text size="sm" c="dimmed">
-                                            {formatDate(session.createdAt)}
-                                        </Text>
-                                    </Group>
+                    <Tabs value={activeSessionsTab} onChange={value => setActiveSessionsTab(value ?? 'tests')}>
+                        <Tabs.List mb="md">
+                            <Tabs.Tab value="tests">
+                                Тестирования{sessionsTotal ? ` (${sessionsTotal})` : ''}
+                            </Tabs.Tab>
+                            <Tabs.Tab value="surveys">
+                                Опросы{surveySessionsTotal ? ` (${surveySessionsTotal})` : ''}
+                            </Tabs.Tab>
+                        </Tabs.List>
 
-                                    <Group justify="flex-end" mt="md" gap="xs">
-                                        {session.status === 'IN_PROGRESS' && (
-                                            <>
-                                                <Button
-                                                    leftSection={<IconArrowRight size={16} />}
-                                                    onClick={() => handleContinueSession(session.id)}
-                                                    variant="light"
-                                                    color="blue"
-                                                    style={{ minWidth: 150 }}
-                                                >
-                                                    Продолжить
-                                                </Button>
-                                                <Button
-                                                    leftSection={<IconX size={16} />}
-                                                    onClick={() => handleCloseSession(session.id)}
-                                                    variant="light"
-                                                    color="red"
-                                                    style={{ minWidth: 150 }}
-                                                >
-                                                    Закрыть
-                                                </Button>
-                                            </>
-                                        )}
-                                        {session.status === 'COMPLETED' && (
-                                            <Button
-                                                leftSection={<IconEye size={16} />}
-                                                onClick={() => handleViewResult(session.id)}
-                                                variant="light"
-                                                color="green"
-                                                style={{ minWidth: 150 }}
-                                            >
-                                                Просмотреть результат
-                                            </Button>
-                                        )}
-                                        {session.status === 'CLOSED' && (
-                                            <Text size="sm" c="dimmed" style={{ minWidth: 150, textAlign: 'right' }}>
-                                                Сессия закрыта
-                                            </Text>
-                                        )}
-                                    </Group>
-                                </Paper>
-                            ))}
-                        </Stack>
-                    )}
+                        <Tabs.Panel value="tests">
+                            {sessionsLoading ? (
+                                <Stack gap="md">
+                                    {Array.from({ length: 3 }).map((_, i) => (
+                                        <Paper key={i} p="md" withBorder>
+                                            <Group justify="space-between" mb="xs">
+                                                <Group>
+                                                    <Skeleton height={16} width={180} />
+                                                    <Skeleton height={20} width={90} radius="xl" />
+                                                </Group>
+                                                <Skeleton height={14} width={140} />
+                                            </Group>
+                                            <Group justify="flex-end" mt="md">
+                                                <Skeleton height={36} width={150} radius="sm" />
+                                            </Group>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            ) : sessionsError ? (
+                                <Alert color="red" title="Ошибка загрузки" mb="md">
+                                    {sessionsError}
+                                </Alert>
+                            ) : sessions.length === 0 ? (
+                                <Box py="xl" style={{ textAlign: 'center' }}>
+                                    <Text c="dimmed" mb="sm">У вас пока нет сессий тестирования</Text>
+                                    <Text size="sm" c="dimmed">
+                                        Начните прохождение теста, чтобы увидеть его здесь
+                                    </Text>
+                                </Box>
+                            ) : (
+                                <Stack gap="md">
+                                    {sessions.map((session) => (
+                                        <Paper key={session.id} p="md" withBorder>
+                                            <Group justify="space-between" mb="xs">
+                                                <Group>
+                                                    <Text fw={600}>{session.testName}</Text>
+                                                    {getStatusBadge(session.status)}
+                                                </Group>
+                                                <Text size="sm" c="dimmed">
+                                                    {formatDate(session.createdAt)}
+                                                </Text>
+                                            </Group>
 
-                    {hasMoreSessions && (
-                        <Group justify="center" mt="md">
-                            <Button
-                                variant="light"
-                                onClick={loadMoreSessions}
-                                loading={loadingMoreSessions}
-                            >
-                                Посмотреть еще
-                            </Button>
-                        </Group>
-                    )}
+                                            <Group justify="flex-end" mt="md" gap="xs">
+                                                {session.status === 'IN_PROGRESS' && (
+                                                    <>
+                                                        <Button
+                                                            leftSection={<IconArrowRight size={16} />}
+                                                            onClick={() => handleContinueSession(session.id)}
+                                                            variant="light"
+                                                            color="blue"
+                                                            style={{ minWidth: 150 }}
+                                                        >
+                                                            Продолжить
+                                                        </Button>
+                                                        <Button
+                                                            leftSection={<IconX size={16} />}
+                                                            onClick={() => handleCloseSession(session.id)}
+                                                            variant="light"
+                                                            color="red"
+                                                            style={{ minWidth: 150 }}
+                                                        >
+                                                            Закрыть
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                {session.status === 'COMPLETED' && (
+                                                    <Button
+                                                        leftSection={<IconEye size={16} />}
+                                                        onClick={() => handleViewResult(session.id)}
+                                                        variant="light"
+                                                        color="green"
+                                                        style={{ minWidth: 150 }}
+                                                    >
+                                                        Просмотреть результат
+                                                    </Button>
+                                                )}
+                                                {session.status === 'CLOSED' && (
+                                                    <Text size="sm" c="dimmed" style={{ minWidth: 150, textAlign: 'right' }}>
+                                                        Сессия закрыта
+                                                    </Text>
+                                                )}
+                                            </Group>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            )}
+
+                            {hasMoreSessions && (
+                                <Group justify="center" mt="md">
+                                    <Button
+                                        variant="light"
+                                        onClick={loadMoreSessions}
+                                        loading={loadingMoreSessions}
+                                    >
+                                        Посмотреть еще
+                                    </Button>
+                                </Group>
+                            )}
+                        </Tabs.Panel>
+
+                        <Tabs.Panel value="surveys">
+                            {surveySessionsLoading ? (
+                                <Stack gap="md">
+                                    {Array.from({ length: 3 }).map((_, i) => (
+                                        <Paper key={i} p="md" withBorder>
+                                            <Group justify="space-between" mb="xs">
+                                                <Group>
+                                                    <Skeleton height={16} width={180} />
+                                                    <Skeleton height={20} width={90} radius="xl" />
+                                                </Group>
+                                                <Skeleton height={14} width={140} />
+                                            </Group>
+                                            <Group justify="flex-end" mt="md">
+                                                <Skeleton height={36} width={150} radius="sm" />
+                                            </Group>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            ) : surveySessionsError ? (
+                                <Alert color="red" title="Ошибка загрузки" mb="md">
+                                    {surveySessionsError}
+                                </Alert>
+                            ) : surveySessions.length === 0 ? (
+                                <Box py="xl" style={{ textAlign: 'center' }}>
+                                    <Text c="dimmed" mb="sm">У вас пока нет сессий опросов</Text>
+                                    <Text size="sm" c="dimmed">
+                                        Пройдите опрос, чтобы увидеть его здесь
+                                    </Text>
+                                </Box>
+                            ) : (
+                                <Stack gap="md">
+                                    {surveySessions.map((session) => (
+                                        <Paper key={session.id} p="md" withBorder>
+                                            <Group justify="space-between" mb="xs">
+                                                <Group>
+                                                    <Text fw={600}>{session.surveyName}</Text>
+                                                    {getStatusBadge(session.status)}
+                                                </Group>
+                                                <Text size="sm" c="dimmed">
+                                                    {formatDate(session.createdAt)}
+                                                </Text>
+                                            </Group>
+
+                                            <Group justify="flex-end" mt="md" gap="xs">
+                                                {session.status === 'IN_PROGRESS' && (
+                                                    <>
+                                                        <Button
+                                                            leftSection={<IconArrowRight size={16} />}
+                                                            onClick={() => handleContinueSurveySession(session.id)}
+                                                            variant="light"
+                                                            color="teal"
+                                                            style={{ minWidth: 150 }}
+                                                        >
+                                                            Продолжить
+                                                        </Button>
+                                                        <Button
+                                                            leftSection={<IconX size={16} />}
+                                                            onClick={() => handleCloseSurveySession(session.id)}
+                                                            variant="light"
+                                                            color="red"
+                                                            style={{ minWidth: 150 }}
+                                                        >
+                                                            Закрыть
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                {session.status === 'COMPLETED' && (
+                                                    <Text size="sm" c="dimmed" style={{ minWidth: 150, textAlign: 'right' }}>
+                                                        Опрос пройден
+                                                    </Text>
+                                                )}
+                                                {session.status === 'CLOSED' && (
+                                                    <Text size="sm" c="dimmed" style={{ minWidth: 150, textAlign: 'right' }}>
+                                                        Сессия закрыта
+                                                    </Text>
+                                                )}
+                                            </Group>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            )}
+
+                            {hasMoreSurveySessions && (
+                                <Group justify="center" mt="md">
+                                    <Button
+                                        variant="light"
+                                        onClick={loadMoreSurveySessions}
+                                        loading={loadingMoreSurveySessions}
+                                    >
+                                        Посмотреть еще
+                                    </Button>
+                                </Group>
+                            )}
+                        </Tabs.Panel>
+                    </Tabs>
                 </Card>
             </Container>
 

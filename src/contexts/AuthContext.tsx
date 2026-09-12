@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser, isAuthenticated } from "@/api/auth";
+import { testingSessionStorage } from "@/utils/testingSessionStorage";
+import { surveySessionStorage } from "@/utils/surveySessionStorage";
 
 interface User {
     id: string;
@@ -79,6 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = () => {
         apiLogout();
+        testingSessionStorage.reset();
+        surveySessionStorage.reset();
         setUser(null);
         setError(null);
     };

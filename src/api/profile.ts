@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { httpClient } from '@/shared/http/httpClient';
 import { API_ROUTES } from '@/shared/config/apiConfig';
-import { UserProfile, TestingSessionCardResponse } from '@/types';
+import {
+    SurveySessionCardResponse,
+    TestingSessionCardResponse,
+    UserProfile,
+} from '@/types';
 
 export interface UpdateProfileRequest {
     name: string;
@@ -67,6 +71,21 @@ export const profileApi = {
             return response.data;
         } catch (error) {
             throw new Error('Не удалось загрузить список сессий');
+        }
+    },
+
+    async getSurveySessions(params: { offset: number; limit: number }): Promise<SurveySessionCardResponse> {
+        try {
+            const queryParams = new URLSearchParams({
+                offset: params.offset.toString(),
+                limit: params.limit.toString(),
+            });
+            const response = await httpClient.get<SurveySessionCardResponse>(
+                `${API_ROUTES.profile.surveySessions}?${queryParams}`,
+            );
+            return response.data;
+        } catch (error) {
+            throw new Error('Не удалось загрузить список сессий опросов');
         }
     },
 };

@@ -1,18 +1,20 @@
 import React from 'react';
-import { Test } from '@/types';
-import { getCategoryLabel, getCategoryGradient, getCategoryIcon } from '@/utils/testAdapters';
+import { Survey } from '@/types';
+import { getCategoryGradient, getCategoryIcon, getCategoryLabel } from '@/utils/testAdapters';
 
-interface TestCardProps {
-    test: Test;
-    onStartTest: (test: Test) => void;
+interface SurveyCardProps {
+    survey: Survey;
+    onStartSurvey: (survey: Survey) => void;
 }
 
-const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
-    const categoryLabel = getCategoryLabel(test.category);
-    const categoryGradient = getCategoryGradient(test.category);
-    const categoryIcon = getCategoryIcon(test.category);
-    const questionsCount = test.questionsCount ?? 0;
-    const duration = test.durationMins || '—';
+const SurveyCard: React.FC<SurveyCardProps> = ({ survey, onStartSurvey }) => {
+    const questionsCount = survey.questionsCount ?? 0;
+    const duration = survey.durationMins || '—';
+    const categoryGradient = survey.category
+        ? getCategoryGradient(survey.category)
+        : 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)';
+    const categoryIcon = survey.category ? getCategoryIcon(survey.category) : '📝';
+    const categoryLabel = survey.category ? getCategoryLabel(survey.category) : 'Опрос';
 
     return (
         <div style={{
@@ -28,7 +30,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
         }}>
             <div
                 style={{
-                    background: categoryGradient,
+                    background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)',
                     height: '120px',
                     display: 'flex',
                     alignItems: 'center',
@@ -38,9 +40,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                     position: 'relative'
                 }}
             >
-                <div style={{ fontSize: '3rem' }}>
-                    {categoryIcon}
-                </div>
+                <div style={{ fontSize: '3rem' }}>📝</div>
                 <div style={{
                     position: 'absolute',
                     top: '10px',
@@ -54,7 +54,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                     fontWeight: '500',
                     border: '1px solid rgba(255,255,255,0.3)'
                 }}>
-                    {categoryLabel}
+                    Опрос
                 </div>
             </div>
 
@@ -65,23 +65,23 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 flex: 1
             }}>
                 <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#2c3e50', marginTop: 0 }}>
-                    {test.name}
+                    {survey.name}
                 </h3>
-                <p style={{ 
-                    color: '#666', 
-                    marginBottom: 'auto', 
-                    lineHeight: '1.5', 
+                <p style={{
+                    color: '#666',
+                    marginBottom: 'auto',
+                    lineHeight: '1.5',
                     marginTop: 0,
                     flex: 1,
                     minHeight: '60px'
                 }}>
-                    {test.description || test.transcript}
+                    {survey.description}
                 </p>
 
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '1rem', 
-                    marginBottom: '1rem', 
+                <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '1rem',
                     marginTop: '1rem'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
@@ -98,7 +98,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                     type="button"
                     style={{
                         width: '100%',
-                        background: '#28a745',
+                        background: '#185a9d',
                         color: 'white',
                         border: 'none',
                         padding: '0.8rem',
@@ -108,13 +108,13 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                         cursor: 'pointer',
                         marginTop: 0
                     }}
-                    onClick={() => onStartTest(test)}
+                    onClick={() => onStartSurvey(survey)}
                 >
-                    Начать тест
+                    Пройти опрос
                 </button>
             </div>
         </div>
     );
 };
 
-export default TestCard;
+export default SurveyCard;

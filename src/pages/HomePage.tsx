@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Welcome } from '@/components/Welcome/Welcome';
 import TestCard from '../components/TestCard';
 import TestCardSkeleton from '../components/TestCardSkeleton';
+import SurveyCard from '../components/SurveyCard';
 import AIAssistant from '../components/AIAssistant';
-import { Test } from '@/types';
+import { Survey, Test } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { fetchTests } from '@/api/tests';
+import { fetchSurveys } from '@/api/surveys';
 import { enrichTests } from '@/utils/testAdapters';
 
 // Данные психологов команды
@@ -63,8 +65,14 @@ const teamPsychologists = [
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
     const [tests, setTests] = useState<Test[]>([]);
+    const [testsTotal, setTestsTotal] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [surveys, setSurveys] = useState<Survey[]>([]);
+    const [surveysTotal, setSurveysTotal] = useState<number>(0);
+    const [surveysLoading, setSurveysLoading] = useState<boolean>(true);
+    const [surveysError, setSurveysError] = useState<string | null>(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -80,6 +88,7 @@ const HomePage: React.FC = () => {
                     return;
                 }
                 setTests(enrichTests(response.items));
+                setTestsTotal(response.total);
             } catch (err) {
                 if (!active) {
                     return;
@@ -94,6 +103,30 @@ const HomePage: React.FC = () => {
 
         loadTests();
 
+        const loadSurveys = async () => {
+            setSurveysLoading(true);
+            setSurveysError(null);
+            try {
+                const response = await fetchSurveys({ offset: 0, limit: 3 });
+                if (!active) {
+                    return;
+                }
+                setSurveys(response.items);
+                setSurveysTotal(response.total);
+            } catch (err) {
+                if (!active) {
+                    return;
+                }
+                setSurveysError(err instanceof Error ? err.message : 'Не удалось загрузить опросы');
+            } finally {
+                if (active) {
+                    setSurveysLoading(false);
+                }
+            }
+        };
+
+        loadSurveys();
+
         return () => {
             active = false;
         };
@@ -107,6 +140,14 @@ const HomePage: React.FC = () => {
         navigate('/tests');
     };
 
+    const handleOpenSurvey = (survey: Survey) => {
+        navigate(`/survey/${survey.id}`, { state: { survey } });
+    };
+
+    const handleViewAllSurveys = () => {
+        navigate('/surveys');
+    };
+
     return (
         <div style={{ minHeight: '100vh', position: 'relative' }}>
             <main style={{ padding: '20px' }}>
@@ -114,7 +155,8 @@ const HomePage: React.FC = () => {
                     {/* Приветственная секция */}
                     <Welcome />
 
-                    {/* Секция тестов */}
+                    {/* Секция тестов — не показываем, если тестов нет */}
+                    {(loading || error || tests.length > 0) && (
                     <section style={{ marginTop: '60px' }}>
                         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                             <h2 style={{
@@ -192,13 +234,13 @@ const HomePage: React.FC = () => {
                                     ))}
                                 </div>
 
-                                {/* Кнопка "Посмотреть еще" */}
+                                {/* Разделитель + кнопка "Посмотреть еще" (кнопка — только если есть скрытые тесты) */}
                                 <div style={{
                                     textAlign: 'center',
                                     position: 'relative',
                                     marginTop: '2rem'
                                 }}>
-                                    {/* Декоративная линия */}
+                                    {/* Декоративная линия — всегда */}
                                     <div style={{
                                         position: 'absolute',
                                         top: '50%',
@@ -210,57 +252,215 @@ const HomePage: React.FC = () => {
                                         zIndex: 1
                                     }} />
 
-                                    {/* Кнопка */}
-                                    <button
-                                        type="button"
-                                        onClick={handleViewAllTests}
-                                        style={{
-                                            position: 'relative',
-                                            zIndex: 2,
-                                            background: 'rgba(255, 255, 255, 0.95)',
-                                            border: 'none',
-                                            borderRadius: '50px',
-                                            padding: '14px 36px',
-                                            fontSize: '1.1rem',
-                                            fontWeight: '600',
-                                            color: '#4a6cf7',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s ease',
-                                            boxShadow: '0 4px 20px rgba(74, 108, 247, 0.25)',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            backdropFilter: 'blur(10px)',
-                                            fontFamily: 'inherit'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = 'white';
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 6px 25px rgba(74, 108, 247, 0.35)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.boxShadow = '0 4px 20px rgba(74, 108, 247, 0.25)';
-                                        }}
-                                    >
-                                        <span>Посмотреть еще</span>
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            style={{ transition: 'transform 0.2s ease' }}
+                                    {testsTotal > 3 ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleViewAllTests}
+                                            style={{
+                                                position: 'relative',
+                                                zIndex: 2,
+                                                background: 'rgba(255, 255, 255, 0.95)',
+                                                border: 'none',
+                                                borderRadius: '50px',
+                                                padding: '14px 36px',
+                                                fontSize: '1.1rem',
+                                                fontWeight: '600',
+                                                color: '#4a6cf7',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                boxShadow: '0 4px 20px rgba(74, 108, 247, 0.25)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                backdropFilter: 'blur(10px)',
+                                                fontFamily: 'inherit'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = 'white';
+                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                e.currentTarget.style.boxShadow = '0 6px 25px rgba(74, 108, 247, 0.35)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(74, 108, 247, 0.25)';
+                                            }}
                                         >
-                                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                                        </svg>
-                                    </button>
+                                            <span>Посмотреть еще</span>
+                                            <svg
+                                                width="20"
+                                                height="20"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                style={{ transition: 'transform 0.2s ease' }}
+                                            >
+                                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                                            </svg>
+                                        </button>
+                                    ) : (
+                                        // Спейсер — задаёт высоту, чтобы линия «дышала», как под кнопкой
+                                        <div style={{ height: '48px' }} />
+                                    )}
                                 </div>
                             </>
                         )}
                     </section>
+                    )}
+
+                    {/* Секция опросов — не показываем, если опросов нет */}
+                    {(surveysLoading || surveysError || surveys.length > 0) && (
+                    <section style={{ marginTop: '80px' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                            <h2 style={{
+                                fontSize: '2.5rem',
+                                marginBottom: '1rem',
+                                color: 'white',
+                                textShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                                fontWeight: '700'
+                            }}>
+                                Опросы
+                            </h2>
+                            <p style={{
+                                fontSize: '1.2rem',
+                                color: 'rgba(255,255,255,0.9)',
+                                maxWidth: '600px',
+                                margin: '0 auto',
+                                textShadow: '0 1px 5px rgba(0,0,0,0.3)',
+                                lineHeight: '1.6'
+                            }}>
+                                Пройдите опросы по разным темам
+                            </p>
+                        </div>
+
+                        {surveysLoading ? (
+                            <div className="tests-grid" style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                gap: '15px',
+                                maxWidth: '1300px',
+                                margin: '0 auto 40px auto'
+                            }}>
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <TestCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        ) : surveysError ? (
+                            <div style={{
+                                textAlign: 'center',
+                                color: 'white',
+                                padding: '2rem'
+                            }}>
+                                <p style={{ marginBottom: '1rem' }}>Не удалось загрузить опросы.</p>
+                                <button
+                                    type="button"
+                                    onClick={handleViewAllSurveys}
+                                    style={{
+                                        background: 'white',
+                                        border: 'none',
+                                        borderRadius: '50px',
+                                        padding: '14px 36px',
+                                        fontSize: '1.1rem',
+                                        fontWeight: '600',
+                                        color: '#185a9d',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Попробовать еще раз
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="tests-grid" style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(3, 1fr)',
+                                    gap: '15px',
+                                    maxWidth: '1300px',
+                                    margin: '0 auto 40px auto'
+                                }}>
+                                    {surveys.map(survey => (
+                                        <SurveyCard
+                                            key={survey.id}
+                                            survey={survey}
+                                            onStartSurvey={handleOpenSurvey}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Разделитель + кнопка "Посмотреть еще" (кнопка — только если есть скрытые опросы) */}
+                                <div style={{
+                                    textAlign: 'center',
+                                    position: 'relative',
+                                    marginTop: '2rem'
+                                }}>
+                                    {/* Декоративная линия — всегда */}
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '50%',
+                                        left: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                        width: '100%',
+                                        height: '1px',
+                                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                                        zIndex: 1
+                                    }} />
+
+                                    {surveysTotal > 3 ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleViewAllSurveys}
+                                            style={{
+                                                position: 'relative',
+                                                zIndex: 2,
+                                                background: 'rgba(255, 255, 255, 0.95)',
+                                                border: 'none',
+                                                borderRadius: '50px',
+                                                padding: '14px 36px',
+                                                fontSize: '1.1rem',
+                                                fontWeight: '600',
+                                                color: '#185a9d',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                boxShadow: '0 4px 20px rgba(24, 90, 157, 0.25)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                backdropFilter: 'blur(10px)',
+                                                fontFamily: 'inherit'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = 'white';
+                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                e.currentTarget.style.boxShadow = '0 6px 25px rgba(24, 90, 157, 0.35)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(24, 90, 157, 0.25)';
+                                            }}
+                                        >
+                                            <span>Посмотреть еще</span>
+                                            <svg
+                                                width="20"
+                                                height="20"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                style={{ transition: 'transform 0.2s ease' }}
+                                            >
+                                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                                            </svg>
+                                        </button>
+                                    ) : (
+                                        <div style={{ height: '48px' }} />
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </section>
+                    )}
 
                     {/* AI ассистент */}
                     <section style={{ marginTop: '80px' }}>
@@ -334,115 +534,115 @@ const HomePage: React.FC = () => {
                         </div>
 
                         {/* Команда психологов */}
-                        <div style={{ marginTop: '4rem' }}>
-                            <h3 style={{
-                                textAlign: 'center',
-                                fontSize: '2.2rem',
-                                marginBottom: '3rem',
-                                color: 'white',
-                                textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                                fontWeight: '600'
-                            }}>
-                                Наша команда психологов
-                            </h3>
+                        {/*<div style={{ marginTop: '4rem' }}>*/}
+                        {/*    <h3 style={{*/}
+                        {/*        textAlign: 'center',*/}
+                        {/*        fontSize: '2.2rem',*/}
+                        {/*        marginBottom: '3rem',*/}
+                        {/*        color: 'white',*/}
+                        {/*        textShadow: '0 2px 10px rgba(0,0,0,0.3)',*/}
+                        {/*        fontWeight: '600'*/}
+                        {/*    }}>*/}
+                        {/*        Наша команда психологов*/}
+                        {/*    </h3>*/}
 
-                            <div className="team-scroll-container" style={{
-                                position: 'relative',
-                                maxWidth: '100%',
-                                overflowX: 'auto',
-                                padding: '2rem 0',
-                                cursor: 'grab'
-                            }}>
-                                <div style={{
-                                    display: 'flex',
-                                    gap: '2rem',
-                                    padding: '0 2rem',
-                                    minWidth: 'min-content'
-                                }}>
-                                    {teamPsychologists.map(psychologist => (
-                                        <div
-                                            key={psychologist.id}
-                                            style={{
-                                                background: 'rgba(255,255,255,0.95)',
-                                                borderRadius: '20px',
-                                                padding: '2rem',
-                                                minWidth: '300px',
-                                                textAlign: 'center',
-                                                boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
-                                                transition: 'all 0.3s ease',
-                                                backdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255,255,255,0.2)'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(-8px)';
-                                                e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.15)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(0)';
-                                                e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.1)';
-                                            }}
-                                        >
-                                            <img
-                                                src={psychologist.photo}
-                                                alt={psychologist.name}
-                                                style={{
-                                                    width: '120px',
-                                                    height: '120px',
-                                                    borderRadius: '50%',
-                                                    objectFit: 'cover',
-                                                    margin: '0 auto 1.5rem',
-                                                    border: '4px solid #4a6cf7',
-                                                    boxShadow: '0 4px 15px rgba(74, 108, 247, 0.3)'
-                                                }}
-                                            />
-                                            <h4 style={{
-                                                fontSize: '1.4rem',
-                                                marginBottom: '0.75rem',
-                                                color: '#2c3e50',
-                                                fontWeight: '600'
-                                            }}>
-                                                {psychologist.name}
-                                            </h4>
-                                            <p style={{
-                                                color: '#4a6cf7',
-                                                fontWeight: '600',
-                                                marginBottom: '0.75rem',
-                                                fontSize: '1rem'
-                                            }}>
-                                                {psychologist.position}
-                                            </p>
-                                            <p style={{
-                                                color: '#666',
-                                                fontSize: '0.95rem',
-                                                marginBottom: '0.75rem',
-                                                lineHeight: '1.5'
-                                            }}>
-                                                {psychologist.specialization}
-                                            </p>
-                                            <p style={{
-                                                color: '#888',
-                                                fontSize: '0.9rem',
-                                                margin: 0,
-                                                fontWeight: '500'
-                                            }}>
-                                                Опыт: {psychologist.experience}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                        {/*    <div className="team-scroll-container" style={{*/}
+                        {/*        position: 'relative',*/}
+                        {/*        maxWidth: '100%',*/}
+                        {/*        overflowX: 'auto',*/}
+                        {/*        padding: '2rem 0',*/}
+                        {/*        cursor: 'grab'*/}
+                        {/*    }}>*/}
+                        {/*        <div style={{*/}
+                        {/*            display: 'flex',*/}
+                        {/*            gap: '2rem',*/}
+                        {/*            padding: '0 2rem',*/}
+                        {/*            minWidth: 'min-content'*/}
+                        {/*        }}>*/}
+                        {/*            {teamPsychologists.map(psychologist => (*/}
+                        {/*                <div*/}
+                        {/*                    key={psychologist.id}*/}
+                        {/*                    style={{*/}
+                        {/*                        background: 'rgba(255,255,255,0.95)',*/}
+                        {/*                        borderRadius: '20px',*/}
+                        {/*                        padding: '2rem',*/}
+                        {/*                        minWidth: '300px',*/}
+                        {/*                        textAlign: 'center',*/}
+                        {/*                        boxShadow: '0 8px 30px rgba(0,0,0,0.1)',*/}
+                        {/*                        transition: 'all 0.3s ease',*/}
+                        {/*                        backdropFilter: 'blur(10px)',*/}
+                        {/*                        border: '1px solid rgba(255,255,255,0.2)'*/}
+                        {/*                    }}*/}
+                        {/*                    onMouseEnter={(e) => {*/}
+                        {/*                        e.currentTarget.style.transform = 'translateY(-8px)';*/}
+                        {/*                        e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.15)';*/}
+                        {/*                    }}*/}
+                        {/*                    onMouseLeave={(e) => {*/}
+                        {/*                        e.currentTarget.style.transform = 'translateY(0)';*/}
+                        {/*                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.1)';*/}
+                        {/*                    }}*/}
+                        {/*                >*/}
+                        {/*                    <img*/}
+                        {/*                        src={psychologist.photo}*/}
+                        {/*                        alt={psychologist.name}*/}
+                        {/*                        style={{*/}
+                        {/*                            width: '120px',*/}
+                        {/*                            height: '120px',*/}
+                        {/*                            borderRadius: '50%',*/}
+                        {/*                            objectFit: 'cover',*/}
+                        {/*                            margin: '0 auto 1.5rem',*/}
+                        {/*                            border: '4px solid #4a6cf7',*/}
+                        {/*                            boxShadow: '0 4px 15px rgba(74, 108, 247, 0.3)'*/}
+                        {/*                        }}*/}
+                        {/*                    />*/}
+                        {/*                    <h4 style={{*/}
+                        {/*                        fontSize: '1.4rem',*/}
+                        {/*                        marginBottom: '0.75rem',*/}
+                        {/*                        color: '#2c3e50',*/}
+                        {/*                        fontWeight: '600'*/}
+                        {/*                    }}>*/}
+                        {/*                        {psychologist.name}*/}
+                        {/*                    </h4>*/}
+                        {/*                    <p style={{*/}
+                        {/*                        color: '#4a6cf7',*/}
+                        {/*                        fontWeight: '600',*/}
+                        {/*                        marginBottom: '0.75rem',*/}
+                        {/*                        fontSize: '1rem'*/}
+                        {/*                    }}>*/}
+                        {/*                        {psychologist.position}*/}
+                        {/*                    </p>*/}
+                        {/*                    <p style={{*/}
+                        {/*                        color: '#666',*/}
+                        {/*                        fontSize: '0.95rem',*/}
+                        {/*                        marginBottom: '0.75rem',*/}
+                        {/*                        lineHeight: '1.5'*/}
+                        {/*                    }}>*/}
+                        {/*                        {psychologist.specialization}*/}
+                        {/*                    </p>*/}
+                        {/*                    <p style={{*/}
+                        {/*                        color: '#888',*/}
+                        {/*                        fontSize: '0.9rem',*/}
+                        {/*                        margin: 0,*/}
+                        {/*                        fontWeight: '500'*/}
+                        {/*                    }}>*/}
+                        {/*                        Опыт: {psychologist.experience}*/}
+                        {/*                    </p>*/}
+                        {/*                </div>*/}
+                        {/*            ))}*/}
+                        {/*        </div>*/}
+                        {/*    </div>*/}
 
-                            {/* Индикатор скролла */}
-                            <div style={{
-                                textAlign: 'center',
-                                marginTop: '2rem',
-                                color: 'rgba(255,255,255,0.7)',
-                                fontSize: '1rem',
-                                fontStyle: 'italic'
-                            }}>
-                                ← Прокрутите, чтобы увидеть всю команду →
-                            </div>
-                        </div>
+                        {/*    /!* Индикатор скролла *!/*/}
+                        {/*    <div style={{*/}
+                        {/*        textAlign: 'center',*/}
+                        {/*        marginTop: '2rem',*/}
+                        {/*        color: 'rgba(255,255,255,0.7)',*/}
+                        {/*        fontSize: '1rem',*/}
+                        {/*        fontStyle: 'italic'*/}
+                        {/*    }}>*/}
+                        {/*        ← Прокрутите, чтобы увидеть всю команду →*/}
+                        {/*    </div>*/}
+                        {/*</div>*/}
                     </section>
                 </div>
             </main>

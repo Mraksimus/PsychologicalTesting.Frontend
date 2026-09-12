@@ -10,6 +10,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import TestingPage from "@/pages/TestingPage";
 import ResultsPage from "@/pages/ResultsPage";
+import SurveyPage from "@/pages/SurveyPage";
+import SurveyingPage from "@/pages/SurveyingPage";
+import SurveyDonePage from "@/pages/SurveyDonePage";
 
 // Компоненты
 import Header from "./components/Header";
@@ -34,11 +37,7 @@ const Layout: React.FC = () => {
             {showHeader && <Header />}
             <Routes>
                 <Route path="/" element={<Navigate to="/home" replace />} />
-                <Route path="/home" element={
-                    <ProtectedRoute>
-                        <HomePage />
-                    </ProtectedRoute>
-                } />
+                <Route path="/home" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/profile" element={
@@ -46,11 +45,7 @@ const Layout: React.FC = () => {
                         <ProfilePage />
                     </ProtectedRoute>
                 } />
-                <Route path="/tests" element={
-                    <ProtectedRoute>
-                        <TestPage />
-                    </ProtectedRoute>
-                } />
+                <Route path="/tests" element={<TestPage />} />
                 <Route path="/test/:testId" element={
                     <ProtectedRoute>
                         <TestingPage />
@@ -64,6 +59,17 @@ const Layout: React.FC = () => {
                 <Route path="/result" element={
                     <ProtectedRoute>
                         <ResultsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/surveys" element={<SurveyPage />} />
+                <Route path="/survey/:surveyId" element={
+                    <ProtectedRoute>
+                        <SurveyingPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/survey/:surveyId/done" element={
+                    <ProtectedRoute>
+                        <SurveyDonePage />
                     </ProtectedRoute>
                 } />
                 <Route path="*" element={<Navigate to="/home" replace />} />

@@ -56,6 +56,13 @@ export const testingSessionsApi = {
     async close(sessionId: string): Promise<void> {
         await httpClient.put(`/testing/sessions/${sessionId}/close`);
     },
+    async regenerateResult(sessionId: string): Promise<FullTestingSession> {
+        const { data } = await httpClient.post<FullTestingSession | CompleteResponse>(
+            `/testing/sessions/${sessionId}/regenerate-result`,
+        );
+        const wrapped = (data as CompleteResponse).session;
+        return wrapped ?? (data as FullTestingSession);
+    },
 };
 
 export const isConflictError = (error: unknown): boolean => {

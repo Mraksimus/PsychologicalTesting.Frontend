@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { notifications } from "@mantine/notifications";
@@ -9,13 +9,15 @@ import { EMAIL_REGEX, NAME_REGEX, PASSWORD_REGEX } from '@/shared/validation/pat
 // Используем именованный экспорт
 export const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { register, user } = useAuth();
+    const redirectTo = (location.state as { from?: string } | undefined)?.from ?? "/home";
 
     React.useEffect(() => {
         if (user) {
-            navigate("/home");
+            navigate(redirectTo, { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, navigate, redirectTo]);
 
     const handleSubmit = async (values: {
         name: string;

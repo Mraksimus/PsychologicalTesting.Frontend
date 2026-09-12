@@ -13,6 +13,7 @@ import {
     Progress,
     Stack,
     Text,
+    Textarea,
     Title,
 } from '@mantine/core';
 import {
@@ -32,11 +33,27 @@ import {
 import { testingSessionStorage } from '@/utils/testingSessionStorage';
 import { notifications } from '@mantine/notifications';
 
-type AnswersMap = Record<string, number | null>;
+interface AnswerCell {
+    selectedIndex: number | null;
+    selectedIndices: number[];
+    textAnswer: string | null;
+}
+
+type AnswersMap = Record<string, AnswerCell>;
+
+const emptyCell = (): AnswerCell => ({
+    selectedIndex: null,
+    selectedIndices: [],
+    textAnswer: null,
+});
 
 const buildAnswersMap = (answers: SessionAnswer[]): AnswersMap =>
     answers.reduce<AnswersMap>((acc, item) => {
-        acc[item.questionId] = item.selectedIndex ?? null;
+        acc[item.questionId] = {
+            selectedIndex: item.selectedIndex ?? null,
+            selectedIndices: item.selectedIndices ?? [],
+            textAnswer: item.textAnswer ?? null,
+        };
         return acc;
     }, {});
 
@@ -44,15 +61,26 @@ const buildAnswersPayload = (
     questions: ExistingQuestion[],
     answersMap: AnswersMap,
 ): SessionAnswer[] =>
-    questions.map(question => ({
-        questionId: question.id,
-        selectedIndex:
-            answersMap[question.id] === undefined ? null : answersMap[question.id],
-    }));
+    questions.map(question => {
+        const cell = answersMap[question.id] ?? emptyCell();
+        return {
+            questionId: question.id,
+            selectedIndex: cell.selectedIndex,
+            selectedIndices: cell.selectedIndices.length > 0 ? cell.selectedIndices : null,
+            textAnswer: cell.textAnswer,
+        };
+    });
 
 const isQuestionAnswered = (question: ExistingQuestion, answersMap: AnswersMap): boolean => {
-    const value = answersMap[question.id];
-    return value !== undefined && value !== null;
+    const cell = answersMap[question.id];
+    if (!cell) return false;
+    if (question.content.type === 'Input') {
+        return Boolean(cell.textAnswer && cell.textAnswer.trim().length > 0);
+    }
+    if (question.content.type === 'Choice' && question.content.mod === 'MULTIPLE') {
+        return cell.selectedIndices.length > 0;
+    }
+    return cell.selectedIndex !== null && cell.selectedIndex !== undefined;
 };
 
 const getInitialQuestionIndex = (
@@ -244,14 +272,49 @@ const TestingPage: React.FC = () => {
     }, [session, locationState.continueFromProfile]);
 
     const handleSelectAnswer = (optionIndex: number) => {
-        if (!currentQuestion) {
-            return;
-        }
-        if (currentQuestion.content.type !== 'Choice') {
-            // Бек поддерживает Input, но UI пока работает только с Choice.
-            return;
-        }
-        setAnswersMap(prev => ({ ...prev, [currentQuestion.id]: optionIndex }));
+        if (!currentQuestion) return;
+        if (currentQuestion.content.type !== 'Choice') return;
+        setAnswersMap(prev => ({
+            ...prev,
+            [currentQuestion.id]: {
+                selectedIndex: optionIndex,
+                selectedIndices: [],
+                textAnswer: null,
+            },
+        }));
+    };
+
+    const handleToggleMulti = (optionIndex: number) => {
+        if (!currentQuestion) return;
+        if (currentQuestion.content.type !== 'Choice') return;
+        setAnswersMap(prev => {
+            const cell = prev[currentQuestion.id] ?? emptyCell();
+            const has = cell.selectedIndices.includes(optionIndex);
+            const nextIndices = has
+                ? cell.selectedIndices.filter(i => i !== optionIndex)
+                : [...cell.selectedIndices, optionIndex].sort((a, b) => a - b);
+            return {
+                ...prev,
+                [currentQuestion.id]: {
+                    selectedIndex: null,
+                    selectedIndices: nextIndices,
+                    textAnswer: null,
+                },
+            };
+        });
+    };
+
+    const handleTextAnswer = (text: string) => {
+        if (!currentQuestion) return;
+        if (currentQuestion.content.type !== 'Input') return;
+        setAnswersMap(prev => ({
+            ...prev,
+            [currentQuestion.id]: {
+                selectedIndex: null,
+                selectedIndices: [],
+                textAnswer: text,
+            },
+        }));
     };
 
     const persistAnswers = useCallback(async () => {
@@ -418,10 +481,12 @@ const TestingPage: React.FC = () => {
         );
     }
 
-    const choiceContent =
-        currentQuestion?.content.type === 'Choice' ? currentQuestion.content : null;
-    const selectedIndex =
-        currentQuestion ? answersMap[currentQuestion.id] ?? null : null;
+    const questionContent = currentQuestion?.content ?? null;
+    const currentCell: AnswerCell =
+        (currentQuestion && answersMap[currentQuestion.id]) || emptyCell();
+    const selectedIndex = currentCell.selectedIndex;
+    const selectedIndices = currentCell.selectedIndices;
+    const textAnswer = currentCell.textAnswer ?? '';
 
     return (
         <>
@@ -494,9 +559,116 @@ const TestingPage: React.FC = () => {
                             </Title>
                         </div>
 
-                        {choiceContent ? (
+                        {questionContent?.type === 'Choice' && questionContent.mod === 'SCALE' ? (
+                            <div>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    gap: '8px',
+                                    flexWrap: 'wrap',
+                                }}>
+                                    {questionContent.options.map(option => {
+                                        const selected = selectedIndex === option.index;
+                                        return (
+                                            <button
+                                                key={option.index}
+                                                type="button"
+                                                disabled={disabledControls}
+                                                onClick={() => handleSelectAnswer(option.index)}
+                                                title={option.text}
+                                                style={{
+                                                    flex: 1,
+                                                    minWidth: '48px',
+                                                    padding: '14px 8px',
+                                                    borderRadius: '8px',
+                                                    border: selected ? '2px solid #667eea' : '2px solid #e0e0e0',
+                                                    background: selected
+                                                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                                        : 'white',
+                                                    color: selected ? 'white' : '#333',
+                                                    cursor: disabledControls ? 'not-allowed' : 'pointer',
+                                                    fontWeight: 600,
+                                                    fontSize: '1rem',
+                                                    transition: 'all 0.2s ease',
+                                                }}
+                                            >
+                                                {option.index + 1}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {questionContent.options.length > 0 && (
+                                    <Group justify="space-between" mt="sm">
+                                        <Text size="sm" c="dimmed">
+                                            {questionContent.options[0]?.text}
+                                        </Text>
+                                        <Text size="sm" c="dimmed">
+                                            {questionContent.options[questionContent.options.length - 1]?.text}
+                                        </Text>
+                                    </Group>
+                                )}
+                            </div>
+                        ) : questionContent?.type === 'Choice' && questionContent.mod === 'MULTIPLE' ? (
                             <Stack gap="md">
-                                {choiceContent.options.map(option => {
+                                {questionContent.options.map(option => {
+                                    const selected = selectedIndices.includes(option.index);
+                                    return (
+                                        <Card
+                                            key={option.index}
+                                            p="md"
+                                            radius="md"
+                                            style={{
+                                                border: selected ? '2px solid #667eea' : '2px solid #e0e0e0',
+                                                background: selected
+                                                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                                    : 'white',
+                                                cursor: disabledControls ? 'not-allowed' : 'pointer',
+                                                opacity: disabledControls ? 0.7 : 1,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                            onClick={() => !disabledControls && handleToggleMulti(option.index)}
+                                            withBorder
+                                        >
+                                            <Group>
+                                                <div
+                                                    style={{
+                                                        width: '24px',
+                                                        height: '24px',
+                                                        borderRadius: '4px',
+                                                        border: `2px solid ${selected ? 'white' : '#ccc'}`,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selected ? 'white' : 'transparent',
+                                                    }}
+                                                >
+                                                    {selected && (
+                                                        <div
+                                                            style={{
+                                                                fontSize: '14px',
+                                                                color: '#667eea',
+                                                                fontWeight: 700,
+                                                                lineHeight: 1,
+                                                            }}
+                                                        >
+                                                            ✓
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <Text
+                                                    fw={500}
+                                                    style={{ color: selected ? 'white' : '#333' }}
+                                                >
+                                                    {option.text}
+                                                </Text>
+                                            </Group>
+                                        </Card>
+                                    );
+                                })}
+                            </Stack>
+                        ) : questionContent?.type === 'Choice' ? (
+                            <Stack gap="md">
+                                {questionContent.options.map(option => {
                                     const selected = selectedIndex === option.index;
                                     return (
                                         <Card
@@ -552,6 +724,15 @@ const TestingPage: React.FC = () => {
                                     );
                                 })}
                             </Stack>
+                        ) : questionContent?.type === 'Input' ? (
+                            <Textarea
+                                placeholder="Введите ваш ответ"
+                                minRows={3}
+                                autosize
+                                value={textAnswer}
+                                onChange={e => handleTextAnswer(e.currentTarget.value)}
+                                disabled={disabledControls}
+                            />
                         ) : (
                             <Alert color="yellow">
                                 Этот тип вопроса пока не поддерживается в интерфейсе.

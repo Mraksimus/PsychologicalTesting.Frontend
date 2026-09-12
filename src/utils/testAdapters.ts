@@ -1,68 +1,36 @@
-import { Test, TestCategory } from '@/types';
+import { Category, Test } from '@/types';
 
-// Бек категории и количество вопросов в публичном API не возвращает,
-// поэтому подставляем безопасные дефолты для UI.
-export const enrichTest = (test: Test): Test => ({
-    ...test,
-    category: test.category ?? 'OTHER',
-    questionsCount: test.questionsCount ?? 0,
-});
+export const enrichTest = (test: Test): Test => test;
 
-export const enrichTests = (tests: Test[]): Test[] => tests.map(enrichTest);
+export const enrichTests = (tests: Test[]): Test[] => tests;
 
-// Маппинг категорий для отображения в UI
-export const getCategoryLabel = (category: TestCategory): string => {
-    const labels: Record<TestCategory, string> = {
-        PERSONALITY: 'Личность',
-        EMOTIONS: 'Эмоции',
-        INTELLECT: 'Интеллект',
-        CAREER: 'Карьера',
-        RELATIONSHIPS: 'Отношения',
-        DEVELOPMENT: 'Развитие',
-        OTHER: 'Другое',
-    };
-    return labels[category];
+const DEFAULT_CATEGORY: Pick<Category, 'name' | 'color' | 'icon'> = {
+    name: 'Другое',
+    color: '#d299c2',
+    icon: '📊',
 };
 
-// Маппинг категорий на цвета для Badge
-export const getCategoryColor = (category: TestCategory): string => {
-    const colors: Record<TestCategory, string> = {
-        PERSONALITY: 'blue',
-        EMOTIONS: 'pink',
-        INTELLECT: 'violet',
-        CAREER: 'orange',
-        RELATIONSHIPS: 'green',
-        DEVELOPMENT: 'cyan',
-        OTHER: 'gray',
-    };
-    return colors[category];
+export const getCategoryLabel = (category: Category | null | undefined): string =>
+    category?.name ?? DEFAULT_CATEGORY.name;
+
+export const getCategoryColor = (category: Category | null | undefined): string =>
+    category?.color ?? DEFAULT_CATEGORY.color;
+
+export const getCategoryIcon = (category: Category | null | undefined): string =>
+    category?.icon ?? DEFAULT_CATEGORY.icon;
+
+const hexToRgba = (hex: string, alpha: number): string => {
+    const clean = hex.replace('#', '');
+    const value = clean.length === 3
+        ? clean.split('').map(c => c + c).join('')
+        : clean;
+    const r = parseInt(value.slice(0, 2), 16) || 0;
+    const g = parseInt(value.slice(2, 4), 16) || 0;
+    const b = parseInt(value.slice(4, 6), 16) || 0;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// Маппинг категорий на градиенты
-export const getCategoryGradient = (category: TestCategory): string => {
-    const gradients: Record<TestCategory, string> = {
-        PERSONALITY: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        EMOTIONS: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        INTELLECT: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        CAREER: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        RELATIONSHIPS: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-        DEVELOPMENT: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-        OTHER: 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
-    };
-    return gradients[category];
+export const getCategoryGradient = (category: Category | null | undefined): string => {
+    const color = getCategoryColor(category);
+    return `linear-gradient(135deg, ${color} 0%, ${hexToRgba(color, 0.6)} 100%)`;
 };
-
-// Маппинг категорий на иконки
-export const getCategoryIcon = (category: TestCategory): string => {
-    const icons: Record<TestCategory, string> = {
-        PERSONALITY: '🧠',
-        EMOTIONS: '❤️',
-        INTELLECT: '💡',
-        CAREER: '💼',
-        RELATIONSHIPS: '💑',
-        DEVELOPMENT: '📈',
-        OTHER: '📊',
-    };
-    return icons[category];
-};
-

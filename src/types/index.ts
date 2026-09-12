@@ -1,14 +1,16 @@
-// ───────── Tests ─────────
+// ───────── Categories ─────────
 
-// Категории — фронтовая мета (бек категории не возвращает).
-export type TestCategory =
-    | 'PERSONALITY'
-    | 'EMOTIONS'
-    | 'INTELLECT'
-    | 'CAREER'
-    | 'RELATIONSHIPS'
-    | 'DEVELOPMENT'
-    | 'OTHER';
+export interface Category {
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+    position: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// ───────── Tests ─────────
 
 export interface Test {
     id: string;
@@ -20,9 +22,8 @@ export interface Test {
     createdAt: string;
     updatedAt: string;
     position: number;
-    /** Категория проставляется только на фронте (см. testAdapters). */
-    category?: TestCategory;
-    /** Количество вопросов теста публично с бека сейчас не приходит. */
+    categoryId?: string | null;
+    category?: Category | null;
     questionsCount?: number;
 }
 
@@ -44,8 +45,7 @@ export interface ChatMessage {
 
 // ───────── Questions ─────────
 
-/** Бек поддерживает только SINGLE и SCALE для Choice-вопросов. */
-export type QuestionChoiceMod = 'SINGLE' | 'SCALE';
+export type QuestionChoiceMod = 'SINGLE' | 'SCALE' | 'MULTIPLE';
 
 export interface Answer {
     index: number;
@@ -70,7 +70,8 @@ export type QuestionContent = ChoiceQuestionContent | InputQuestionContent;
 
 export interface ExistingQuestion {
     id: string;
-    testId: string;
+    testId?: string | null;
+    surveyId?: string | null;
     content: QuestionContent;
     position: number;
 }
@@ -83,6 +84,8 @@ export type TestingSessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
 export interface SessionAnswer {
     questionId: string;
     selectedIndex: number | null;
+    selectedIndices?: number[] | null;
+    textAnswer?: string | null;
 }
 
 /** Сессия без списка вопросов (используется в списках). */
@@ -133,3 +136,48 @@ export interface TestingSessionCard {
 }
 
 export type TestingSessionCardResponse = PaginatedResponse<TestingSessionCard>;
+
+// ───────── Surveys ─────────
+
+export interface Survey {
+    id: string;
+    name: string;
+    description: string;
+    durationMins: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    position: number;
+    categoryId?: string | null;
+    category?: Category | null;
+    questionsCount?: number;
+}
+
+export type SurveySessionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
+
+export interface ExistingSurveySession {
+    id: string;
+    userId: string;
+    surveyId: string;
+    answers: SessionAnswer[];
+    status: SurveySessionStatus;
+    createdAt: string;
+    closedAt?: string | null;
+}
+
+export interface FullSurveySession extends ExistingSurveySession {
+    questions: ExistingQuestion[];
+}
+
+export interface UpdateSurveyAnswersRequest {
+    answers: SessionAnswer[];
+}
+
+export interface SurveySessionCard {
+    id: string;
+    surveyName: string;
+    status: SurveySessionStatus;
+    createdAt: string;
+}
+
+export type SurveySessionCardResponse = PaginatedResponse<SurveySessionCard>;

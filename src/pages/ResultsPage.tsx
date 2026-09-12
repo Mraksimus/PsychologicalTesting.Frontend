@@ -90,6 +90,22 @@ const ResultsPage: React.FC = () => {
         loadTestDetails();
     }, [loadTestDetails]);
 
+    const [regenerating, setRegenerating] = useState(false);
+
+    const handleRegenerate = async () => {
+        if (!session) return;
+        setRegenerating(true);
+        setError(null);
+        try {
+            const updated = await testingSessionsApi.regenerateResult(session.id);
+            setSession(updated);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Не удалось сгенерировать результат');
+        } finally {
+            setRegenerating(false);
+        }
+    };
+
     const handleRetake = () => {
         const targetTestId = session?.testId ?? routeTestId ?? '';
         if (!targetTestId) {
@@ -146,7 +162,8 @@ const ResultsPage: React.FC = () => {
         );
     }
 
-    const resultText = session.result ?? 'Результат появится чуть позже. Попробуйте обновить страницу через пару минут.';
+    const hasResult = Boolean(session.result && session.result.trim().length > 0);
+    const resultText = session.result ?? '';
     const sortedQuestions = [...session.questions].sort((a, b) => a.position - b.position);
     const answersByQuestion = new Map(session.answers.map(a => [a.questionId, a.selectedIndex]));
     const answeredCount = sortedQuestions.filter(q => {
@@ -177,7 +194,30 @@ const ResultsPage: React.FC = () => {
                 <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
                     <Stack gap="md">
                         <Title order={3}>Анализ результата</Title>
-                        <ReactMarkdown>{resultText}</ReactMarkdown>
+                        {hasResult ? (
+                            <ReactMarkdown>{resultText}</ReactMarkdown>
+                        ) : (
+                            <Stack gap="sm">
+                                <Alert color="yellow" title="Результат ещё не готов">
+                                    Модель анализа временно недоступна. Ваши ответы сохранены —
+                                    попробуйте сгенерировать заключение ещё раз.
+                                </Alert>
+                                {error ? (
+                                    <Alert color="red" title="Ошибка" withCloseButton onClose={() => setError(null)}>
+                                        {error}
+                                    </Alert>
+                                ) : null}
+                                <Group>
+                                    <Button
+                                        onClick={handleRegenerate}
+                                        loading={regenerating}
+                                        disabled={regenerating}
+                                    >
+                                        Сгенерировать результат
+                                    </Button>
+                                </Group>
+                            </Stack>
+                        )}
                     </Stack>
                 </Card>
 

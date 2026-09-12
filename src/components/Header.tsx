@@ -163,6 +163,13 @@ const Header: React.FC = () => {
                             </li>
                             <li>
                                 <NavButton
+                                    label="Опросы"
+                                    active={isActivePage('/surveys')}
+                                    onClick={() => handleNavigation('/surveys')}
+                                />
+                            </li>
+                            <li>
+                                <NavButton
                                     label="О проекте"
                                     onClick={handleAboutClick}
                                 />
@@ -170,7 +177,7 @@ const Header: React.FC = () => {
                         </ul>
                     </nav>
 
-                    {/* Профиль пользователя - справа */}
+                    {/* Профиль пользователя или кнопки входа - справа */}
                     <div style={{
                         flex: 1,
                         display: 'flex',
@@ -178,67 +185,127 @@ const Header: React.FC = () => {
                         gap: '1rem',
                         justifyContent: 'flex-end'
                     }}>
-                        {/* Имя пользователя */}
-                        <button
-                            type="button"
-                            style={{
-                                color: '#333',
-                                fontWeight: '500',
-                                fontSize: '0.9rem',
-                                cursor: 'pointer',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '20px',
-                                background: 'rgba(102, 126, 234, 0.1)',
-                                transition: 'all 0.3s ease',
-                                whiteSpace: 'nowrap',
-                                border: 'none'
-                            }}
-                            onClick={handleProfileClick}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
-                                e.currentTarget.style.color = '#667eea';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
-                                e.currentTarget.style.color = '#333';
-                            }}
-                            title="Перейти в профиль"
-                        >
-                            {fullName}
-                        </button>
+                        {user ? (
+                            <>
+                                {/* Имя пользователя */}
+                                <button
+                                    type="button"
+                                    style={{
+                                        color: '#333',
+                                        fontWeight: '500',
+                                        fontSize: '0.9rem',
+                                        cursor: 'pointer',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '20px',
+                                        background: 'rgba(102, 126, 234, 0.1)',
+                                        transition: 'all 0.3s ease',
+                                        whiteSpace: 'nowrap',
+                                        border: 'none'
+                                    }}
+                                    onClick={handleProfileClick}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
+                                        e.currentTarget.style.color = '#667eea';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
+                                        e.currentTarget.style.color = '#333';
+                                    }}
+                                    title="Перейти в профиль"
+                                >
+                                    {fullName}
+                                </button>
 
-                        {/* Кнопка профиля */}
-                        <button
-                            type="button"
-                            onClick={handleProfileClick}
-                            style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
-                                border: 'none',
-                                width: '45px',
-                                height: '45px',
-                                borderRadius: '50%',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '1.3rem',
-                                transition: 'all 0.3s ease',
-                                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                                flexShrink: 0
-                            }}
-                            title="Профиль"
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'scale(1.1)';
-                                e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
-                            }}
-                        >
-                            👤
-                        </button>
+                                {/* Кнопка профиля */}
+                                <button
+                                    type="button"
+                                    onClick={handleProfileClick}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        width: '45px',
+                                        height: '45px',
+                                        borderRadius: '50%',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '1.3rem',
+                                        transition: 'all 0.3s ease',
+                                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                                        flexShrink: 0
+                                    }}
+                                    title="Профиль"
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1.1)';
+                                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                                    }}
+                                >
+                                    👤
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => handleNavigation('/login')}
+                                    style={{
+                                        background: 'transparent',
+                                        color: '#333',
+                                        border: '1px solid rgba(102, 126, 234, 0.4)',
+                                        padding: '0.5rem 1.1rem',
+                                        borderRadius: '20px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 500,
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = 'rgba(102, 126, 234, 0.08)';
+                                        e.currentTarget.style.borderColor = '#667eea';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'transparent';
+                                        e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.4)';
+                                    }}
+                                >
+                                    Войти
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleNavigation('/register')}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '0.55rem 1.2rem',
+                                        borderRadius: '20px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600,
+                                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.35)',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.55)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.35)';
+                                    }}
+                                >
+                                    Зарегистрироваться
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

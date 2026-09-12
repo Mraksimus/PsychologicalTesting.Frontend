@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IconSearch } from '@tabler/icons-react';
-import { Test } from '@/types';
+import { Category, Test } from '@/types';
+import { fetchCategories } from '@/api/categories';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -21,17 +22,6 @@ import { enrichTests } from '@/utils/testAdapters';
 import TestCard from '@/components/TestCard';
 import TestCardSkeleton from '@/components/TestCardSkeleton';
 
-const categories = [
-    { value: 'all', label: 'Все категории' },
-    { value: 'PERSONALITY', label: 'Личность' },
-    { value: 'EMOTIONS', label: 'Эмоции' },
-    { value: 'INTELLECT', label: 'Интеллект' },
-    { value: 'CAREER', label: 'Карьера' },
-    { value: 'RELATIONSHIPS', label: 'Отношения' },
-    { value: 'DEVELOPMENT', label: 'Развитие' },
-    { value: 'OTHER', label: 'Другое' },
-];
-
 const sortOptions = [
     { value: 'popular', label: 'По популярности' },
     { value: 'new', label: 'Сначала новые' },
@@ -42,6 +32,7 @@ const sortOptions = [
 const TestsPage: React.FC = () => {
     const navigate = useNavigate();
     const [tests, setTests] = useState<Test[]>([]);
+    const [categoriesList, setCategoriesList] = useState<Category[]>([]);
     const [filteredTests, setFilteredTests] = useState<Test[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -52,17 +43,21 @@ const TestsPage: React.FC = () => {
     useEffect(() => {
         let active = true;
 
-        const loadTests = async () => {
-                setLoading(true);
+        const load = async () => {
+            setLoading(true);
             setError(null);
             try {
-                const data = await fetchTests({ offset: 0, limit: 50 });
+                const [testsResp, cats] = await Promise.all([
+                    fetchTests({ offset: 0, limit: 50 }),
+                    fetchCategories(),
+                ]);
                 if (!active) {
                     return;
                 }
-                const enriched = enrichTests(data.items);
+                const enriched = enrichTests(testsResp.items);
                 setTests(enriched);
                 setFilteredTests(enriched);
+                setCategoriesList(cats);
             } catch (err) {
                 if (!active) {
                     return;
@@ -70,17 +65,22 @@ const TestsPage: React.FC = () => {
                 setError(err instanceof Error ? err.message : 'Не удалось загрузить тесты');
             } finally {
                 if (active) {
-                setLoading(false);
+                    setLoading(false);
                 }
             }
         };
 
-        loadTests();
+        load();
 
         return () => {
             active = false;
         };
     }, []);
+
+    const categorySelectData = [
+        { value: 'all', label: 'Все категории' },
+        ...categoriesList.map(c => ({ value: c.id, label: c.name })),
+    ];
 
     useEffect(() => {
         let result = [...tests];
@@ -94,7 +94,7 @@ const TestsPage: React.FC = () => {
         }
 
         if (selectedCategory !== 'all') {
-            result = result.filter(test => test.category === selectedCategory);
+            result = result.filter(test => test.categoryId === selectedCategory);
         }
 
         switch (sortBy) {
@@ -169,7 +169,7 @@ const TestsPage: React.FC = () => {
                                 placeholder="Категория"
                                 value={selectedCategory}
                                 onChange={handleCategoryChange}
-                                data={categories}
+                                data={categorySelectData}
                             />
                         </Grid.Col>
                         <Grid.Col span={{ xs: 6, md: 3 }}>

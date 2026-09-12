@@ -16,6 +16,17 @@ export const API_ROUTES = {
         complete: (sessionId: string) => `/testing/sessions/${sessionId}/complete`,
         close: (sessionId: string) => `/testing/sessions/${sessionId}/close`,
     },
+    surveys: {
+        list: '/surveys',
+    },
+    surveySessions: {
+        base: '/surveys/sessions',
+        create: (surveyId: string) => `/surveys/sessions/${surveyId}`,
+        session: (sessionId: string) => `/surveys/sessions/${sessionId}`,
+        answers: (sessionId: string) => `/surveys/sessions/${sessionId}/answers`,
+        complete: (sessionId: string) => `/surveys/sessions/${sessionId}/complete`,
+        close: (sessionId: string) => `/surveys/sessions/${sessionId}/close`,
+    },
     chat: {
         history: '/chat',
     },
@@ -24,6 +35,7 @@ export const API_ROUTES = {
         update: '/user/profile',
         delete: '/user/profile',
         sessions: '/user/profile/sessions',
+        surveySessions: '/user/profile/survey-sessions',
     },
 } as const;
 
