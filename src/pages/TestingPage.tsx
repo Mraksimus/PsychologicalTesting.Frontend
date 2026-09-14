@@ -532,7 +532,7 @@ const TestingPage: React.FC = () => {
                 <div style={{ textAlign: 'center', color: 'white', marginBottom: '40px' }}>
                     <Title order={1}>{testDetails?.name ?? 'Психологический тест'}</Title>
                     <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                        {testDetails?.transcript ?? 'Ответьте на вопросы, чтобы получить персонализированный результат'}
+                        {testDetails?.description ?? 'Ответьте на вопросы, чтобы получить персонализированный результат'}
                     </Text>
                 </div>
 
