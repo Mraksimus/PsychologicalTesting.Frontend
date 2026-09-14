@@ -50,7 +50,6 @@ export type QuestionChoiceMod = 'SINGLE' | 'SCALE' | 'MULTIPLE';
 export interface Answer {
     index: number;
     text: string;
-    score: number;
 }
 
 export interface ChoiceQuestionContent {
