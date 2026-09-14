@@ -190,9 +190,29 @@ const ResultsPage: React.FC = () => {
 
                 <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
                     <Stack gap="md">
-                        <Title order={3}>Анализ результата</Title>
+                        <Group justify="space-between" align="center">
+                            <Title order={3}>Анализ результата</Title>
+                            {hasResult ? (
+                                <Button
+                                    variant="light"
+                                    size="xs"
+                                    onClick={handleRegenerate}
+                                    loading={regenerating}
+                                    disabled={regenerating}
+                                >
+                                    Повторить анализ
+                                </Button>
+                            ) : null}
+                        </Group>
                         {hasResult ? (
-                            <ReactMarkdown>{resultText}</ReactMarkdown>
+                            <>
+                                <ReactMarkdown>{resultText}</ReactMarkdown>
+                                {error ? (
+                                    <Alert color="red" title="Ошибка" withCloseButton onClose={() => setError(null)}>
+                                        {error}
+                                    </Alert>
+                                ) : null}
+                            </>
                         ) : (
                             <Stack gap="sm">
                                 <Alert color="yellow" title="Результат ещё не готов">
