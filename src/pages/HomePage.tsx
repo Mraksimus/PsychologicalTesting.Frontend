@@ -11,6 +11,7 @@ import { fetchSurveys } from '@/api/surveys';
 import { enrichTests } from '@/utils/testAdapters';
 
 // Данные психологов команды
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const teamPsychologists = [
     {
         id: 1,

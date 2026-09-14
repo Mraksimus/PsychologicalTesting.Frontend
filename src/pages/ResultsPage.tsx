@@ -61,9 +61,6 @@ const ResultsPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-        // session используется только для решения о показе спиннера;
-        // зависимость намеренно опускаем, чтобы не перезапускать при каждом обновлении.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId]);
 
     useEffect(() => {
@@ -93,7 +90,7 @@ const ResultsPage: React.FC = () => {
     const [regenerating, setRegenerating] = useState(false);
 
     const handleRegenerate = async () => {
-        if (!session) return;
+        if (!session) {return;}
         setRegenerating(true);
         setError(null);
         try {

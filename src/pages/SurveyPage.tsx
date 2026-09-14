@@ -49,15 +49,15 @@ const SurveyPage: React.FC = () => {
                     fetchSurveys({ offset: 0, limit: 50 }),
                     fetchCategories(),
                 ]);
-                if (!active) return;
+                if (!active) {return;}
                 setSurveys(data.items);
                 setFiltered(data.items);
                 setCategoriesList(cats);
             } catch (err) {
-                if (!active) return;
+                if (!active) {return;}
                 setError(err instanceof Error ? err.message : 'Не удалось загрузить опросы');
             } finally {
-                if (active) setLoading(false);
+                if (active) {setLoading(false);}
             }
         };
         load();

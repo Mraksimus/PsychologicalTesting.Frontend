@@ -72,7 +72,7 @@ const buildAnswersPayload = (
 
 const isQuestionAnswered = (question: ExistingQuestion, answersMap: AnswersMap): boolean => {
     const cell = answersMap[question.id];
-    if (!cell) return false;
+    if (!cell) {return false;}
     if (question.content.type === 'Input') {
         return Boolean(cell.textAnswer && cell.textAnswer.trim().length > 0);
     }
@@ -86,7 +86,7 @@ const getInitialQuestionIndex = (
     questions: ExistingQuestion[],
     answersMap: AnswersMap,
 ): number => {
-    if (!questions.length) return 0;
+    if (!questions.length) {return 0;}
     const firstUnanswered = questions.findIndex(q => !isQuestionAnswered(q, answersMap));
     return firstUnanswered === -1 ? questions.length - 1 : firstUnanswered;
 };
@@ -129,11 +129,11 @@ const SurveyingPage: React.FC = () => {
         : 0;
 
     const loadSurveyDetails = useCallback(async () => {
-        if (surveyDetails || !surveyId) return;
+        if (surveyDetails || !surveyId) {return;}
         try {
             const data = await fetchSurveys({ offset: 0, limit: 50 });
             const match = data.items.find(item => item.id === surveyId);
-            if (match) setSurveyDetails(match);
+            if (match) {setSurveyDetails(match);}
         } catch {
             // необязательно
         }
@@ -148,12 +148,12 @@ const SurveyingPage: React.FC = () => {
         const match = sessions.items.find(
             item => item.surveyId === surveyId && item.status === 'IN_PROGRESS',
         );
-        if (!match) return null;
+        if (!match) {return null;}
         return surveySessionsApi.get(match.id);
     }, [surveyId]);
 
     const createNewSession = useCallback(async () => {
-        if (createNewSessionRef.current) return;
+        if (createNewSessionRef.current) {return;}
         createNewSessionRef.current = true;
         try {
             const newSession = await surveySessionsApi.create(surveyId);
@@ -167,8 +167,8 @@ const SurveyingPage: React.FC = () => {
     }, [surveyId]);
 
     const initializeSession = useCallback(async () => {
-        if (!surveyId) return;
-        if (isInitializingRef.current) return;
+        if (!surveyId) {return;}
+        if (isInitializingRef.current) {return;}
 
         isInitializingRef.current = true;
         setLoading(true);
@@ -235,7 +235,7 @@ const SurveyingPage: React.FC = () => {
     }, [initializeSession]);
 
     useEffect(() => {
-        if (!session) return;
+        if (!session) {return;}
         const sortedQuestions = [...session.questions].sort((a, b) => a.position - b.position);
         const map = buildAnswersMap(session.answers);
         setQuestions(sortedQuestions);
@@ -253,8 +253,8 @@ const SurveyingPage: React.FC = () => {
     }, [session, locationState.continueFromProfile]);
 
     const handleSelectAnswer = (optionIndex: number) => {
-        if (!currentQuestion) return;
-        if (currentQuestion.content.type !== 'Choice') return;
+        if (!currentQuestion) {return;}
+        if (currentQuestion.content.type !== 'Choice') {return;}
         setAnswersMap(prev => ({
             ...prev,
             [currentQuestion.id]: {
@@ -266,8 +266,8 @@ const SurveyingPage: React.FC = () => {
     };
 
     const handleToggleMulti = (optionIndex: number) => {
-        if (!currentQuestion) return;
-        if (currentQuestion.content.type !== 'Choice') return;
+        if (!currentQuestion) {return;}
+        if (currentQuestion.content.type !== 'Choice') {return;}
         setAnswersMap(prev => {
             const cell = prev[currentQuestion.id] ?? emptyCell();
             const has = cell.selectedIndices.includes(optionIndex);
@@ -286,8 +286,8 @@ const SurveyingPage: React.FC = () => {
     };
 
     const handleTextAnswer = (text: string) => {
-        if (!currentQuestion) return;
-        if (currentQuestion.content.type !== 'Input') return;
+        if (!currentQuestion) {return;}
+        if (currentQuestion.content.type !== 'Input') {return;}
         setAnswersMap(prev => ({
             ...prev,
             [currentQuestion.id]: {
@@ -299,13 +299,13 @@ const SurveyingPage: React.FC = () => {
     };
 
     const persistAnswers = useCallback(async () => {
-        if (!session) return;
+        if (!session) {return;}
         const payload = buildAnswersPayload(questions, answersMap);
         await surveySessionsApi.updateAnswers(session.id, payload);
     }, [answersMap, questions, session]);
 
     const completeSurvey = async () => {
-        if (!session) return;
+        if (!session) {return;}
         setIsCompleting(true);
         try {
             await persistAnswers();
@@ -327,7 +327,7 @@ const SurveyingPage: React.FC = () => {
     };
 
     const handleNextQuestion = async () => {
-        if (!session || !currentQuestion) return;
+        if (!session || !currentQuestion) {return;}
         if (!isQuestionAnswered(currentQuestion, answersMap)) {
             notifications.show({
                 title: 'Ответ не выбран',
@@ -359,12 +359,12 @@ const SurveyingPage: React.FC = () => {
     };
 
     const handlePreviousQuestion = () => {
-        if (currentQuestionIndex === 0) return;
+        if (currentQuestionIndex === 0) {return;}
         setCurrentQuestionIndex(prev => Math.max(prev - 1, 0));
     };
 
     const handleRestartConfirm = async () => {
-        if (!session || isRestarting) return;
+        if (!session || isRestarting) {return;}
         setIsRestarting(true);
         try {
             await surveySessionsApi.close(session.id);

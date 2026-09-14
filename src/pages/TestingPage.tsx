@@ -73,7 +73,7 @@ const buildAnswersPayload = (
 
 const isQuestionAnswered = (question: ExistingQuestion, answersMap: AnswersMap): boolean => {
     const cell = answersMap[question.id];
-    if (!cell) return false;
+    if (!cell) {return false;}
     if (question.content.type === 'Input') {
         return Boolean(cell.textAnswer && cell.textAnswer.trim().length > 0);
     }
@@ -272,8 +272,8 @@ const TestingPage: React.FC = () => {
     }, [session, locationState.continueFromProfile]);
 
     const handleSelectAnswer = (optionIndex: number) => {
-        if (!currentQuestion) return;
-        if (currentQuestion.content.type !== 'Choice') return;
+        if (!currentQuestion) {return;}
+        if (currentQuestion.content.type !== 'Choice') {return;}
         setAnswersMap(prev => ({
             ...prev,
             [currentQuestion.id]: {
@@ -285,8 +285,8 @@ const TestingPage: React.FC = () => {
     };
 
     const handleToggleMulti = (optionIndex: number) => {
-        if (!currentQuestion) return;
-        if (currentQuestion.content.type !== 'Choice') return;
+        if (!currentQuestion) {return;}
+        if (currentQuestion.content.type !== 'Choice') {return;}
         setAnswersMap(prev => {
             const cell = prev[currentQuestion.id] ?? emptyCell();
             const has = cell.selectedIndices.includes(optionIndex);
@@ -305,8 +305,8 @@ const TestingPage: React.FC = () => {
     };
 
     const handleTextAnswer = (text: string) => {
-        if (!currentQuestion) return;
-        if (currentQuestion.content.type !== 'Input') return;
+        if (!currentQuestion) {return;}
+        if (currentQuestion.content.type !== 'Input') {return;}
         setAnswersMap(prev => ({
             ...prev,
             [currentQuestion.id]: {

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Survey } from '@/types';
-import { getCategoryGradient, getCategoryIcon, getCategoryLabel } from '@/utils/testAdapters';
 
 interface SurveyCardProps {
     survey: Survey;
@@ -10,11 +9,6 @@ interface SurveyCardProps {
 const SurveyCard: React.FC<SurveyCardProps> = ({ survey, onStartSurvey }) => {
     const questionsCount = survey.questionsCount ?? 0;
     const duration = survey.durationMins || '—';
-    const categoryGradient = survey.category
-        ? getCategoryGradient(survey.category)
-        : 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)';
-    const categoryIcon = survey.category ? getCategoryIcon(survey.category) : '📝';
-    const categoryLabel = survey.category ? getCategoryLabel(survey.category) : 'Опрос';
 
     return (
         <div style={{
