@@ -126,6 +126,9 @@ export interface UserProfile {
     sessionsCount: number;
     completedSessionsCount: number;
     inProgressSessionsCount: number;
+    surveySessionsCount: number;
+    completedSurveySessionsCount: number;
+    inProgressSurveySessionsCount: number;
 }
 
 export interface TestingSessionCard {

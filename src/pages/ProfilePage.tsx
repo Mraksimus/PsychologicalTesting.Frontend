@@ -388,6 +388,17 @@ const ProfilePage: React.FC = () => {
         };
     };
 
+    const getSurveySessionsStats = () => {
+        if (!profile) {
+            return { total: 0, completed: 0, inProgress: 0 };
+        }
+        return {
+            total: profile.surveySessionsCount,
+            completed: profile.completedSurveySessionsCount,
+            inProgress: profile.inProgressSurveySessionsCount,
+        };
+    };
+
     const hasMoreSessions = sessions.length < sessionsTotal;
     const hasMoreSurveySessions = surveySessions.length < surveySessionsTotal;
 
@@ -492,33 +503,62 @@ const ProfilePage: React.FC = () => {
 
                                 <Divider />
 
-                                <Box style={{ textAlign: 'center' }}>
-                                    <Text size="xl" fw={700} c="blue">
-                                        {getSessionsStats().total}
-                                    </Text>
-                                    <Text size="sm" c="dimmed">Пройдено тестов</Text>
-                                </Box>
-
-                                <Divider />
-
-                                <Box style={{ textAlign: 'center' }}>
-                                    <Text size="xl" fw={700} c="green">
-                                        {getSessionsStats().completed}
-                                    </Text>
-                                    <Text size="sm" c="dimmed">Завершенных тестов</Text>
-                                </Box>
-
-                                {getSessionsStats().inProgress > 0 && (
-                                    <>
-                                        <Divider />
-                                        <Box style={{ textAlign: 'center' }}>
-                                            <Text size="xl" fw={700} c="orange">
-                                                {getSessionsStats().inProgress}
+                                <Grid gutter="md">
+                                    <Grid.Col span={6}>
+                                        <Stack gap="sm">
+                                            <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center">
+                                                Тесты
                                             </Text>
-                                            <Text size="sm" c="dimmed">В процессе</Text>
-                                        </Box>
-                                    </>
-                                )}
+                                            <Box style={{ textAlign: 'center' }}>
+                                                <Text size="xl" fw={700} c="blue">
+                                                    {getSessionsStats().total}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Пройдено</Text>
+                                            </Box>
+                                            <Box style={{ textAlign: 'center' }}>
+                                                <Text size="xl" fw={700} c="green">
+                                                    {getSessionsStats().completed}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Завершено</Text>
+                                            </Box>
+                                            {getSessionsStats().inProgress > 0 && (
+                                                <Box style={{ textAlign: 'center' }}>
+                                                    <Text size="xl" fw={700} c="orange">
+                                                        {getSessionsStats().inProgress}
+                                                    </Text>
+                                                    <Text size="xs" c="dimmed">В процессе</Text>
+                                                </Box>
+                                            )}
+                                        </Stack>
+                                    </Grid.Col>
+                                    <Grid.Col span={6}>
+                                        <Stack gap="sm">
+                                            <Text size="xs" fw={600} c="dimmed" tt="uppercase" ta="center">
+                                                Опросы
+                                            </Text>
+                                            <Box style={{ textAlign: 'center' }}>
+                                                <Text size="xl" fw={700} c="teal">
+                                                    {getSurveySessionsStats().total}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Пройдено</Text>
+                                            </Box>
+                                            <Box style={{ textAlign: 'center' }}>
+                                                <Text size="xl" fw={700} c="green">
+                                                    {getSurveySessionsStats().completed}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Завершено</Text>
+                                            </Box>
+                                            {getSurveySessionsStats().inProgress > 0 && (
+                                                <Box style={{ textAlign: 'center' }}>
+                                                    <Text size="xl" fw={700} c="orange">
+                                                        {getSurveySessionsStats().inProgress}
+                                                    </Text>
+                                                    <Text size="xs" c="dimmed">В процессе</Text>
+                                                </Box>
+                                            )}
+                                        </Stack>
+                                    </Grid.Col>
+                                </Grid>
                             </Stack>
                         </Card>
                     </Grid.Col>
@@ -532,11 +572,13 @@ const ProfilePage: React.FC = () => {
                             style={{
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
                             }}
                         >
                             <Title order={2} mb="md">Личная информация</Title>
 
-                            <Stack gap="md">
+                            <Stack gap="md" style={{ flex: 1 }}>
                                 <Group justify="space-between">
                                     <Group>
                                         <IconUser size={20} color="gray" />
@@ -622,9 +664,9 @@ const ProfilePage: React.FC = () => {
                                     </Group>
                                 )}
 
-                                <Divider />
+                                <Divider style={{ marginTop: 'auto' }} />
 
-                                <Group justify="center" mt="md" gap="md">
+                                <Group justify="center" gap="md">
                                     <Button
                                         variant="outline"
                                         color="red"
