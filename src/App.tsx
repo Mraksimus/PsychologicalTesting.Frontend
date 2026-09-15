@@ -23,6 +23,7 @@ import { theme } from "./theme";
 
 // Стили
 import "./styles/background.css";
+import "./styles/responsive.css";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import TestPage from "@/pages/TestPage";
 

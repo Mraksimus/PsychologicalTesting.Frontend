@@ -530,13 +530,13 @@ const TestingPage: React.FC = () => {
                 </Modal>
 
                 <div style={{ textAlign: 'center', color: 'white', marginBottom: '40px' }}>
-                    <Title order={1}>{testDetails?.name ?? 'Психологический тест'}</Title>
+                    <Title order={1} className="testing-title">{testDetails?.name ?? 'Психологический тест'}</Title>
                     <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
                         {testDetails?.description ?? 'Ответьте на вопросы, чтобы получить персонализированный результат'}
                     </Text>
                 </div>
 
-                <Card shadow="md" p="xl" style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px' }}>
+                <Card shadow="md" p="xl" className="testing-card" style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px' }}>
                     <Stack gap="md" mb="xl">
                         <Group justify="space-between">
                             <Text fw={500}>
@@ -554,7 +554,7 @@ const TestingPage: React.FC = () => {
                             <Badge size="lg" mb="md" color="violet">
                                 Вопрос {currentQuestionIndex + 1}
                             </Badge>
-                            <Title order={2} size="h3" style={{ marginBottom: '30px', color: '#2c3e50' }}>
+                            <Title order={2} size="h3" className="testing-question-title" style={{ marginBottom: '30px', color: '#2c3e50' }}>
                                 {currentQuestion?.content.text}
                             </Title>
                         </div>
@@ -740,7 +740,7 @@ const TestingPage: React.FC = () => {
                         )}
                     </Stack>
 
-                    <Group justify="space-between" mt="xl">
+                    <Group justify="space-between" mt="xl" className="testing-nav-buttons">
                         <Button
                             variant="light"
                             disabled={currentQuestionIndex === 0 || disabledControls}

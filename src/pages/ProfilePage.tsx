@@ -666,7 +666,7 @@ const ProfilePage: React.FC = () => {
 
                                 <Divider style={{ marginTop: 'auto' }} />
 
-                                <Group justify="center" gap="md">
+                                <Group justify="center" gap="md" className="profile-footer-actions">
                                     <Button
                                         variant="outline"
                                         color="red"
@@ -738,7 +738,7 @@ const ProfilePage: React.FC = () => {
                                 <Stack gap="md">
                                     {sessions.map((session) => (
                                         <Paper key={session.id} p="md" withBorder>
-                                            <Group justify="space-between" mb="xs">
+                                            <Group justify="space-between" mb="xs" className="profile-session-row">
                                                 <Group>
                                                     <Text fw={600}>{session.testName}</Text>
                                                     {getStatusBadge(session.status)}
@@ -748,7 +748,7 @@ const ProfilePage: React.FC = () => {
                                                 </Text>
                                             </Group>
 
-                                            <Group justify="flex-end" mt="md" gap="xs">
+                                            <Group justify="flex-end" mt="md" gap="xs" className="profile-session-actions">
                                                 {session.status === 'IN_PROGRESS' && (
                                                     <>
                                                         <Button
@@ -839,7 +839,7 @@ const ProfilePage: React.FC = () => {
                                 <Stack gap="md">
                                     {surveySessions.map((session) => (
                                         <Paper key={session.id} p="md" withBorder>
-                                            <Group justify="space-between" mb="xs">
+                                            <Group justify="space-between" mb="xs" className="profile-session-row">
                                                 <Group>
                                                     <Text fw={600}>{session.surveyName}</Text>
                                                     {getStatusBadge(session.status)}
@@ -849,7 +849,7 @@ const ProfilePage: React.FC = () => {
                                                 </Text>
                                             </Group>
 
-                                            <Group justify="flex-end" mt="md" gap="xs">
+                                            <Group justify="flex-end" mt="md" gap="xs" className="profile-session-actions">
                                                 {session.status === 'IN_PROGRESS' && (
                                                     <>
                                                         <Button

@@ -188,9 +188,9 @@ const ResultsPage: React.FC = () => {
                     </Group>
                 </Stack>
 
-                <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                <Card shadow="md" p="xl" mb="xl" className="testing-card" style={{ background: 'rgba(255,255,255,0.95)' }}>
                     <Stack gap="md">
-                        <Group justify="space-between" align="center">
+                        <Group justify="space-between" align="center" className="results-header">
                             <Title order={3}>Анализ результата</Title>
                             {hasResult ? (
                                 <Button
@@ -238,7 +238,7 @@ const ResultsPage: React.FC = () => {
                     </Stack>
                 </Card>
 
-                <Card shadow="md" p="xl" mb="xl" style={{ background: 'rgba(255,255,255,0.95)' }}>
+                <Card shadow="md" p="xl" mb="xl" className="testing-card" style={{ background: 'rgba(255,255,255,0.95)' }}>
                     <Group mb="lg">
                         <Text fw={600} size="lg">Ответы</Text>
                         <Badge color="green">{answeredCount} / {sortedQuestions.length}</Badge>
@@ -266,7 +266,7 @@ const ResultsPage: React.FC = () => {
                     </Stack>
                 </Card>
 
-                <Group justify="center" mt="lg">
+                <Group justify="center" mt="lg" className="results-actions">
                     <Button variant="light" onClick={handleRetake}>
                         Пройти еще раз
                     </Button>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Burger, Drawer, Stack, Divider } from '@mantine/core';
 import { profileApi } from '@/api/profile';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -53,6 +54,7 @@ const Header: React.FC = () => {
     const location = useLocation();
     const { user } = useAuth();
     const [fullName, setFullName] = useState<string>('Пользователь');
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -65,7 +67,7 @@ const Header: React.FC = () => {
                     }
                     setFullName(parts.join(' '));
                 } catch {
-                    // Если не удалось загрузить, оставляем дефолтное значение
+                    // не удалось — оставляем дефолт
                 }
             }
         };
@@ -74,10 +76,12 @@ const Header: React.FC = () => {
 
     const handleProfileClick = () => {
         navigate('/profile');
+        setDrawerOpen(false);
     };
 
     const handleNavigation = (path: string) => {
         navigate(path);
+        setDrawerOpen(false);
     };
 
     const isActivePage = (path: string) => location.pathname === path;
@@ -90,6 +94,7 @@ const Header: React.FC = () => {
     };
 
     const handleAboutClick = () => {
+        setDrawerOpen(false);
         if (location.pathname === '/home') {
             scrollToAbout();
         } else {
@@ -116,12 +121,14 @@ const Header: React.FC = () => {
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: '12px'
                 }}>
                     {/* Логотип */}
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: '0 0 auto' }}>
                         <button
                             type="button"
+                            className="header-logo"
                             style={{
                                 fontSize: '1.5rem',
                                 fontWeight: 'bold',
@@ -138,8 +145,8 @@ const Header: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Навигация по центру */}
-                    <nav style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                    {/* Десктопная навигация */}
+                    <nav className="header-desktop-nav" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                         <ul style={{
                             display: 'flex',
                             listStyle: 'none',
@@ -148,38 +155,23 @@ const Header: React.FC = () => {
                             padding: 0
                         }}>
                             <li>
-                                <NavButton
-                                    label="Главная"
-                                    active={isActivePage('/home')}
-                                    onClick={() => handleNavigation('/home')}
-                                />
+                                <NavButton label="Главная" active={isActivePage('/home')} onClick={() => handleNavigation('/home')} />
                             </li>
                             <li>
-                                <NavButton
-                                    label="Тесты"
-                                    active={isActivePage('/tests')}
-                                    onClick={() => handleNavigation('/tests')}
-                                />
+                                <NavButton label="Тесты" active={isActivePage('/tests')} onClick={() => handleNavigation('/tests')} />
                             </li>
                             <li>
-                                <NavButton
-                                    label="Опросы"
-                                    active={isActivePage('/surveys')}
-                                    onClick={() => handleNavigation('/surveys')}
-                                />
+                                <NavButton label="Опросы" active={isActivePage('/surveys')} onClick={() => handleNavigation('/surveys')} />
                             </li>
                             <li>
-                                <NavButton
-                                    label="О проекте"
-                                    onClick={handleAboutClick}
-                                />
+                                <NavButton label="О проекте" onClick={handleAboutClick} />
                             </li>
                         </ul>
                     </nav>
 
-                    {/* Профиль пользователя или кнопки входа - справа */}
-                    <div style={{
-                        flex: 1,
+                    {/* Десктопные экшены (профиль / войти) */}
+                    <div className="header-desktop-actions" style={{
+                        flex: '0 0 auto',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '1rem',
@@ -187,7 +179,6 @@ const Header: React.FC = () => {
                     }}>
                         {user ? (
                             <>
-                                {/* Имя пользователя */}
                                 <button
                                     type="button"
                                     style={{
@@ -203,20 +194,10 @@ const Header: React.FC = () => {
                                         border: 'none'
                                     }}
                                     onClick={handleProfileClick}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
-                                        e.currentTarget.style.color = '#667eea';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
-                                        e.currentTarget.style.color = '#333';
-                                    }}
                                     title="Перейти в профиль"
                                 >
                                     {fullName}
                                 </button>
-
-                                {/* Кнопка профиля */}
                                 <button
                                     type="button"
                                     onClick={handleProfileClick}
@@ -232,19 +213,10 @@ const Header: React.FC = () => {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontSize: '1.3rem',
-                                        transition: 'all 0.3s ease',
                                         boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
                                         flexShrink: 0
                                     }}
                                     title="Профиль"
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'scale(1.1)';
-                                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'scale(1)';
-                                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
-                                    }}
                                 >
                                     👤
                                 </button>
@@ -263,16 +235,7 @@ const Header: React.FC = () => {
                                         cursor: 'pointer',
                                         fontSize: '0.95rem',
                                         fontWeight: 500,
-                                        transition: 'all 0.2s ease',
                                         whiteSpace: 'nowrap'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = 'rgba(102, 126, 234, 0.08)';
-                                        e.currentTarget.style.borderColor = '#667eea';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = 'transparent';
-                                        e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.4)';
                                     }}
                                 >
                                     Войти
@@ -290,16 +253,7 @@ const Header: React.FC = () => {
                                         fontSize: '0.95rem',
                                         fontWeight: 600,
                                         boxShadow: '0 4px 15px rgba(102, 126, 234, 0.35)',
-                                        transition: 'all 0.2s ease',
                                         whiteSpace: 'nowrap'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-1px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.55)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.35)';
                                     }}
                                 >
                                     Зарегистрироваться
@@ -307,8 +261,93 @@ const Header: React.FC = () => {
                             </>
                         )}
                     </div>
+
+                    {/* Бургер для мобильных */}
+                    <Burger
+                        opened={drawerOpen}
+                        onClick={() => setDrawerOpen(o => !o)}
+                        aria-label="Открыть меню"
+                        className="header-burger"
+                        size="sm"
+                    />
                 </div>
             </div>
+
+            <Drawer
+                opened={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                title="Меню"
+                position="right"
+                size="80%"
+                zIndex={2000}
+            >
+                <Stack gap="xs">
+                    {user && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={handleProfileClick}
+                                style={{
+                                    background: 'rgba(102, 126, 234, 0.1)',
+                                    border: 'none',
+                                    padding: '0.75rem 1rem',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    color: '#333',
+                                    textAlign: 'left',
+                                }}
+                            >
+                                👤 {fullName}
+                            </button>
+                            <Divider my="xs" />
+                        </>
+                    )}
+
+                    <NavButton label="Главная" active={isActivePage('/home')} onClick={() => handleNavigation('/home')} />
+                    <NavButton label="Тесты" active={isActivePage('/tests')} onClick={() => handleNavigation('/tests')} />
+                    <NavButton label="Опросы" active={isActivePage('/surveys')} onClick={() => handleNavigation('/surveys')} />
+                    <NavButton label="О проекте" onClick={handleAboutClick} />
+
+                    {!user && (
+                        <>
+                            <Divider my="xs" />
+                            <button
+                                type="button"
+                                onClick={() => handleNavigation('/login')}
+                                style={{
+                                    background: 'transparent',
+                                    color: '#333',
+                                    border: '1px solid rgba(102, 126, 234, 0.4)',
+                                    padding: '0.6rem 1rem',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Войти
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleNavigation('/register')}
+                                style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '0.7rem 1rem',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Зарегистрироваться
+                            </button>
+                        </>
+                    )}
+                </Stack>
+            </Drawer>
         </header>
     );
 };

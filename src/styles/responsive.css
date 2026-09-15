@@ -1,0 +1,213 @@
+/* Глобальный адаптив
+ * Брейкпоинты (совпадают с Mantine):
+ *   sm ≤ 768px  — телефон
+ *   md ≤ 992px  — планшет
+ */
+
+/* ============================================================
+ * Общие правила: убираем горизонтальный скролл, поджимаем контейнеры
+ * ============================================================ */
+html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+@media (max-width: 992px) {
+    .mantine-Container-root {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+}
+
+/* ============================================================
+ * HomePage — заголовки, паддинги, «Посмотреть еще»
+ * ============================================================ */
+@media (max-width: 768px) {
+    .home-section-title {
+        font-size: 1.75rem !important;
+    }
+    .home-section-subtitle {
+        font-size: 1rem !important;
+        padding: 0 8px !important;
+    }
+    .home-about-title {
+        font-size: 1.75rem !important;
+    }
+    .home-about-card {
+        padding: 1.5rem !important;
+    }
+    .home-about-card p {
+        font-size: 1rem !important;
+    }
+    .home-main {
+        padding: 12px !important;
+    }
+    .home-view-more-btn {
+        padding: 10px 22px !important;
+        font-size: 0.95rem !important;
+    }
+}
+
+/* ============================================================
+ * Header — прячем десктопную навигацию на мобиле
+ * ============================================================ */
+@media (max-width: 900px) {
+    .header-desktop-nav {
+        display: none !important;
+    }
+    .header-desktop-actions {
+        display: none !important;
+    }
+    .header-burger {
+        display: inline-flex !important;
+    }
+    .header-logo {
+        font-size: 1.2rem !important;
+    }
+}
+@media (min-width: 901px) {
+    .header-burger {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+ * Welcome — уменьшаем заголовок
+ * ============================================================ */
+@media (max-width: 768px) {
+    .welcome-title {
+        font-size: 2rem !important;
+        margin-top: 40px !important;
+    }
+}
+
+/* ============================================================
+ * TestingPage / SurveyingPage — карточки, кнопки
+ * ============================================================ */
+@media (max-width: 768px) {
+    .testing-card {
+        padding: 16px !important;
+    }
+    .testing-title {
+        font-size: 1.5rem !important;
+    }
+    .testing-question-title {
+        font-size: 1.15rem !important;
+        margin-bottom: 20px !important;
+    }
+    .testing-nav-buttons {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+    .testing-nav-buttons > button {
+        width: 100%;
+    }
+}
+
+/* ============================================================
+ * ResultsPage — кнопки, ответы
+ * ============================================================ */
+@media (max-width: 768px) {
+    .results-actions {
+        flex-direction: column;
+    }
+    .results-actions > button {
+        width: 100%;
+    }
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+    }
+    .results-header > button {
+        width: 100%;
+    }
+}
+
+/* ============================================================
+ * ProfilePage — сессии, кнопки внизу
+ * ============================================================ */
+@media (max-width: 768px) {
+    .profile-session-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px;
+    }
+    .profile-session-actions {
+        justify-content: stretch !important;
+        flex-direction: column;
+    }
+    .profile-session-actions > button,
+    .profile-session-actions > .mantine-Button-root {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .profile-footer-actions {
+        flex-direction: column;
+        gap: 8px !important;
+    }
+    .profile-footer-actions > button {
+        width: 100%;
+    }
+}
+
+/* ============================================================
+ * AIAssistant — паддинги, шрифты, сообщения на мобилке
+ * ============================================================ */
+@media (max-width: 768px) {
+    .ai-header {
+        padding: 1.25rem !important;
+        gap: 0.75rem !important;
+    }
+    .ai-header-icon {
+        font-size: 2rem !important;
+    }
+    .ai-header-title {
+        font-size: 1.15rem !important;
+    }
+    .ai-header-subtitle {
+        font-size: 0.85rem !important;
+    }
+    .ai-body {
+        padding: 1rem !important;
+    }
+    .ai-messages {
+        height: 320px !important;
+        padding: 0.75rem !important;
+    }
+    .ai-message-bubble {
+        max-width: 85% !important;
+        padding: 0.75rem !important;
+    }
+    .ai-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 1rem !important;
+    }
+    .ai-input-row {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    .ai-input-row > textarea,
+    .ai-input-row > button {
+        width: 100% !important;
+    }
+    .ai-footer {
+        padding: 1.25rem !important;
+    }
+    .ai-quick-question {
+        font-size: 0.8rem !important;
+        padding: 0.4rem 0.75rem !important;
+    }
+}
+
+/* ============================================================
+ * AuthForm — по ширине экрана
+ * ============================================================ */
+@media (max-width: 480px) {
+    .auth-form {
+        width: calc(100vw - 32px) !important;
+        max-width: 400px !important;
+        padding: 20px !important;
+    }
+}

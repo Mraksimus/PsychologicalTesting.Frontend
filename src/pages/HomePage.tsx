@@ -151,7 +151,7 @@ const HomePage: React.FC = () => {
 
     return (
         <div style={{ minHeight: '100vh', position: 'relative' }}>
-            <main style={{ padding: '20px' }}>
+            <main className="home-main" style={{ padding: '20px' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     {/* Приветственная секция */}
                     <Welcome />
@@ -160,7 +160,7 @@ const HomePage: React.FC = () => {
                     {(loading || error || tests.length > 0) && (
                     <section style={{ marginTop: '60px' }}>
                         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                            <h2 style={{
+                            <h2 className="home-section-title" style={{
                                 fontSize: '2.5rem',
                                 marginBottom: '1rem',
                                 color: 'white',
@@ -169,7 +169,7 @@ const HomePage: React.FC = () => {
                             }}>
                                 Психологические тесты
                             </h2>
-                            <p style={{
+                            <p className="home-section-subtitle" style={{
                                 fontSize: '1.2rem',
                                 color: 'rgba(255,255,255,0.9)',
                                 maxWidth: '600px',
@@ -256,6 +256,7 @@ const HomePage: React.FC = () => {
                                     {testsTotal > 3 ? (
                                         <button
                                             type="button"
+                                            className="home-view-more-btn"
                                             onClick={handleViewAllTests}
                                             style={{
                                                 position: 'relative',
@@ -314,7 +315,7 @@ const HomePage: React.FC = () => {
                     {(surveysLoading || surveysError || surveys.length > 0) && (
                     <section style={{ marginTop: '80px' }}>
                         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                            <h2 style={{
+                            <h2 className="home-section-title" style={{
                                 fontSize: '2.5rem',
                                 marginBottom: '1rem',
                                 color: 'white',
@@ -323,7 +324,7 @@ const HomePage: React.FC = () => {
                             }}>
                                 Опросы
                             </h2>
-                            <p style={{
+                            <p className="home-section-subtitle" style={{
                                 fontSize: '1.2rem',
                                 color: 'rgba(255,255,255,0.9)',
                                 maxWidth: '600px',
@@ -410,6 +411,7 @@ const HomePage: React.FC = () => {
                                     {surveysTotal > 3 ? (
                                         <button
                                             type="button"
+                                            className="home-view-more-btn"
                                             onClick={handleViewAllSurveys}
                                             style={{
                                                 position: 'relative',
@@ -477,7 +479,7 @@ const HomePage: React.FC = () => {
                             borderTop: '2px solid rgba(255,255,255,0.15)'
                         }}>
                         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                            <h2 style={{
+                            <h2 className="home-about-title" style={{
                                 fontSize: '2.5rem',
                                 marginBottom: '1.5rem',
                                 color: 'white',
@@ -487,7 +489,7 @@ const HomePage: React.FC = () => {
                                 О проекте
                             </h2>
 
-                            <div style={{
+                            <div className="home-about-card" style={{
                                 background: 'rgba(255,255,255,0.95)',
                                 padding: '3rem',
                                 borderRadius: '20px',

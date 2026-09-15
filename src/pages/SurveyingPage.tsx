@@ -486,7 +486,7 @@ const SurveyingPage: React.FC = () => {
             </Modal>
 
             <div style={{ textAlign: 'center', color: 'white', marginBottom: '40px' }}>
-                <Title order={1}>{surveyDetails?.name ?? 'Опрос'}</Title>
+                <Title order={1} className="testing-title">{surveyDetails?.name ?? 'Опрос'}</Title>
                 <Text size="lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     {surveyDetails?.description ?? 'Пройдите опрос и поделитесь своим мнением'}
                 </Text>
@@ -495,6 +495,7 @@ const SurveyingPage: React.FC = () => {
             <Card
                 shadow="md"
                 p="xl"
+                className="testing-card"
                 style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '12px' }}
             >
                 <Stack gap="md" mb="xl">
@@ -517,6 +518,7 @@ const SurveyingPage: React.FC = () => {
                         <Title
                             order={2}
                             size="h3"
+                            className="testing-question-title"
                             style={{ marginBottom: '30px', color: '#2c3e50' }}
                         >
                             {currentQuestion?.content.text}
@@ -710,7 +712,7 @@ const SurveyingPage: React.FC = () => {
                     )}
                 </Stack>
 
-                <Group justify="space-between" mt="xl">
+                <Group justify="space-between" mt="xl" className="testing-nav-buttons">
                     <Button
                         variant="light"
                         disabled={currentQuestionIndex === 0 || disabledControls}

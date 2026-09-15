@@ -109,7 +109,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     });
 
     return (
-        <Paper withBorder shadow="md" p={30} radius="md" w={400}>
+        <Paper withBorder shadow="md" p={30} radius="md" w={400} className="auth-form">
             <Title order={2} ta="center" mb="md">
                 {title}
             </Title>

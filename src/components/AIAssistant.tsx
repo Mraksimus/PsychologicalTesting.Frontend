@@ -165,7 +165,7 @@ const AIAssistant: React.FC = () => {
             boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
             overflow: 'hidden'
         }}>
-            <div style={{
+            <div className="ai-header" style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 padding: '2rem',
@@ -173,16 +173,16 @@ const AIAssistant: React.FC = () => {
                 alignItems: 'center',
                 gap: '1rem'
             }}>
-                <div style={{ fontSize: '3rem' }}>🧠</div>
+                <div className="ai-header-icon" style={{ fontSize: '3rem' }}>🧠</div>
                 <div>
-                    <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem' }}>AI-помощник MindCheck</h3>
-                    <p style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>
+                    <h3 className="ai-header-title" style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem' }}>AI-помощник MindCheck</h3>
+                    <p className="ai-header-subtitle" style={{ margin: 0, opacity: 0.9, fontSize: '1rem' }}>
                         Подключен к психологическому API • Режим реального времени
                     </p>
                 </div>
             </div>
 
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e9ecef' }}>
+            <div className="ai-body" style={{ padding: '1.5rem', borderBottom: '1px solid #e9ecef' }}>
                 {error && !error.includes('Сессия истекла') && (
                     <div style={{
                         background: '#ffeaa7',
@@ -198,6 +198,7 @@ const AIAssistant: React.FC = () => {
 
                 <div
                     ref={messagesContainerRef}
+                    className="ai-messages"
                     style={{
                         height: '400px',
                         overflowY: 'auto',
@@ -261,7 +262,7 @@ const AIAssistant: React.FC = () => {
                                         flexDirection: message.isUser ? 'row-reverse' : 'row'
                                     }}
                                 >
-                                    <div style={{
+                                    <div className="ai-message-bubble" style={{
                                         maxWidth: '70%',
                                         padding: '1rem',
                                         borderRadius: '15px',
@@ -297,7 +298,7 @@ const AIAssistant: React.FC = () => {
                                             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
-                                    <div style={{
+                                    <div className="ai-avatar" style={{
                                         width: '40px',
                                         height: '40px',
                                         borderRadius: '50%',
@@ -391,6 +392,7 @@ const AIAssistant: React.FC = () => {
                             <button
                                 type="button"
                                 key={index}
+                                className="ai-quick-question"
                                 style={{
                                     background: '#f8f9fa',
                                     border: '1px solid #dee2e6',
@@ -418,7 +420,7 @@ const AIAssistant: React.FC = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                <div className="ai-input-row" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
                     <textarea
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
@@ -461,7 +463,7 @@ const AIAssistant: React.FC = () => {
                 </div>
             </div>
 
-            <div style={{ padding: '2rem', background: '#f8f9fa' }}>
+            <div className="ai-footer" style={{ padding: '2rem', background: '#f8f9fa' }}>
                 <h4 style={{ marginBottom: '1rem', color: '#2c3e50', textAlign: 'center' }}>Что я могу:</h4>
                 <div style={{
                     display: 'grid',
