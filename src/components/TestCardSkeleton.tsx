@@ -11,7 +11,8 @@ const TestCardSkeleton: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             width: '100%',
-            height: '100%'
+            height: '100%',
+            minHeight: '440px'
         }}>
             <Skeleton height={120} radius={0} />
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '0.75rem' }}>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Survey } from '@/types';
+import { questionsWord } from '@/utils/plural';
 
 interface SurveyCardProps {
     survey: Survey;
@@ -20,7 +21,8 @@ const SurveyCard: React.FC<SurveyCardProps> = ({ survey, onStartSurvey }) => {
             display: 'flex',
             flexDirection: 'column',
             width: '100%',
-            height: '100%'
+            height: '100%',
+            minHeight: '440px'
         }}>
             <div
                 style={{
@@ -67,7 +69,12 @@ const SurveyCard: React.FC<SurveyCardProps> = ({ survey, onStartSurvey }) => {
                     lineHeight: '1.5',
                     marginTop: 0,
                     flex: 1,
-                    minHeight: '60px'
+                    minHeight: '60px',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 4,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
                 }}>
                     {survey.description}
                 </p>
@@ -80,7 +87,7 @@ const SurveyCard: React.FC<SurveyCardProps> = ({ survey, onStartSurvey }) => {
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>❓</span>
-                        <span>{questionsCount} вопросов</span>
+                        <span>{questionsCount} {questionsWord(questionsCount)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>⏱️</span>

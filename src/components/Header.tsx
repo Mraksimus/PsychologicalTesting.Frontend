@@ -54,6 +54,7 @@ const Header: React.FC = () => {
     const location = useLocation();
     const { user } = useAuth();
     const [fullName, setFullName] = useState<string>('Пользователь');
+    const [shortName, setShortName] = useState<string>('Пользователь');
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
@@ -66,6 +67,13 @@ const Header: React.FC = () => {
                         parts.push(profile.patronymic);
                     }
                     setFullName(parts.join(' '));
+                    const initials = [
+                        profile.name ? `${profile.name[0]}.` : '',
+                        profile.patronymic ? `${profile.patronymic[0]}.` : '',
+                    ].filter(Boolean).join(' ');
+                    setShortName(
+                        [profile.surname, initials].filter(Boolean).join(' ').trim() || 'Пользователь'
+                    );
                 } catch {
                     // не удалось — оставляем дефолт
                 }
@@ -118,14 +126,14 @@ const Header: React.FC = () => {
                 margin: '0 auto',
                 padding: '0 20px'
             }}>
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
+                <div className="header-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto 1fr',
                     alignItems: 'center',
                     gap: '12px'
                 }}>
                     {/* Логотип */}
-                    <div style={{ flex: '0 0 auto' }}>
+                    <div style={{ justifySelf: 'start', minWidth: 0 }}>
                         <button
                             type="button"
                             className="header-logo"
@@ -146,7 +154,7 @@ const Header: React.FC = () => {
                     </div>
 
                     {/* Десктопная навигация */}
-                    <nav className="header-desktop-nav" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                    <nav className="header-desktop-nav" style={{ display: 'flex', justifyContent: 'center' }}>
                         <ul style={{
                             display: 'flex',
                             listStyle: 'none',
@@ -171,11 +179,12 @@ const Header: React.FC = () => {
 
                     {/* Десктопные экшены (профиль / войти) */}
                     <div className="header-desktop-actions" style={{
-                        flex: '0 0 auto',
+                        justifySelf: 'end',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '1rem',
-                        justifyContent: 'flex-end'
+                        minWidth: 0,
+                        maxWidth: '100%'
                     }}>
                         {user ? (
                             <>
@@ -191,12 +200,16 @@ const Header: React.FC = () => {
                                         background: 'rgba(102, 126, 234, 0.1)',
                                         transition: 'all 0.3s ease',
                                         whiteSpace: 'nowrap',
-                                        border: 'none'
+                                        border: 'none',
+                                        maxWidth: '220px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        minWidth: 0
                                     }}
                                     onClick={handleProfileClick}
-                                    title="Перейти в профиль"
+                                    title={fullName}
                                 >
-                                    {fullName}
+                                    {shortName}
                                 </button>
                                 <button
                                     type="button"
@@ -269,6 +282,7 @@ const Header: React.FC = () => {
                         aria-label="Открыть меню"
                         className="header-burger"
                         size="sm"
+                        style={{ gridColumn: 3, justifySelf: 'end' }}
                     />
                 </div>
             </div>

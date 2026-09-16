@@ -702,23 +702,21 @@ const HomePage: React.FC = () => {
                         background: rgba(255,255,255,0.5);
                     }
                     
-                    /* Карточки тестов/опросов: центрирование через flex */
+                    /* Карточки тестов/опросов: всегда один ряд, центр */
                     .tests-grid-item {
-                        flex: 0 1 400px;
-                        display: flex;
+                        flex: 1 1 0;
                         min-width: 0;
+                        max-width: 400px;
+                        display: flex;
                     }
                     .tests-grid-item > * {
                         width: 100%;
                     }
 
-                    @media (max-width: 900px) {
-                        .tests-grid-item {
-                            flex: 0 1 360px;
-                        }
-                    }
-
                     @media (max-width: 768px) {
+                        .tests-grid {
+                            flex-wrap: wrap !important;
+                        }
                         .tests-grid-item {
                             flex: 1 1 100%;
                             max-width: 420px;

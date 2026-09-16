@@ -1,6 +1,7 @@
 import React from 'react';
 import { Test } from '@/types';
 import { getCategoryLabel, getCategoryGradient, getCategoryIcon } from '@/utils/testAdapters';
+import { questionsWord } from '@/utils/plural';
 
 interface TestCardProps {
     test: Test;
@@ -24,7 +25,8 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
             display: 'flex',
             flexDirection: 'column',
             width: '100%',
-            height: '100%'
+            height: '100%',
+            minHeight: '440px'
         }}>
             <div
                 style={{
@@ -67,13 +69,18 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: '#2c3e50', marginTop: 0 }}>
                     {test.name}
                 </h3>
-                <p style={{ 
-                    color: '#666', 
-                    marginBottom: 'auto', 
-                    lineHeight: '1.5', 
+                <p style={{
+                    color: '#666',
+                    marginBottom: 'auto',
+                    lineHeight: '1.5',
                     marginTop: 0,
                     flex: 1,
-                    minHeight: '60px'
+                    minHeight: '60px',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 4,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
                 }}>
                     {test.description || test.transcript}
                 </p>
@@ -86,7 +93,7 @@ const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>❓</span>
-                        <span>{questionsCount} вопросов</span>
+                        <span>{questionsCount} {questionsWord(questionsCount)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                         <span>⏱️</span>
