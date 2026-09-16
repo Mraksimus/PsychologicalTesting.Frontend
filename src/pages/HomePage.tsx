@@ -156,8 +156,7 @@ const HomePage: React.FC = () => {
                     {/* Приветственная секция */}
                     <Welcome />
 
-                    {/* Секция тестов — не показываем, если тестов нет */}
-                    {(loading || error || tests.length > 0) && (
+                    {/* Секция тестов */}
                     <section style={{ marginTop: '60px' }}>
                         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                             <h2 className="home-section-title" style={{
@@ -183,14 +182,17 @@ const HomePage: React.FC = () => {
 
                         {loading ? (
                             <div className="tests-grid" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                justifyContent: 'center',
                                 gap: '15px',
                                 maxWidth: '1300px',
                                 margin: '0 auto 40px auto'
                             }}>
                                 {Array.from({ length: 3 }).map((_, i) => (
-                                    <TestCardSkeleton key={i} />
+                                    <div key={i} className="tests-grid-item">
+                                        <TestCardSkeleton />
+                                    </div>
                                 ))}
                             </div>
                         ) : error ? (
@@ -217,21 +219,33 @@ const HomePage: React.FC = () => {
                                     Попробовать еще раз
                                 </button>
                             </div>
+                        ) : tests.length === 0 ? (
+                            <div style={{
+                                textAlign: 'center',
+                                color: 'rgba(255,255,255,0.9)',
+                                fontSize: '1.1rem',
+                                padding: '2rem',
+                                textShadow: '0 1px 5px rgba(0,0,0,0.3)'
+                            }}>
+                                Пока нет доступных тестов
+                            </div>
                         ) : (
                             <>
                                 <div className="tests-grid" style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(3, 1fr)',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'center',
                                     gap: '15px',
                                     maxWidth: '1300px',
                                     margin: '0 auto 40px auto'
                                 }}>
                                     {tests.map(test => (
-                                        <TestCard
-                                            key={test.id}
-                                            test={test}
-                                            onStartTest={handleOpenTest}
-                                        />
+                                        <div key={test.id} className="tests-grid-item">
+                                            <TestCard
+                                                test={test}
+                                                onStartTest={handleOpenTest}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
 
@@ -309,10 +323,8 @@ const HomePage: React.FC = () => {
                             </>
                         )}
                     </section>
-                    )}
 
-                    {/* Секция опросов — не показываем, если опросов нет */}
-                    {(surveysLoading || surveysError || surveys.length > 0) && (
+                    {/* Секция опросов */}
                     <section style={{ marginTop: '80px' }}>
                         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                             <h2 className="home-section-title" style={{
@@ -338,14 +350,17 @@ const HomePage: React.FC = () => {
 
                         {surveysLoading ? (
                             <div className="tests-grid" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                justifyContent: 'center',
                                 gap: '15px',
                                 maxWidth: '1300px',
                                 margin: '0 auto 40px auto'
                             }}>
                                 {Array.from({ length: 3 }).map((_, i) => (
-                                    <TestCardSkeleton key={i} />
+                                    <div key={i} className="tests-grid-item">
+                                        <TestCardSkeleton />
+                                    </div>
                                 ))}
                             </div>
                         ) : surveysError ? (
@@ -372,21 +387,33 @@ const HomePage: React.FC = () => {
                                     Попробовать еще раз
                                 </button>
                             </div>
+                        ) : surveys.length === 0 ? (
+                            <div style={{
+                                textAlign: 'center',
+                                color: 'rgba(255,255,255,0.9)',
+                                fontSize: '1.1rem',
+                                padding: '2rem',
+                                textShadow: '0 1px 5px rgba(0,0,0,0.3)'
+                            }}>
+                                Пока нет доступных опросов
+                            </div>
                         ) : (
                             <>
                                 <div className="tests-grid" style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(3, 1fr)',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'center',
                                     gap: '15px',
                                     maxWidth: '1300px',
                                     margin: '0 auto 40px auto'
                                 }}>
                                     {surveys.map(survey => (
-                                        <SurveyCard
-                                            key={survey.id}
-                                            survey={survey}
-                                            onStartSurvey={handleOpenSurvey}
-                                        />
+                                        <div key={survey.id} className="tests-grid-item">
+                                            <SurveyCard
+                                                survey={survey}
+                                                onStartSurvey={handleOpenSurvey}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
 
@@ -463,7 +490,6 @@ const HomePage: React.FC = () => {
                             </>
                         )}
                     </section>
-                    )}
 
                     {/* AI ассистент */}
                     <section style={{ marginTop: '80px' }}>
@@ -676,16 +702,26 @@ const HomePage: React.FC = () => {
                         background: rgba(255,255,255,0.5);
                     }
                     
-                    /* Адаптивность для карточек тестов */
-                    @media (max-width: 1024px) {
-                        .tests-grid {
-                            grid-template-columns: repeat(2, 1fr) !important;
+                    /* Карточки тестов/опросов: центрирование через flex */
+                    .tests-grid-item {
+                        flex: 0 1 400px;
+                        display: flex;
+                        min-width: 0;
+                    }
+                    .tests-grid-item > * {
+                        width: 100%;
+                    }
+
+                    @media (max-width: 900px) {
+                        .tests-grid-item {
+                            flex: 0 1 360px;
                         }
                     }
-                    
+
                     @media (max-width: 768px) {
-                        .tests-grid {
-                            grid-template-columns: 1fr !important;
+                        .tests-grid-item {
+                            flex: 1 1 100%;
+                            max-width: 420px;
                         }
                     }
                 `}
